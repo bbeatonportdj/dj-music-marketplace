@@ -1,0 +1,418 @@
+.track-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px 100px;
+}
+
+.track-detail-loading, .track-detail-error {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: var(--text-muted);
+}
+
+.track-detail-error h2 {
+  color: white;
+  margin-top: 10px;
+}
+
+.track-detail-error p {
+  margin-bottom: 20px;
+}
+
+.detail-top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: white;
+}
+
+.share-wrapper {
+  position: relative;
+}
+
+.share-main-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.share-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  min-width: 160px;
+}
+
+.share-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.share-dropdown button:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
+}
+
+/* Hero Section */
+.track-hero {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 48px;
+  margin-bottom: 60px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 100%);
+  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.track-hero-artwork {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.track-hero-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play-overlay-btn {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s;
+  cursor: pointer;
+  border: none;
+}
+
+.track-hero-artwork:hover .play-overlay-btn {
+  opacity: 1;
+  background: rgba(0,0,0,0.2);
+}
+
+.track-hero-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.track-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pack-link {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.track-hero-info h1 {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.artist-name {
+  font-size: 20px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.track-stats-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.waveform-hero-container {
+  margin-bottom: 40px;
+}
+
+.track-actions-primary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.buy-now-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--accent-color);
+  color: black;
+  font-weight: 700;
+  padding: 16px 32px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.buy-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(var(--accent-color-rgb), 0.3);
+}
+
+.buy-now-btn.added {
+  background: #22c55e;
+  color: white;
+}
+
+.favorite-btn {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.favorite-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.favorite-btn.active {
+  color: var(--accent-color);
+  background: rgba(var(--accent-color-rgb), 0.1);
+  border-color: rgba(var(--accent-color-rgb), 0.3);
+}
+
+/* Details Grid */
+.track-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.details-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 20px;
+  padding: 32px;
+}
+
+.details-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #222;
+}
+
+.spec-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.spec-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.spec-value {
+  font-weight: 600;
+  color: white;
+}
+
+.version-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.version-clean { background: #22c55e; }
+.version-dirty { background: #ef4444; }
+
+.about-card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.view-pack-btn {
+  display: inline-block;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+@media (max-width: 968px) {
+  .track-hero {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+  
+  .track-hero-artwork {
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .track-hero-info {
+    text-align: center;
+  }
+  
+  .track-meta-top, .track-stats-row, .track-actions-primary {
+    justify-content: center;
+  }
+  
+  .track-hero-info h1 {
+    font-size: 32px;
+  }
+  
+  .track-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .track-detail-container {
+    padding: 16px 12px 80px;
+  }
+  
+  .track-hero {
+    padding: 16px;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  
+  .track-hero-artwork {
+    max-width: 220px;
+  }
+  
+  .track-hero-info h1 {
+    font-size: 24px;
+  }
+  
+  .artist-name {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .play-overlay-btn {
+    opacity: 1;
+  }
+  
+  .track-stats-row {
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  
+  .track-actions-primary {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .buy-now-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+  }
+  
+  .favorite-btn {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .details-card {
+    padding: 20px;
+  }
+  
+  .detail-top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

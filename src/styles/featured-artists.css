@@ -1,0 +1,105 @@
+.featured-artists {
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.featured-artists .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.featured-artists h2 {
+  font-size: 32px;
+  letter-spacing: 1px;
+}
+
+.view-all-btn {
+  color: var(--accent-color);
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.artists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.artist-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.artist-card:hover {
+  transform: translateY(-5px);
+  border-color: #444;
+}
+
+.artist-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 0px;
+  overflow: hidden;
+  border: 2px solid var(--accent-color);
+}
+
+.artist-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artist-info {
+  flex: 1;
+}
+
+.artist-info h3 {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.artist-genre {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.artist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.follower-count {
+  font-size: 11px;
+  color: #666;
+}
+
+.follow-btn {
+  background-color: transparent;
+  border: 1px solid #333;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.follow-btn:hover {
+  background-color: var(--accent-color);
+  color: black;
+  border-color: var(--accent-color);
+}

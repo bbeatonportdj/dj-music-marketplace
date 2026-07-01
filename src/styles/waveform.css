@@ -1,0 +1,28 @@
+.waveform-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 60px;
+  width: 100%;
+  padding: 10px 0;
+}
+
+.waveform-bar {
+  flex: 1;
+  background-color: #333;
+  border-radius: 2px;
+  transition: background-color 0.2s, height 0.2s;
+}
+
+.waveform-bar.active {
+  background-color: var(--accent-color);
+}
+
+.waveform-container.playing .waveform-bar.active {
+  animation: dance 0.6s infinite ease-in-out alternate;
+}
+
+@keyframes dance {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(1.3); }
+}

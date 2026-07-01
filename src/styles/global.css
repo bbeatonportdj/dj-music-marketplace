@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&family=Anton&display=swap');
+
+:root {
+  --bg-color: #000000; /* Pure black for premium feel */
+  --surface-color: #0c0c0c; /* Deep charcoal surface */
+  --surface-light: #161616;
+  --primary-color: #ff3b30; /* Vibrant Red accent */
+  --secondary-color: #b3b3b3;
+  --accent-color: #ff3b30;
+  --text-main: #ffffff;
+  --text-muted: #888888;
+  --text-dim: #666666;
+  --border-color: #1a1a1a;
+  --player-height: 90px;
+  --nav-height: 70px;
+  
+  /* Vault Aesthetics */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --red-glow: 0 0 20px rgba(255, 59, 48, 0.2);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+/* Premium Typography */
+h1, h2, h3, h4, h5 {
+  font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+h1 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: white;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 30px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: white;
+}
+
+h3 {
+  font-size: 16px;
+  line-height: 28px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+h4 {
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: var(--text-dim);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* Utility Classes */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+}
+
+.glow-hover:hover {
+  box-shadow: var(--red-glow);
+  border-color: var(--primary-color);
+}
+
+.premium-gradient {
+  background: linear-gradient(180deg, rgba(255, 59, 48, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: var(--player-height);
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  
+  h2 {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}

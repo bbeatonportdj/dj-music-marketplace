@@ -1,0 +1,158 @@
+.fav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.fav-container h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 40px;
+}
+
+.fav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 30px;
+}
+
+.fav-card {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s;
+}
+
+.fav-card:hover {
+  transform: translateY(-5px);
+}
+
+.fav-artwork-container {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.fav-artwork-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fav-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.fav-card:hover .fav-overlay {
+  opacity: 1;
+}
+
+.fav-info {
+  padding: 16px;
+}
+
+.fav-info h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fav-info p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.remove-fav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff4d4d;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.remove-fav-btn:hover {
+  background-color: rgba(255, 77, 77, 0.1);
+  border-color: #ff4d4d;
+}
+
+/* Empty State */
+.fav-empty {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-icon {
+  color: #333;
+  margin-bottom: 24px;
+}
+
+.fav-empty h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.fav-empty p {
+  color: var(--text-muted);
+  margin-bottom: 30px;
+}
+
+@media (max-width: 600px) {
+  .fav-container {
+    padding: 20px 16px;
+  }
+  
+  .fav-container h1 {
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+  
+  .fav-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+  
+  .fav-info {
+    padding: 12px;
+  }
+  
+  .fav-info h3 {
+    font-size: 13px;
+  }
+  
+  .fav-info p {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .remove-fav-btn {
+    font-size: 11px;
+    padding: 6px;
+  }
+}
