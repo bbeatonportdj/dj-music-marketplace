@@ -14,6 +14,7 @@ import orderRoutes from './routes/order.js';
 import paymentRoutes from './routes/payment.js';
 import stripeRoutes from './routes/stripe.js';
 import downloadRoutes from './routes/download.js';
+import previewRoutes from './routes/preview.js';
 
 // Import Models for Sync
 import { Track } from './models/index.js';
@@ -74,6 +75,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/downloads', downloadRoutes);
+app.use('/api/preview', previewRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
