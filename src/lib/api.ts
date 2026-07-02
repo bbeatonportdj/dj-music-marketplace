@@ -12,6 +12,7 @@ export interface Track {
   price: number;
   artwork: string;
   preview_url: string;
+  full_audio_url?: string;
   created_at?: string;
   date?: string;
   plays?: number;
