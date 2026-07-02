@@ -4,9 +4,19 @@ import { Order, OrderItem, Track, Purchase, User } from '../models/index.js';
 import { EmailService } from '../services/emailService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key || key === 'sk_test_placeholder') {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
-const DOMAIN = process.env.FRONTEND_URL || 'http://localhost:5173';
+const getDomain = () => process.env.FRONTEND_URL || 'http://localhost:5173';
 
 export const createCheckoutSession = async (req: AuthRequest, res: Response) => {
   try {
@@ -76,12 +86,12 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
       quantity: 1,
     }));
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card', 'promptpay'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${DOMAIN}/orders?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
-      cancel_url: `${DOMAIN}/cart?cancelled=true`,
+      success_url: `${getDomain()}/orders?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+      cancel_url: `${getDomain()}/cart?cancelled=true`,
       metadata: {
         order_id: order.id,
         user_id: req.user.id,
@@ -113,7 +123,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    event = getStripe().webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err: any) {
     console.error('❌ Stripe webhook signature verification failed:', err.message);
     return res.status(400).json({ error: `Webhook Error: ${err.message}` });
