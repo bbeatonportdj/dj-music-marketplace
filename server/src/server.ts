@@ -77,8 +77,13 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/downloads', downloadRoutes);
 app.use('/api/preview', previewRoutes);
 
+// Root
+app.get('/', (_req, res) => {
+  res.json({ name: 'DJ Marketplace API', version: '1.0.0', status: 'running' });
+});
+
 // Health Check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
