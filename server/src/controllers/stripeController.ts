@@ -87,7 +87,7 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
     }));
 
     const session = await getStripe().checkout.sessions.create({
-      payment_method_types: ['card', 'promptpay'],
+      payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
       success_url: `${getDomain()}/orders?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
