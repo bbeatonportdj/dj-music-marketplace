@@ -15,6 +15,7 @@ import paymentRoutes from './routes/payment.js';
 import stripeRoutes from './routes/stripe.js';
 import downloadRoutes from './routes/download.js';
 import previewRoutes from './routes/preview.js';
+import prepareRoutes from './routes/prepare.js';
 
 // Import Models for Sync
 import { Track } from './models/index.js';
@@ -76,6 +77,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/downloads', downloadRoutes);
 app.use('/api/preview', previewRoutes);
+app.use('/api/prepare', prepareRoutes);
 
 // Root
 app.get('/', (_req, res) => {
