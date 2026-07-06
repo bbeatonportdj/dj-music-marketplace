@@ -11,7 +11,11 @@ const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : 
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, display_name } = req.body;
+    const { email, password, display_name, role: requestedRole } = req.body;
+
+    if (!email || !password || !display_name) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
 
     if (!email || !password || !display_name) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -27,11 +31,17 @@ export const register = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    // Set first user or predefined emails as Admin
+    // Determine role
     const count = await User.count();
     const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : ['admin@beatvault.dj', 'bbeatonportdj@gmail.com'];
     const isAdminEmail = adminEmails.includes(email);
-    const role = (count === 0 || isAdminEmail) ? 'admin' : 'user';
+
+    let role = 'user';
+    if (count === 0 || isAdminEmail) {
+      role = 'admin';
+    } else if (requestedRole === 'producer') {
+      role = 'producer';
+    }
 
     // Create user
     const user = await User.create({
@@ -109,7 +119,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const oauthLogin = async (req: Request, res: Response) => {
   try {
-    const { provider, email, display_name, oauth_id } = req.body;
+    const { provider, email, display_name, oauth_id, role: requestedRole } = req.body;
 
     if (!provider || !email || !oauth_id) {
       return res.status(400).json({ error: 'Provider, email, and oauth_id are required' });
@@ -134,7 +144,12 @@ export const oauthLogin = async (req: Request, res: Response) => {
         const count = await User.count();
         const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : ['admin@beatvault.dj', 'bbeatonportdj@gmail.com'];
         const isAdminEmail = adminEmails.includes(email);
-        const role = (count === 0 || isAdminEmail) ? 'admin' : 'user';
+        let role = 'user';
+        if (count === 0 || isAdminEmail) {
+          role = 'admin';
+        } else if (requestedRole === 'producer') {
+          role = 'producer';
+        }
 
         user = await User.create({
           email,
@@ -191,6 +206,47 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     const message = getErrorMessage(error);
     return res.status(500).json({ error: message || 'Server error fetching profile' });
+  }
+};
+
+export const updateUserRole = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+
+    const { userId, role } = req.body;
+    if (!userId || !role || !['user', 'producer', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Valid userId and role (user/producer/admin) required' });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.role = role;
+    await user.save();
+
+    return res.json({
+      message: 'User role updated successfully',
+      user: { id: user.id, email: user.email, display_name: user.display_name, role: user.role },
+    });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+};
+
+export const getUsers = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+
+    const users = await User.findAll({
+      attributes: ['id', 'email', 'display_name', 'role', 'created_at'],
+      order: [['created_at', 'DESC']],
+    });
+
+    return res.json(users);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
   }
 };
 

@@ -15,6 +15,10 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [signUpAsProducer, setSignUpAsProducer] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('signup') === 'producer';
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const { t } = useLanguage();
@@ -132,7 +136,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, signUpAsProducer ? 'producer' : undefined);
         if (error) throw error;
         setSignUpSuccess(true);
         showNotification(
@@ -261,19 +265,30 @@ const Auth = () => {
                   </div>
 
                   {isSignUp && (
-                    <div className="auth-input-group">
-                      <label>Confirm Password</label>
-                      <div className="auth-input-wrapper">
-                        <Lock size={16} className="auth-input-icon" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
-                          required
-                        />
+                    <>
+                      <div className="auth-input-group">
+                        <label>Confirm Password</label>
+                        <div className="auth-input-wrapper">
+                          <Lock size={16} className="auth-input-icon" />
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                          />
+                        </div>
                       </div>
-                    </div>
+                      <label className="auth-producer-checkbox" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '1rem', fontSize: '13px' }}>
+                        <input
+                          type="checkbox"
+                          checked={signUpAsProducer}
+                          onChange={(e) => setSignUpAsProducer(e.target.checked)}
+                          style={{ accentColor: 'var(--accent-color)' }}
+                        />
+                        <span>Sign up as <strong>Producer/Label</strong> — upload and manage your own tracks</span>
+                      </label>
+                    </>
                   )}
 
                   <button type="submit" disabled={loading} className="auth-submit-btn">

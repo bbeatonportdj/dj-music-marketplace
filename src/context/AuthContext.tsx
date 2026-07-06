@@ -14,9 +14,10 @@ interface AuthContextType {
   user: UserProfile | null;
   token: string | null;
   isAdmin: boolean;
+  isProducer: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, role?: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isProducer, setIsProducer] = useState(false);
 
   // Load user from JWT token on mount
   useEffect(() => {
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(data.user);
           setToken(savedToken);
           setIsAdmin(data.user.role === 'admin');
+          setIsProducer(data.user.role === 'producer');
         } else {
           // Token expired or invalid
           localStorage.removeItem('jwt_token');
@@ -84,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
+      setIsProducer(data.user.role === 'producer');
       return { error: null };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -91,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, role?: string) => {
     try {
       const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
@@ -99,7 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({
           email,
           password,
-          display_name: email.split('@')[0], // Default display name
+          display_name: email.split('@')[0],
+          ...(role && { role }),
         }),
       });
 
@@ -113,6 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
+      setIsProducer(data.user.role === 'producer');
       return { error: null };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -157,6 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     setIsAdmin(false);
+    setIsProducer(false);
   };
 
   const updateProfileName = async (displayName: string) => {
@@ -188,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut, updateProfileName }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, isProducer, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut, updateProfileName }}>
       {children}
     </AuthContext.Provider>
   );

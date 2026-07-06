@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 import Favorites from './pages/Favorites';
 import Admin from './pages/Admin';
+import ProducerDashboard from './pages/ProducerDashboard';
 import Orders from './pages/Orders';
 import Downloads from './pages/Downloads';
 import { AudioProvider } from './context/AudioContext';
@@ -48,6 +49,7 @@ function App() {
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/downloads" element={<Downloads />} />
                         <Route path="/admin" element={<Admin />} />
+                        <Route path="/producer" element={<ProducerDashboard />} />
                       </Routes>
                     </main>
                     <Footer />

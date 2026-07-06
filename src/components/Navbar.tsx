@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search, ShoppingCart, ShoppingBag, Disc, Heart,
-  User, LogOut, LayoutDashboard, Upload, ChevronDown, Menu, X
+  User, LogOut, LayoutDashboard, Upload, BarChart3, ChevronDown, Menu, X
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,7 +15,7 @@ const Navbar = () => {
   const { cart } = useCart();
   const { t } = useLanguage();
   const { favorites } = useFavorites();
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, isProducer, loading, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -150,25 +150,39 @@ const Navbar = () => {
                     )}
                   </Link>
 
-                  {isAdmin && (
+                  {(isProducer || isAdmin) && (
                     <>
                       <div className="dropdown-divider" />
-                      <Link
-                        to="/admin"
-                        className="dropdown-item admin-item"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <LayoutDashboard size={16} />
-                        Admin Dashboard
-                      </Link>
-                      <Link
-                        to="/admin?tab=upload"
-                        className="dropdown-item admin-item"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <Upload size={16} />
-                        Upload Track
-                      </Link>
+                      {isProducer && (
+                        <Link
+                          to="/producer"
+                          className="dropdown-item producer-item"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <BarChart3 size={16} />
+                          Producer Studio
+                        </Link>
+                      )}
+                      {isAdmin && (
+                        <>
+                          <Link
+                            to="/admin"
+                            className="dropdown-item admin-item"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <LayoutDashboard size={16} />
+                            Admin Dashboard
+                          </Link>
+                          <Link
+                            to="/admin?tab=upload"
+                            className="dropdown-item admin-item"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <Upload size={16} />
+                            Upload Track
+                          </Link>
+                        </>
+                      )}
                     </>
                   )}
 
@@ -236,6 +250,11 @@ const Navbar = () => {
                   <Link to="/orders" className="drawer-admin-link" onClick={() => setMobileMenuOpen(false)} style={{ color: 'white', marginTop: '10px' }}>
                     <ShoppingBag size={16} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'text-bottom' }} /> Orders
                   </Link>
+                  {isProducer && (
+                    <Link to="/producer" className="drawer-admin-link" onClick={() => setMobileMenuOpen(false)}>
+                      Producer Studio
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link to="/admin" className="drawer-admin-link" onClick={() => setMobileMenuOpen(false)}>
                       ⚡ Admin Dashboard

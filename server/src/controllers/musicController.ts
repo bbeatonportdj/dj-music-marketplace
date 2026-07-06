@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Track } from '../models/index.js';
 import { StorageService } from '../services/storageService.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 export const getTracks = async (req: Request, res: Response) => {
   try {
@@ -29,8 +30,24 @@ export const getTrackById = async (req: Request, res: Response) => {
   }
 };
 
-export const createTrack = async (req: Request, res: Response) => {
+export const getMyTracks = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    const tracks = await Track.findAll({
+      where: { uploaded_by: req.user.id },
+      order: [['created_at', 'DESC']],
+    });
+    return res.json(tracks);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: message || 'Server error fetching tracks' });
+  }
+};
+
+export const createTrack = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+
     const {
       title,
       artist,
@@ -82,6 +99,7 @@ export const createTrack = async (req: Request, res: Response) => {
       artwork_url: artworkUrl,
       is_new: is_new === 'true' || is_new === true,
       is_hot: is_hot === 'true' || is_hot === true,
+      uploaded_by: req.user.id,
     });
 
     return res.status(201).json(track);
@@ -92,8 +110,10 @@ export const createTrack = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTrack = async (req: Request, res: Response) => {
+export const updateTrack = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+
     const { id } = req.params;
     const {
       title,
@@ -112,6 +132,11 @@ export const updateTrack = async (req: Request, res: Response) => {
     const track = await Track.findByPk(id);
     if (!track) {
       return res.status(404).json({ error: 'Track not found' });
+    }
+
+    // Ownership check: admin can edit any track, producer can only edit own
+    if (req.user.role !== 'admin' && track.uploaded_by !== req.user.id) {
+      return res.status(403).json({ error: 'You can only edit your own tracks' });
     }
 
     // Update fields
@@ -149,13 +174,21 @@ export const updateTrack = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteTrack = async (req: Request, res: Response) => {
+export const deleteTrack = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+
     const { id } = req.params;
     const track = await Track.findByPk(id);
     if (!track) {
       return res.status(404).json({ error: 'Track not found' });
     }
+
+    // Ownership check: admin can delete any track, producer can only delete own
+    if (req.user.role !== 'admin' && track.uploaded_by !== req.user.id) {
+      return res.status(403).json({ error: 'You can only delete your own tracks' });
+    }
+
     await track.destroy();
     return res.json({ message: 'Track deleted successfully' });
   } catch (error: unknown) {

@@ -74,6 +74,11 @@ export class Track extends Model {
   declare artwork_url: string;
   declare is_new: boolean;
   declare is_hot: boolean;
+  declare uploaded_by: string | null;
+  declare plays: number;
+  declare energy: number;
+  declare popularity_rank: number;
+  declare version_detail: string;
 }
 Track.init(
   {
@@ -137,6 +142,26 @@ Track.init(
     is_hot: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    uploaded_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    plays: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    energy: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
+    popularity_rank: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    version_detail: {
+      type: DataTypes.TEXT,
+      defaultValue: '',
     },
   },
   {

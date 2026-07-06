@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, Mail, Shield, Save, Loader2, 
-  LogOut, ChevronRight, UserCircle,
+  LogOut, ChevronRight, UserCircle, BarChart3,
   ShoppingBag, Download, CheckCircle, Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +34,7 @@ interface Order {
 }
 
 const Profile = () => {
-  const { user, signOut, isAdmin, token, updateProfileName } = useAuth();
+  const { user, signOut, isAdmin, isProducer, token, updateProfileName } = useAuth();
   const { showNotification } = useNotifications();
   const navigate = useNavigate();
   
@@ -110,7 +110,8 @@ const Profile = () => {
         <div className="profile-header-info">
           <h1>{user.display_name || 'User'}</h1>
           <p>{email}</p>
-          {isAdmin && <span className="admin-badge">ADMIN</span>}
+          {isAdmin && <span className="admin-badge" style={{ background: 'rgba(234,179,8,0.15)', color: '#eab308', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>ADMIN</span>}
+          {isProducer && <span className="admin-badge" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>PRODUCER</span>}
         </div>
       </div>
 
@@ -132,6 +133,13 @@ const Profile = () => {
             <span>Order History</span>
           </button>
           
+          {isProducer && (
+            <button className="profile-nav-item" onClick={() => navigate('/producer')}>
+              <BarChart3 size={18} />
+              <span>Producer Studio</span>
+              <ChevronRight size={14} className="nav-arrow" />
+            </button>
+          )}
           {isAdmin && (
             <button className="profile-nav-item" onClick={() => navigate('/admin')}>
               <Shield size={18} />
@@ -186,6 +194,38 @@ const Profile = () => {
                   <span>Save Changes</span>
                 </button>
               </form>
+
+              <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color, #333)', paddingTop: '1.5rem' }}>
+                <h2>Account Role</h2>
+                <div style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '1rem', background: 'var(--card-bg, #1e1e1e)', borderRadius: '8px',
+                  marginTop: '1rem', flexWrap: 'wrap', gap: '1rem'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      {isAdmin ? 'Administrator' : isProducer ? 'Producer / Label' : 'Member'}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {isAdmin
+                        ? 'Full access to all features, user management, and site configuration.'
+                        : isProducer
+                          ? 'Upload and manage your own tracks. Access the Producer Studio.'
+                          : 'Browse, purchase, and download tracks. Upgrade to Producer to upload music.'}
+                    </div>
+                  </div>
+                  {!isProducer && !isAdmin && (
+                    <Link to="/auth?signup=producer" style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 16px', background: '#3b82f6', color: 'white',
+                      borderRadius: '8px', fontWeight: 'bold', fontSize: '13px',
+                      textDecoration: 'none', whiteSpace: 'nowrap'
+                    }}>
+                      <BarChart3 size={16} /> Upgrade to Producer
+                    </Link>
+                  )}
+                </div>
+              </div>
             </section>
           )}
 

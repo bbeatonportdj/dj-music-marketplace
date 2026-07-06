@@ -129,6 +129,15 @@
   color: white;
 }
 
+.dropdown-item.producer-item {
+  color: #3b82f6;
+}
+
+.dropdown-item.producer-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+}
+
 .dropdown-item.admin-item {
   color: var(--accent-color);
 }
