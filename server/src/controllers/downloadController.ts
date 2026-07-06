@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 import { Purchase, Track } from '../models/index.js';
+import { getDriveFileStream } from '../services/googleDriveService.js';
 import https from 'https';
 import http from 'http';
 
@@ -24,14 +25,33 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
     }
 
     const track = await Track.findByPk(trackId);
-    if (!track || !track.audio_url) {
-      return res.status(404).json({ error: 'Track file not found' });
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
     }
 
     purchase.set('download_count', (Number(purchase.get('download_count') || 0)) + 1);
     await purchase.save();
 
     const filename = `${track.title.replace(/[^a-zA-Z0-9]/g, '_')}_${track.artist.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
+
+    if (track.gdrive_file_id) {
+      try {
+        const { stream, mimeType, fileName, fileSize } = await getDriveFileStream(track.gdrive_file_id);
+        const safeName = fileName || filename;
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Length', fileSize);
+        stream.pipe(res);
+        return;
+      } catch (driveError: unknown) {
+        const msg = driveError instanceof Error ? driveError.message : String(driveError);
+        console.error('Google Drive stream failed, falling back to audio_url:', msg);
+      }
+    }
+
+    if (!track.audio_url) {
+      return res.status(404).json({ error: 'Track file not found' });
+    }
 
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'audio/mpeg');

@@ -75,6 +75,7 @@ export class Track extends Model {
   declare is_new: boolean;
   declare is_hot: boolean;
   declare uploaded_by: string | null;
+  declare gdrive_file_id: string | null;
   declare plays: number;
   declare energy: number;
   declare popularity_rank: number;
@@ -145,6 +146,10 @@ Track.init(
     },
     uploaded_by: {
       type: DataTypes.UUID,
+      allowNull: true,
+    },
+    gdrive_file_id: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     plays: {
