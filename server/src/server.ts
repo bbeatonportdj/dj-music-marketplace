@@ -16,6 +16,7 @@ import stripeRoutes from './routes/stripe.js';
 import downloadRoutes from './routes/download.js';
 import previewRoutes from './routes/preview.js';
 import prepareRoutes from './routes/prepare.js';
+import adminRoutes from './routes/admin.js';
 
 // Import Models for Sync
 import { Track } from './models/index.js';
@@ -78,6 +79,7 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/downloads', downloadRoutes);
 app.use('/api/preview', previewRoutes);
 app.use('/api/prepare', prepareRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root
 app.get('/', (_req, res) => {
