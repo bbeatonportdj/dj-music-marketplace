@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode, useCallback } from
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import '../styles/notifications.css';
 
+/* eslint-disable react-refresh/only-export-components */
 type NotificationType = 'success' | 'error' | 'info';
 
 interface Notification {

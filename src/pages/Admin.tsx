@@ -5,8 +5,9 @@ import {
   LayoutDashboard, RefreshCw, Save, X, ShieldOff, ChevronRight,
   AlertTriangle, CheckCircle, Play, Database, ShoppingBag, DollarSign
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../lib/apiBase';
 import { useNotifications } from '../context/NotificationContext';
 import '../styles/admin-dashboard.css';
 
@@ -82,20 +83,31 @@ const Admin = () => {
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState<string | null>(null);
+  interface OrderRecord {
+    id: string;
+    status: string;
+    total_amount?: number;
+    created_at?: string;
+    email?: string;
+    payment_method?: string;
+    promptpay_ref?: string | null;
+  }
+  const [ordersTyped, setOrdersTyped] = useState<OrderRecord[]>([]);
 
   const fetchTracks = useCallback(async () => {
     setTracksLoading(true);
     try {
-      const res = await fetch('/api/music');
+      const res = await fetch(apiUrl('/api/music'));
       if (res.ok) {
         const data = await res.json();
-        setTracks(data);
+        setTracks(data as Track[]);
       }
-    } catch (err) {
-      console.error('Failed to fetch tracks:', err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Failed to fetch tracks:', message);
     } finally {
       setTracksLoading(false);
     }
@@ -104,14 +116,18 @@ const Admin = () => {
   const fetchOrders = useCallback(async () => {
     setOrdersLoading(true);
     try {
-      const { data, error } = await supabase
+      const client = getSupabaseClient();
+      const { data, error } = await client
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setOrders(data || []);
-    } catch (err: any) {
-      console.error('Failed to fetch orders:', err);
+      const normalized = (data || []) as OrderRecord[];
+      setOrders(normalized);
+      setOrdersTyped(normalized);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Failed to fetch orders:', message);
     } finally {
       setOrdersLoading(false);
     }
@@ -119,8 +135,10 @@ const Admin = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchTracks();
-      fetchOrders();
+      Promise.resolve().then(() => {
+        fetchTracks();
+        fetchOrders();
+      });
     }
   }, [isAdmin, fetchTracks, fetchOrders]);
 
@@ -191,7 +209,7 @@ const Admin = () => {
         dataToSend.append('artworkFile', artworkFile);
       }
 
-      const res = await fetch('/api/music', {
+      const res = await fetch(apiUrl('/api/music'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -211,8 +229,9 @@ const Admin = () => {
       setAudioFile(null);
       setArtworkFile(null);
       fetchTracks();
-    } catch (err: any) {
-      setUploadStatus({ type: 'error', message: err.message || 'Upload failed.' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setUploadStatus({ type: 'error', message: message || 'Upload failed.' });
     } finally {
       setUploadLoading(false);
     }
@@ -222,7 +241,7 @@ const Admin = () => {
   const handleDelete = async (id: string) => {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/music/${id}`, {
+      const res = await fetch(apiUrl(`/api/music/${id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -236,8 +255,9 @@ const Admin = () => {
 
       showNotification('Track deleted.', 'success');
       setTracks(prev => prev.filter(t => t.id !== id));
-    } catch (err: any) {
-      showNotification('Delete failed: ' + err.message, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification('Delete failed: ' + message, 'error');
     } finally {
       setDeleteConfirmId(null);
       setDeleting(false);
@@ -249,7 +269,7 @@ const Admin = () => {
     if (!editingTrack) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/music/${editingTrack.id}`, {
+      const res = await fetch(apiUrl(`/api/music/${editingTrack.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -267,8 +287,9 @@ const Admin = () => {
       showNotification('Track updated!', 'success');
       setTracks(prev => prev.map(t => t.id === editingTrack.id ? result : t));
       setEditingTrack(null);
-    } catch (err: any) {
-      showNotification('Update failed: ' + err.message, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification('Update failed: ' + message, 'error');
     } finally {
       setSaving(false);
     }
@@ -278,15 +299,17 @@ const Admin = () => {
   const handleConfirmPayment = async (orderId: string) => {
     setConfirmingOrder(orderId);
     try {
-      const { error } = await supabase
+      const client = getSupabaseClient();
+      const { error } = await client
         .from('orders')
         .update({ status: 'paid' })
         .eq('id', orderId);
       if (error) throw error;
       showNotification('Payment confirmed successfully', 'success');
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'paid' } : o));
-    } catch (err: any) {
-      showNotification('Failed to confirm payment: ' + err.message, 'error');
+      setOrdersTyped(prev => prev.map(o => o.id === orderId ? { ...o, status: 'paid' } : o));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification('Failed to confirm payment: ' + message, 'error');
     } finally {
       setConfirmingOrder(null);
     }
@@ -324,9 +347,9 @@ const Admin = () => {
           <button className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
             <ShoppingBag size={18} />
             Orders
-            {orders.filter(o => o.status === 'pending').length > 0 && (
+            {ordersTyped.filter(o => o.status === 'pending').length > 0 && (
               <span className="admin-badge-count" style={{ background: '#eab308' }}>
-                {orders.filter(o => o.status === 'pending').length}
+                {ordersTyped.filter(o => o.status === 'pending').length}
               </span>
             )}
           </button>
@@ -359,12 +382,12 @@ const Admin = () => {
               </div>
               <div className="admin-stat-card">
                 <div className="stat-icon stat-icon-green"><DollarSign size={22} /></div>
-                <div className="stat-value">${orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + Number(o.total_amount), 0).toFixed(2)}</div>
+                <div className="stat-value">${ordersTyped.filter(o => o.status === 'paid').reduce((sum, o) => sum + Number(o.total_amount ?? 0), 0).toFixed(2)}</div>
                 <div className="stat-label">Total Revenue</div>
               </div>
               <div className="admin-stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308' }}><ShoppingBag size={22} /></div>
-                <div className="stat-value">{orders.filter(o => new Date(o.created_at).getMonth() === new Date().getMonth()).length}</div>
+                <div className="stat-value">{ordersTyped.filter(o => new Date(o.created_at ?? new Date().toISOString()).getMonth() === new Date().getMonth()).length}</div>
                 <div className="stat-label">Orders This Month</div>
               </div>
             </div>
@@ -654,7 +677,7 @@ const Admin = () => {
                       <tr key={order.id} className="admin-track-row">
                         <td><span className="admin-meta">{order.id.split('-')[0]}</span></td>
                         <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-                          {new Date(order.created_at).toLocaleDateString()}
+                          {new Date(order.created_at ?? new Date().toISOString()).toLocaleDateString()}
                         </td>
                         <td>{order.email || 'Unknown'}</td>
                         <td><strong>${order.total_amount}</strong></td>

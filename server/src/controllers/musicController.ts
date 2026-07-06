@@ -8,9 +8,10 @@ export const getTracks = async (req: Request, res: Response) => {
       order: [['created_at', 'DESC']],
     });
     return res.json(tracks);
-  } catch (error: any) {
-    console.error('Error fetching tracks:', error);
-    return res.status(500).json({ error: error.message || 'Server error fetching tracks' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error fetching tracks:', message);
+    return res.status(500).json({ error: message || 'Server error fetching tracks' });
   }
 };
 
@@ -22,8 +23,9 @@ export const getTrackById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Track not found' });
     }
     return res.json(track);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message || 'Server error fetching track' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: message || 'Server error fetching track' });
   }
 };
 
@@ -83,9 +85,10 @@ export const createTrack = async (req: Request, res: Response) => {
     });
 
     return res.status(201).json(track);
-  } catch (error: any) {
-    console.error('Error creating track:', error);
-    return res.status(500).json({ error: error.message || 'Server error creating track' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error creating track:', message);
+    return res.status(500).json({ error: message || 'Server error creating track' });
   }
 };
 
@@ -139,9 +142,10 @@ export const updateTrack = async (req: Request, res: Response) => {
 
     await track.save();
     return res.json(track);
-  } catch (error: any) {
-    console.error('Error updating track:', error);
-    return res.status(500).json({ error: error.message || 'Server error updating track' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error updating track:', message);
+    return res.status(500).json({ error: message || 'Server error updating track' });
   }
 };
 
@@ -154,8 +158,9 @@ export const deleteTrack = async (req: Request, res: Response) => {
     }
     await track.destroy();
     return res.json({ message: 'Track deleted successfully' });
-  } catch (error: any) {
-    console.error('Error deleting track:', error);
-    return res.status(500).json({ error: error.message || 'Server error deleting track' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error deleting track:', message);
+    return res.status(500).json({ error: message || 'Server error deleting track' });
   }
 };

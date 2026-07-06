@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
 
@@ -17,13 +18,15 @@ interface FavoritesContextType {
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('dj_favorites');
+      return saved ? JSON.parse(saved) as FavoriteItem[] : [];
+    } catch {
+      return [];
+    }
+  });
   const { showNotification } = useNotifications();
-
-  useEffect(() => {
-    const saved = localStorage.getItem('dj_favorites');
-    if (saved) setFavorites(JSON.parse(saved));
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('dj_favorites', JSON.stringify(favorites));

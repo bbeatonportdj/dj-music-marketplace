@@ -33,20 +33,21 @@ export class EmailService {
           },
         });
         console.log(`📧 Ethereal test SMTP configured. User: ${testAccount.user}`);
-      } catch (err) {
-        console.error('❌ Failed to configure test SMTP. Logging emails to console only.', err);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('❌ Failed to configure test SMTP. Logging emails to console only.', message);
         // Fallback dummy
         this.transporter = {
-          sendMail: async (mailOptions: any) => {
+          sendMail: async (mailOptions: Record<string, unknown>) => {
             console.log('\n=== [CONSOLE EMAIL DUMP] ===');
             console.log(`From: ${mailOptions.from}`);
             console.log(`To: ${mailOptions.to}`);
             console.log(`Subject: ${mailOptions.subject}`);
             console.log(`Body (HTML):\n${mailOptions.html}`);
             console.log('============================\n');
-            return { messageId: 'console-dummy-id' };
+            return { messageId: 'console-dummy-id' } as Record<string, unknown>;
           },
-        } as any;
+        } as unknown as nodemailer.Transporter;
       }
     }
 
@@ -85,27 +86,35 @@ export class EmailService {
         console.log(`✉️ Test email URL: ${nodemailer.getTestMessageUrl(info)}`);
       }
       console.log(`✉️ Signup confirmation email sent to: ${toEmail}`);
-    } catch (error) {
-      console.error('❌ Failed to send welcome email:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Failed to send welcome email:', message);
     }
   }
 
   /**
    * Send Order Confirmation with download link
    */
-  static async sendDownloadLinksEmail(toEmail: string, displayName: string, orderId: string, tracks: any[]) {
+  static async sendDownloadLinksEmail(toEmail: string, displayName: string, orderId: string, tracks: Record<string, unknown>[]) {
     const transporter = await this.getTransporter();
     const from = process.env.SMTP_FROM || '"RunMusic Store" <noreply@beatvault.dj>';
 
     let tracksHtml = '<ul style="list-style-type: none; padding: 0;">';
-    tracks.forEach((track) => {
+    tracks.forEach((trackRaw) => {
+      const track = trackRaw as Record<string, unknown>;
+      const artwork = String(track.artwork_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop');
+      const title = String(track.title || 'Unknown Title');
+      const artist = String(track.artist || 'Unknown Artist');
+      const version = String(track.version || 'Original Edit');
+      const audioUrl = String(track.audio_url || '#');
+
       tracksHtml += `
         <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
-          <img src="${track.artwork_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}" width="50" height="50" style="border-radius: 4px; margin-right: 15px; object-fit: crop;" />
+          <img src="${artwork}" width="50" height="50" style="border-radius: 4px; margin-right: 15px; object-fit: crop;" />
           <div>
-            <strong style="font-size: 16px;">${track.title}</strong><br>
-            <span style="color: #666; font-size: 14px;">${track.artist} (${track.version || 'Original Edit'})</span><br>
-            <a href="${track.audio_url}" download style="color: #6366f1; font-weight: bold; text-decoration: underline; font-size: 14px;">Download Track Link</a>
+            <strong style="font-size: 16px;">${title}</strong><br>
+            <span style="color: #666; font-size: 14px;">${artist} (${version})</span><br>
+            <a href="${audioUrl}" download style="color: #6366f1; font-weight: bold; text-decoration: underline; font-size: 14px;">Download Track Link</a>
           </div>
         </li>
       `;
@@ -141,8 +150,9 @@ export class EmailService {
         console.log(`✉️ Test email URL: ${nodemailer.getTestMessageUrl(info)}`);
       }
       console.log(`✉️ Order verification email sent to: ${toEmail}`);
-    } catch (error) {
-      console.error('❌ Failed to send download links email:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Failed to send download links email:', message);
     }
   }
 
@@ -173,8 +183,9 @@ export class EmailService {
         html,
       });
       console.log(`✉️ Admin order notification sent for Order: ${orderId}`);
-    } catch (error) {
-      console.error('❌ Failed to send admin order notification:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Failed to send admin order notification:', message);
     }
   }
 }

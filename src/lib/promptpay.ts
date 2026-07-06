@@ -6,7 +6,7 @@ import generatePayload from 'promptpay-qr';
 import QRCode from 'qrcode';
 
 // PromptPay ID — เบอร์โทรหรือเลขบัตรประชาชน
-const PROMPTPAY_ID = import.meta.env.VITE_PROMPTPAY_ID || '0000000000';
+export const PROMPTPAY_ID = import.meta.env.VITE_PROMPTPAY_ID || '0000000000';
 
 /**
  * สร้าง PromptPay payload string

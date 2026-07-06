@@ -7,9 +7,9 @@ headers = []
 
 [build]
 publish = "/Users/aj/dj-music-marketplace/dist"
-publishOrigin = "ui"
-commandOrigin = "ui"
-command = "npm run build"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "node -e \"const fs = require('fs'); let r = fs.readFileSync('public/_redirects', 'utf8'); r = r.replace(/https:\\/\\/BACKEND_API_URL_PLACEHOLDER/g, process.env.BACKEND_API_URL || 'http://localhost:5001'); fs.writeFileSync('public/_redirects', r);\" && npm run build"
 
 [build.environment]
 
@@ -24,6 +24,30 @@ command = "npm run build"
 [build.processing.js]
 
 [build.services]
+
+[[redirects]]
+from = "/api/*"
+to = "http://localhost:5001/api/:splat"
+status = 200.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "/uploads/*"
+to = "http://localhost:5001/uploads/:splat"
+status = 200.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
 
 [[redirects]]
 from = "/*"

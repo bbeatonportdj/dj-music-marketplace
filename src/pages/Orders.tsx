@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
+import { apiUrl } from '../lib/apiBase';
 import { Download, Loader2, Clock, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
 import '../styles/orders.css';
 
@@ -39,7 +40,8 @@ const Orders = () => {
 
     const fetchOrders = async () => {
       try {
-        const { data, error } = await supabase
+        const client = getSupabaseClient();
+        const { data, error } = await client
           .from('orders')
           .select(`
             id,
@@ -61,10 +63,22 @@ const Orders = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setOrders(data as any);
-      } catch (error: any) {
-        console.error('Error fetching orders:', error);
-        showNotification('Failed to load orders', 'error');
+
+        const normalized = ((data || []) as Array<Record<string, unknown>>).map((order) => ({
+          ...(order as Record<string, unknown>),
+          order_items: ((order.order_items as Array<Record<string, unknown>> | undefined) || []).map((item) => ({
+            ...(item as Record<string, unknown>),
+            track: Array.isArray(item.track)
+              ? (item.track as Array<Record<string, unknown>>)[0] ?? null
+              : (item.track as Record<string, unknown> | null) ?? null,
+          }))
+        })) as Order[];
+
+        setOrders(normalized);
+      } catch (error: unknown) {
+          console.error('Error fetching orders:', error);
+          const message = error instanceof Error ? error.message : String(error);
+          showNotification('Failed to load orders: ' + message, 'error');
       } finally {
         setLoading(false);
       }
@@ -93,7 +107,7 @@ const Orders = () => {
       const token = localStorage.getItem('jwt_token');
       if (!token) throw new Error('Not authenticated');
 
-      const res = await fetch(`/api/downloads/${trackId}`, {
+      const res = await fetch(apiUrl(`/api/downloads/${trackId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -114,9 +128,10 @@ const Orders = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showNotification(err.message, 'error');
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
     } finally {
       setDownloading(null);
     }

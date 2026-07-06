@@ -105,9 +105,10 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
       url: session.url,
       tracks: tracks.map((t) => ({ id: t.id, title: t.title, artist: t.artist, price: t.price })),
     });
-  } catch (error: any) {
-    console.error('Error creating Stripe checkout session:', error);
-    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error creating Stripe checkout session:', message);
+    return res.status(500).json({ error: message || 'Failed to create checkout session' });
   }
 };
 
@@ -124,9 +125,10 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
   try {
     event = getStripe().webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err: any) {
-    console.error('❌ Stripe webhook signature verification failed:', err.message);
-    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('❌ Stripe webhook signature verification failed:', message);
+    return res.status(400).json({ error: `Webhook Error: ${message}` });
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -161,8 +163,10 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       order.status = 'paid';
       await order.save();
 
-      const tracks = order.items.map((item: any) => item.track).filter(Boolean);
-      const purchases = tracks.map((track: any) => ({
+      const tracks = order.items
+        .map((item) => (item as Record<string, unknown>).track)
+        .filter(Boolean) as unknown as Track[];
+      const purchases = tracks.map((track) => ({
         user_id: order.user_id,
         track_id: track.id,
         purchased_at: new Date(),
@@ -178,8 +182,9 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       );
 
       console.log(`✅ Order ${orderId} completed via Stripe webhook`);
-    } catch (err) {
-      console.error(`❌ Error processing order ${orderId}:`, err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`❌ Error processing order ${orderId}:`, message);
     }
   }
 

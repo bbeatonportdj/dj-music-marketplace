@@ -41,22 +41,24 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
 
     client.get(track.audio_url, (audioRes) => {
       if (audioRes.statusCode && audioRes.statusCode >= 300 && audioRes.statusCode < 400 && audioRes.headers.location) {
-        const redirectUrl = new URL(audioRes.headers.location);
-        const redirectClient = redirectUrl.protocol === 'https:' ? https : http;
-        redirectClient.get(audioRes.headers.location, (redirectRes) => {
+        const location = String(audioRes.headers.location);
+        const redirectClient = location.startsWith('https') ? https : http;
+        redirectClient.get(location, (redirectRes) => {
           redirectRes.pipe(res);
         });
         return;
       }
       audioRes.pipe(res);
     }).on('error', (err) => {
-      console.error('Download stream error:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Download stream error:', msg);
       res.status(500).json({ error: 'Failed to stream file' });
     });
 
-  } catch (error: any) {
-    console.error('Download error:', error);
-    return res.status(500).json({ error: error.message || 'Download failed' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Download error:', message);
+    return res.status(500).json({ error: message || 'Download failed' });
   }
 };
 
@@ -87,8 +89,9 @@ export const getDownloadInfo = async (req: AuthRequest, res: Response) => {
           download_count: p.get('download_count') || 0,
         }))
     );
-  } catch (error: any) {
-    console.error('Error fetching downloads:', error);
-    return res.status(500).json({ error: error.message || 'Failed to fetch downloads' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error fetching downloads:', message);
+    return res.status(500).json({ error: message || 'Failed to fetch downloads' });
   }
 };

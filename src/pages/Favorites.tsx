@@ -33,7 +33,7 @@ const Favorites = () => {
                 <button 
                   className="play-btn-circle" 
                   onClick={() => playTrack({
-                    id: item.id as any,
+                    id: item.id,
                     title: item.title,
                     artist: item.artist,
                     artwork: item.artwork,

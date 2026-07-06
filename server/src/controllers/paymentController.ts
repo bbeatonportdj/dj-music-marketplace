@@ -66,10 +66,10 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
           headers: {
             'x-authorization': slipokKey,
           },
-          body: formData as any,
+          body: formData,
         });
 
-        const slipResult: any = await response.json();
+        const slipResult = await response.json();
 
         if (slipResult.success) {
           const amount = slipResult.data.amount;
@@ -90,7 +90,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
         } else {
           return res.status(400).json({ error: 'Slip verification failed: ' + (slipResult.message || 'Invalid transfer slip') });
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('❌ SlipOK verification request failed:', err);
         return res.status(500).json({ error: 'Failed to contact payment verification service' });
       }
@@ -107,8 +107,10 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     }
 
     // Register purchases for download access
-    const tracks = order.items.map((item: any) => item.track).filter(Boolean);
-    const purchases = tracks.map((track: any) => ({
+    const tracks = order.items
+      .map((item) => (item as Record<string, unknown>).track)
+      .filter(Boolean) as unknown as Track[];
+    const purchases = tracks.map((track) => ({
       user_id: order.user_id,
       track_id: track.id,
       purchased_at: new Date(),
@@ -123,9 +125,10 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       message: 'Payment verified and completed successfully',
       order,
     });
-  } catch (error: any) {
-    console.error('Error verifying payment:', error);
-    return res.status(500).json({ error: error.message || 'Server error during payment verification' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error verifying payment:', message);
+    return res.status(500).json({ error: message || 'Server error during payment verification' });
   }
 };
 
@@ -182,8 +185,10 @@ export const handleWebhook = async (req: Request, res: Response) => {
     await order.save();
 
     // Register purchases
-    const tracks = order.items.map((item: any) => item.track).filter(Boolean);
-    const purchases = tracks.map((track: any) => ({
+    const tracks = order.items
+      .map((item) => (item as Record<string, unknown>).track)
+      .filter(Boolean) as unknown as Track[];
+    const purchases = tracks.map((track) => ({
       user_id: order.user_id,
       track_id: track.id,
       purchased_at: new Date(),
@@ -195,8 +200,9 @@ export const handleWebhook = async (req: Request, res: Response) => {
     EmailService.sendDownloadLinksEmail(order.email, user?.display_name || 'Customer', order.id, tracks);
 
     return res.json({ message: 'Order updated via webhook successfully' });
-  } catch (error: any) {
-    console.error('Error processing webhook:', error);
-    return res.status(500).json({ error: error.message || 'Server error processing webhook' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error processing webhook:', message);
+    return res.status(500).json({ error: message || 'Server error processing webhook' });
   }
 };

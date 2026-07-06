@@ -7,6 +7,8 @@ import { AuthRequest } from '../middleware/auth.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'runmusic_jwt_secret_token_key';
 
+const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, display_name } = req.body;
@@ -58,9 +60,10 @@ export const register = async (req: Request, res: Response) => {
         role: user.role,
       },
     });
-  } catch (error: any) {
-    console.error('Error during registration:', error);
-    return res.status(500).json({ error: error.message || 'Server error during registration' });
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    console.error('Error during registration:', message);
+    return res.status(500).json({ error: message || 'Server error during registration' });
   }
 };
 
@@ -97,9 +100,10 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
       },
     });
-  } catch (error: any) {
-    console.error('Error during login:', error);
-    return res.status(500).json({ error: error.message || 'Server error during login' });
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    console.error('Error during login:', message);
+    return res.status(500).json({ error: message || 'Server error during login' });
   }
 };
 
@@ -160,9 +164,10 @@ export const oauthLogin = async (req: Request, res: Response) => {
         role: user.role,
       },
     });
-  } catch (error: any) {
-    console.error('Error during OAuth login:', error);
-    return res.status(500).json({ error: error.message || 'Server error during OAuth login' });
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    console.error('Error during OAuth login:', message);
+    return res.status(500).json({ error: message || 'Server error during OAuth login' });
   }
 };
 
@@ -183,8 +188,9 @@ export const getMe = async (req: AuthRequest, res: Response) => {
         role: user.role,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message || 'Server error fetching profile' });
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    return res.status(500).json({ error: message || 'Server error fetching profile' });
   }
 };
 
@@ -215,7 +221,8 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         role: user.role,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message || 'Server error updating profile' });
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    return res.status(500).json({ error: message || 'Server error updating profile' });
   }
 };

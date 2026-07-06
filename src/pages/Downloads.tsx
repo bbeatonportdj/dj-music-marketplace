@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Download, Loader2, Music } from 'lucide-react';
 import '../styles/orders.css';
+import { apiUrl } from '../lib/apiBase';
 
 interface Track {
   id: string;
@@ -31,7 +32,7 @@ const Downloads = () => {
 
     const fetchDownloads = async () => {
       try {
-        const res = await fetch('/api/downloads', {
+        const res = await fetch(apiUrl('/api/downloads'), {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -39,10 +40,11 @@ const Downloads = () => {
 
         if (!res.ok) throw new Error('Failed to fetch downloads');
         const data = await res.json();
-        setTracks(data);
-      } catch (error: any) {
+        setTracks(data as Track[]);
+      } catch (error: unknown) {
         console.error('Error fetching downloads:', error);
-        showNotification('Failed to load downloads', 'error');
+        const message = error instanceof Error ? error.message : String(error);
+        showNotification('Failed to load downloads: ' + message, 'error');
       } finally {
         setLoading(false);
       }
@@ -54,7 +56,7 @@ const Downloads = () => {
   const handleDownload = async (trackId: string, trackTitle: string) => {
     setDownloading(trackId);
     try {
-      const res = await fetch(`/api/downloads/${trackId}`, {
+      const res = await fetch(apiUrl(`/api/downloads/${trackId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -75,9 +77,10 @@ const Downloads = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       showNotification(`Downloading "${trackTitle}"`, 'success');
-    } catch (err: any) {
-      console.error(err);
-      showNotification(err.message, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(message);
+      showNotification(message, 'error');
     } finally {
       setDownloading(null);
     }

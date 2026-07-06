@@ -4,6 +4,8 @@ import { Disc, Eye, EyeOff, Loader2, ArrowRight, Mail, Lock, AlertCircle, CheckC
 import { useLanguage } from '../context/LanguageContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import { apiUrl } from '../lib/apiBase';
 import '../styles/auth.css';
 
 const Auth = () => {
@@ -27,11 +29,73 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Handle OAuth redirect from Supabase: exchange Supabase user for server JWT
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isOauth = params.get('oauth') === '1';
+    const provider = params.get('provider');
+    if (!isOauth || !provider) return;
+
+    (async () => {
+      if (!supabase) {
+        showNotification('OAuth is not configured on this client.', 'error');
+        return;
+      }
+
+      try {
+        // supabase v2: getSession, fallback to session()
+        let userObj: unknown = null;
+        const sb = supabase as unknown as Record<string, unknown> | null;
+        const authObj = sb?.['auth'] as Record<string, unknown> | undefined;
+        if (authObj && typeof authObj['getSession'] === 'function') {
+          const resp = await (authObj['getSession'] as unknown as () => Promise<unknown>)();
+          const respObj = resp as Record<string, unknown> | undefined;
+          const data = respObj?.['data'] as Record<string, unknown> | undefined;
+          const session = data?.['session'] as Record<string, unknown> | undefined;
+          userObj = session?.['user'] ?? null;
+        } else if (authObj && typeof authObj['session'] === 'function') {
+          const sess = (authObj['session'] as unknown as () => unknown)();
+          const session = sess as Record<string, unknown> | undefined;
+          userObj = session?.['user'] ?? null;
+        }
+
+        if (!userObj || typeof userObj !== 'object') {
+          showNotification('OAuth session not found. Try signing in again.', 'error');
+          return;
+        }
+
+        const u = userObj as Record<string, unknown>;
+        const oauth_id = typeof u.id === 'string' ? u.id : undefined;
+        const email = typeof u.email === 'string' ? u.email : undefined;
+        const meta = u.user_metadata as Record<string, unknown> | undefined;
+        const display_name = meta && (typeof meta.full_name === 'string' ? meta.full_name : (typeof meta.name === 'string' ? meta.name : undefined)) || (email ? email.split('@')[0] : undefined);
+
+        const res = await fetch(apiUrl('/api/auth/oauth'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider, email, display_name, oauth_id }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'OAuth exchange failed');
+        }
+
+        localStorage.setItem('jwt_token', data.token);
+        // Force reload to let AuthProvider pick up the token and load user
+        window.location.href = '/browse';
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        showNotification(msg || 'OAuth flow failed', 'error');
+      }
+    })();
+  }, [showNotification]);
+
   const handleGoogleLogin = async () => {
     setLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
-      showNotification(error.message || 'Google login failed', 'error');
+      showNotification(error || 'Google login failed', 'error');
       setLoading(false);
     }
   };
@@ -40,7 +104,7 @@ const Auth = () => {
     setLoading(true);
     const { error } = await signInWithFacebook();
     if (error) {
-      showNotification(error.message || 'Facebook login failed', 'error');
+      showNotification(error || 'Facebook login failed', 'error');
       setLoading(false);
     }
   };
@@ -84,8 +148,8 @@ const Auth = () => {
         );
         navigate('/browse');
       }
-    } catch (error: any) {
-      const msg = error?.message || 'Unknown error';
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error || 'Unknown error');
       setErrorMsg(msg);
       showNotification(msg, 'error');
     } finally {

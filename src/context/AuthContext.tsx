@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
+import { apiUrl } from '../lib/apiBase';
 
+/* eslint-disable react-refresh/only-export-components */
 export interface UserProfile {
   id: string;
   email: string;
@@ -13,12 +15,12 @@ interface AuthContextType {
   token: string | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
-  signInWithFacebook: () => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  updateProfileName: (displayName: string) => Promise<{ error: any }>;
+  updateProfileName: (displayName: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const res = await fetch('/api/auth/me', {
+        const res = await fetch(apiUrl('/api/auth/me'), {
           headers: {
             'Authorization': `Bearer ${savedToken}`,
           },
@@ -66,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -83,14 +85,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
       return { error: null };
-    } catch (err: any) {
-      return { error: err };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message };
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,36 +114,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
       return { error: null };
-    } catch (err: any) {
-      return { error: err };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message };
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const client = getSupabaseClient();
+      const { error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/browse'
+          redirectTo: window.location.origin + '/auth?oauth=1&provider=google'
         }
       });
-      return { error };
-    } catch (err: any) {
-      return { error: err };
+      return { error: error ? String(error) : null };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message };
     }
   };
 
   const signInWithFacebook = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const client = getSupabaseClient();
+      const { error } = await client.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: window.location.origin + '/browse'
+          redirectTo: window.location.origin + '/auth?oauth=1&provider=facebook'
         }
       });
-      return { error };
-    } catch (err: any) {
-      return { error: err };
+      return { error: error ? String(error) : null };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message };
     }
   };
 
@@ -156,7 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const savedToken = localStorage.getItem('jwt_token');
       if (!savedToken) throw new Error('Not authenticated');
 
-      const res = await fetch('/api/auth/profile', {
+      const res = await fetch(apiUrl('/api/auth/profile'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -173,8 +181,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       setUser(data.user);
       return { error: null };
-    } catch (err: any) {
-      return { error: err };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { error: message };
     }
   };
 

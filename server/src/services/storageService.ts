@@ -56,8 +56,9 @@ export class StorageService {
         await upload.done();
         const region = process.env.AWS_REGION || 'us-east-1';
         return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
-      } catch (err) {
-        console.error('❌ AWS S3 Upload failed, falling back to local storage:', err);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('❌ AWS S3 Upload failed, falling back to local storage:', message);
       }
     }
 
@@ -71,7 +72,7 @@ export class StorageService {
       try {
         const { Storage } = await import('@google-cloud/storage');
         
-        const gcsOptions: any = {
+        const gcsOptions: Record<string, unknown> = {
           projectId: process.env.GCS_PROJECT_ID,
         };
         if (process.env.GCS_KEY_FILE) {
@@ -92,8 +93,9 @@ export class StorageService {
         });
         
         return `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${folder}/${fileName}`;
-      } catch (err) {
-        console.error('❌ GCS Upload failed, falling back to local storage:', err);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('❌ GCS Upload failed, falling back to local storage:', message);
       }
     }
 

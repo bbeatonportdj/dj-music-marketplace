@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { apiUrl } from '../lib/apiBase';
 import '../styles/profile.css';
 
 interface OrderItem {
@@ -39,16 +40,14 @@ const Profile = () => {
   
   const [activeTab, setActiveTab] = useState<'info' | 'orders'>('info');
   const [loading, setLoading] = useState(false);
-  const [displayName, setDisplayName] = useState('');
+  const [displayName, setDisplayName] = useState(() => user?.display_name || '');
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const email = user?.email || '';
 
   // Initialize displayName when user is loaded
   useEffect(() => {
-    if (user) {
-      setDisplayName(user.display_name || '');
-    } else {
+    if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
@@ -59,7 +58,7 @@ const Profile = () => {
       const fetchOrders = async () => {
         setOrdersLoading(true);
         try {
-          const res = await fetch('/api/orders', {
+          const res = await fetch(apiUrl('/api/orders'), {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -89,7 +88,7 @@ const Profile = () => {
     setLoading(false);
     
     if (error) {
-      showNotification(error.message || 'Failed to update profile', 'error');
+      showNotification(error || 'Failed to update profile', 'error');
     } else {
       showNotification('Profile updated successfully!', 'success');
     }
@@ -314,7 +313,7 @@ const Profile = () => {
                                   title="Download MP3"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    fetch(`/api/downloads/${item.track!.id}`, {
+                                    fetch(apiUrl(`/api/downloads/${item.track!.id}`), {
                                       headers: {
                                         'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
                                       },

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
 
@@ -22,14 +23,15 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<Pack[]>([]);
+  const [cart, setCart] = useState<Pack[]>(() => {
+    try {
+      const saved = localStorage.getItem('dj_cart');
+      return saved ? JSON.parse(saved) as Pack[] : [];
+    } catch {
+      return [];
+    }
+  });
   const { showNotification } = useNotifications();
-
-  // Load cart from localStorage on init
-  useEffect(() => {
-    const savedCart = localStorage.getItem('dj_cart');
-    if (savedCart) setCart(JSON.parse(savedCart));
-  }, []);
 
   // Save cart to localStorage on change
   useEffect(() => {

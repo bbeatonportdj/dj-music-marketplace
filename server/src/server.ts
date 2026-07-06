@@ -88,11 +88,14 @@ app.get('/health', (_req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled server error:', err);
-  const status = err.status || err.statusCode || 500;
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const e = (err && typeof err === 'object') ? err as Record<string, unknown> : {};
+  const status = (e.status as number) || (e.statusCode as number) || 500;
+  const message = (e && 'message' in e) ? String((e as Record<string, unknown>).message) : String(err);
+  console.error('Unhandled server error:', message);
+  void _next;
   res.status(status).json({
-    error: err.message || 'Internal Server Error',
+    error: message || 'Internal Server Error',
   });
 });
 

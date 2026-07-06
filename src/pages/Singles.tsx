@@ -60,7 +60,7 @@ const Singles = () => {
     loadTracks();
   }, []);
 
-  const handlePlay = (track: any) => {
+  const handlePlay = (track: Track) => {
     playTrack({
       id: track.id,
       title: track.title,
@@ -267,7 +267,7 @@ const Singles = () => {
                             </button>
                             <button 
                               className={`cart-btn-arsenal ${isInCart(track.id) ? 'added' : ''}`}
-                              onClick={() => addToCart(track as any)}
+                              onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
                             >
                               {isInCart(track.id) ? <Check size={14} /> : (is_free ? <Download size={14} /> : <span>${track.price}</span>)}
                             </button>

@@ -25,14 +25,15 @@ export const streamPreview = async (req: Request, res: Response) => {
     res.setHeader('Accept-Ranges', 'bytes');
 
     const reqStream = client.get(audioUrl, (audioRes) => {
-      let redirectUrl = audioUrl;
       if (audioRes.statusCode && audioRes.statusCode >= 300 && audioRes.statusCode < 400 && audioRes.headers.location) {
-        redirectUrl = audioRes.headers.location;
-        const redirectReq = https.get(redirectUrl, (redirectRes) => {
+        const location = String(audioRes.headers.location);
+        const redirectClient = location.startsWith('https') ? https : http;
+        const redirectReq = redirectClient.get(location, (redirectRes) => {
           streamWithLimit(redirectRes, res);
         });
-        redirectReq.on('error', (err) => {
-          console.error('Preview redirect error:', err);
+        redirectReq.on('error', (err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error('Preview redirect error:', message);
           res.status(500).json({ error: 'Failed to stream preview' });
         });
         return;
@@ -53,14 +54,16 @@ export const streamPreview = async (req: Request, res: Response) => {
       streamWithLimit(audioRes, res);
     });
 
-    reqStream.on('error', (err) => {
-      console.error('Preview stream error:', err);
+    reqStream.on('error', (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Preview stream error:', message);
       res.status(500).json({ error: 'Failed to stream preview' });
     });
 
-  } catch (error: any) {
-    console.error('Preview error:', error);
-    return res.status(500).json({ error: error.message || 'Preview failed' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Preview error:', message);
+    return res.status(500).json({ error: message || 'Preview failed' });
   }
 };
 
@@ -93,8 +96,9 @@ function streamWithLimit(source: http.IncomingMessage, dest: Response) {
     }
   });
 
-  source.on('error', (err) => {
-    console.error('Stream error:', err);
+  source.on('error', (err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Stream error:', message);
     if (!aborted) {
       dest.end();
     }

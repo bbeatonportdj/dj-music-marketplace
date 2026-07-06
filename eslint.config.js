@@ -4,9 +4,13 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', '.vercel', '.railway', 'batch_upload.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -17,6 +21,10 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+        project: ['./tsconfig.app.json', './tsconfig.node.json', './server/tsconfig.json'],
+      },
     },
   },
 ])

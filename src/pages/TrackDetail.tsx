@@ -142,7 +142,7 @@ const TrackDetail = () => {
           <div className="track-actions-primary">
             <button 
               className={`buy-now-btn ${isInCart(track.id) ? 'added' : ''}`}
-              onClick={() => addToCart(track as any)}
+              onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
               disabled={isInCart(track.id)}
             >
               {track.price === 0 ? <Download size={20} /> : <ShoppingCart size={20} />}

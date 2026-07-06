@@ -82,9 +82,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       qr_code_url,
       tracks: tracks.map((t) => ({ id: t.id, title: t.title, artist: t.artist, price: t.price })),
     });
-  } catch (error: any) {
-    console.error('Error creating order:', error);
-    return res.status(500).json({ error: error.message || 'Server error creating order' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error creating order:', message);
+    return res.status(500).json({ error: message || 'Server error creating order' });
   }
 };
 
@@ -113,9 +114,10 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json(orders);
-  } catch (error: any) {
-    console.error('Error fetching orders:', error);
-    return res.status(500).json({ error: error.message || 'Server error fetching orders' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error fetching orders:', message);
+    return res.status(500).json({ error: message || 'Server error fetching orders' });
   }
 };
 
@@ -138,8 +140,9 @@ export const getPurchasedTracks = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json(purchases.map(p => p.track).filter(Boolean));
-  } catch (error: any) {
-    console.error('Error fetching purchased tracks:', error);
-    return res.status(500).json({ error: error.message || 'Server error fetching purchased tracks' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error fetching purchased tracks:', message);
+    return res.status(500).json({ error: message || 'Server error fetching purchased tracks' });
   }
 };

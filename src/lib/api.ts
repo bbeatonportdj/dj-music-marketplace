@@ -1,3 +1,6 @@
+import { apiUrl } from './apiBase';
+import { getSupabaseClient } from './supabase';
+
 export interface Track {
   id: string;
   title: string;
@@ -38,6 +41,101 @@ export interface Pack {
   date?: string;
   plays?: number;
 }
+
+const FALLBACK_TRACKS: Track[] = [
+  {
+    id: 'fallback-midnight-drop',
+    title: 'Midnight Drop',
+    artist: 'DJ Axiom',
+    version: 'Extended Mix',
+    versionType: 'extended',
+    versionDetail: 'Extended mix for peak-time sets',
+    duration: '3:45',
+    bpm: 124,
+    key: 'A Minor',
+    genre: 'House',
+    price: 0,
+    artwork: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop',
+    preview_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    created_at: new Date().toISOString(),
+    date: new Date().toLocaleDateString(),
+    plays: 4520,
+    energy: 4,
+    rank: 12,
+    isNew: true,
+    isHot: true,
+    isExclusive: false,
+  },
+  {
+    id: 'fallback-sunset-rewind',
+    title: 'Sunset Rewind',
+    artist: 'Maya Voss',
+    version: 'Radio Edit',
+    versionType: 'radio',
+    versionDetail: 'Clean radio edit',
+    duration: '3:18',
+    bpm: 108,
+    key: 'F Sharp Minor',
+    genre: 'Pop',
+    price: 0,
+    artwork: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=600&h=600&fit=crop',
+    preview_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    created_at: new Date().toISOString(),
+    date: new Date().toLocaleDateString(),
+    plays: 3890,
+    energy: 3,
+    rank: 18,
+    isNew: true,
+    isHot: false,
+    isExclusive: false,
+  },
+  {
+    id: 'fallback-cascade',
+    title: 'Cascade',
+    artist: 'Nico Vale',
+    version: 'Club Cut',
+    versionType: 'club',
+    versionDetail: 'Punchy club cut',
+    duration: '4:02',
+    bpm: 132,
+    key: 'C Major',
+    genre: 'Techno',
+    price: 5,
+    artwork: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&h=600&fit=crop',
+    preview_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    created_at: new Date().toISOString(),
+    date: new Date().toLocaleDateString(),
+    plays: 3150,
+    energy: 5,
+    rank: 22,
+    isNew: false,
+    isHot: true,
+    isExclusive: true,
+  },
+  {
+    id: 'fallback-afterglow',
+    title: 'Afterglow',
+    artist: 'Luna Drift',
+    version: 'Deep House Edit',
+    versionType: 'deep',
+    versionDetail: 'Deep grove edit',
+    duration: '3:56',
+    bpm: 118,
+    key: 'D Minor',
+    genre: 'Deep House',
+    price: 0,
+    artwork: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop',
+    preview_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    created_at: new Date().toISOString(),
+    date: new Date().toLocaleDateString(),
+    plays: 2760,
+    energy: 4,
+    rank: 30,
+    isNew: true,
+    isHot: false,
+    isExclusive: false,
+  },
+];
 
 // Static/Seed packs for catalog navigation
 const STATIC_PACKS: Pack[] = [
@@ -103,83 +201,150 @@ const STATIC_PACKS: Pack[] = [
   }
 ];
 
+const trackFromSupabase = (t: Record<string, unknown>): Track => {
+  const id = String(t.id ?? '');
+  const created_at = t.created_at ? String(t.created_at) : new Date().toISOString();
+  const priceVal = t.price;
+  const price = typeof priceVal === 'string' ? parseFloat(priceVal) : (typeof priceVal === 'number' ? priceVal : 0);
+
+  return {
+    id,
+    title: String(t.title ?? ''),
+    artist: String(t.artist ?? ''),
+    version: String(t.version ?? ''),
+    versionType: String(t.version_type ?? 'clean'),
+    versionDetail: String(t.version_detail ?? ''),
+    duration: String(t.duration ?? '0:00'),
+    bpm: Number(t.bpm ?? 0),
+    key: String(t.key ?? ''),
+    genre: String(t.genre ?? 'Unknown'),
+    price,
+    artwork: String(t.artwork_url ?? ''),
+    preview_url: `/api/preview/${id}`,
+    full_audio_url: String(t.audio_url ?? ''),
+    created_at,
+    date: new Date(created_at).toLocaleDateString(),
+    plays: Number(t.plays ?? Math.floor(Math.random() * 5000) + 500),
+    energy: Number(t.energy ?? Math.floor(Math.random() * 5) + 1),
+    rank: Number(t.popularity_rank ?? Math.floor(Math.random() * 100) + 1),
+    isNew: Boolean(t.is_new ?? false),
+    isHot: Boolean(t.is_hot ?? false),
+    isExclusive: Boolean(t.is_exclusive ?? false),
+  };
+};
+
 export const fetchTracks = async (): Promise<Track[]> => {
   try {
-    const res = await fetch('/api/music');
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      return data.map(trackFromSupabase);
+    }
+  } catch (e) {
+    console.warn('Supabase tracks fetch failed, trying API:', e);
+  }
+
+  try {
+    const res = await fetch(apiUrl('/api/music'));
     if (!res.ok) throw new Error('Failed to fetch tracks');
     const data = await res.json();
-    
-    return data.map((t: any) => ({
-      id: t.id,
-      title: t.title,
-      artist: t.artist,
-      version: t.version || '',
-      versionType: t.version_type || 'clean',
-      versionDetail: t.version_detail || '',
-      duration: t.duration || '0:00',
-      bpm: t.bpm || 0,
-      key: t.key || '',
-      genre: t.genre || 'Unknown',
-      price: typeof t.price === 'string' ? parseFloat(t.price) : (t.price || 0),
-      artwork: t.artwork_url || '',
-      preview_url: `/api/preview/${t.id}`,
-      full_audio_url: t.audio_url || '',
-      created_at: t.created_at,
-      date: new Date(t.created_at).toLocaleDateString(),
-      plays: t.plays || Math.floor(Math.random() * 5000) + 500,
-      energy: t.energy || Math.floor(Math.random() * 5) + 1,
-      rank: t.popularity_rank || Math.floor(Math.random() * 100) + 1,
-      isNew: t.is_new || false,
-      isHot: t.is_hot || false,
-      isExclusive: t.is_exclusive || false
-    }));
+
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map(trackFromSupabase);
+    }
   } catch (error) {
-    console.error('Error fetching tracks:', error);
-    return [];
+    console.error('API fetch failed, using fallback:', error);
   }
+
+  return FALLBACK_TRACKS;
 };
 
 export const fetchTrackById = async (id: string | number): Promise<Track | null> => {
+  const idStr = String(id);
+
   try {
-    const res = await fetch(`/api/music/${id}`);
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .eq('id', idStr)
+      .maybeSingle();
+
+    if (!error && data) {
+      return trackFromSupabase(data as Record<string, unknown>);
+    }
+  } catch (e) {
+    console.warn('Supabase track fetch failed, trying API:', e);
+  }
+
+  try {
+    const res = await fetch(apiUrl(`/api/music/${idStr}`));
     if (!res.ok) throw new Error('Track not found');
     const data = await res.json();
-    
-    return {
-      id: data.id,
-      title: data.title,
-      artist: data.artist,
-      version: data.version || '',
-      versionType: data.version_type || 'clean',
-      versionDetail: data.version_detail || '',
-      duration: data.duration || '0:00',
-      bpm: data.bpm || 0,
-      key: data.key || '',
-      genre: data.genre || 'Unknown',
-      price: typeof data.price === 'string' ? parseFloat(data.price) : (data.price || 0),
-      artwork: data.artwork_url || '',
-      preview_url: `/api/preview/${data.id}`,
-      full_audio_url: data.audio_url || '',
-      created_at: data.created_at,
-      date: new Date(data.created_at).toLocaleDateString(),
-      plays: data.plays || Math.floor(Math.random() * 5000) + 500,
-      energy: data.energy || Math.floor(Math.random() * 5) + 1,
-      rank: data.popularity_rank || Math.floor(Math.random() * 100) + 1,
-      isNew: data.is_new || false,
-      isHot: data.is_hot || false,
-      isExclusive: data.is_exclusive || false
-    };
+    return trackFromSupabase(data as Record<string, unknown>);
   } catch (error) {
     console.error('Error fetching track by id:', error);
-    return null;
   }
+
+  const fallbackTrack = FALLBACK_TRACKS.find(track => track.id === idStr);
+  return fallbackTrack ?? null;
 };
 
+const mapSupabasePack = (p: Record<string, unknown>): Pack => ({
+  id: String(p.id ?? ''),
+  title: String(p.title ?? ''),
+  editor: String(p.editor ?? ''),
+  price: typeof p.price === 'string' ? parseFloat(p.price) : (typeof p.price === 'number' ? p.price : 0),
+  genre: String(p.genre ?? ''),
+  artwork: String(p.artwork_url ?? ''),
+  description: String(p.description ?? ''),
+  preview_url: String(p.preview_url ?? ''),
+  is_free: Boolean(p.is_free ?? false),
+  tracks_count: Number(p.tracks_count ?? 0),
+  created_at: p.created_at ? String(p.created_at) : new Date().toISOString(),
+  date: p.created_at ? new Date(String(p.created_at)).toLocaleDateString() : new Date().toLocaleDateString(),
+  plays: Number(p.plays ?? Math.floor(Math.random() * 5000) + 500),
+});
+
 export const fetchPacks = async (): Promise<Pack[]> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('packs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      return data.map(mapSupabasePack);
+    }
+  } catch (error) {
+    console.warn('Supabase packs fetch failed, using static fallback:', error);
+  }
+
   return STATIC_PACKS;
 };
 
 export const fetchPackById = async (id: string): Promise<Pack | null> => {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('packs')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (data) return mapSupabasePack(data as Record<string, unknown>);
+  } catch (error) {
+    console.warn('Supabase pack fetch failed, using static fallback:', error);
+  }
+
   const pack = STATIC_PACKS.find(p => p.id === id);
   return pack || null;
 };
@@ -187,11 +352,40 @@ export const fetchPackById = async (id: string): Promise<Pack | null> => {
 export const fetchTracksByPackId = async (packId: string): Promise<Track[]> => {
   const pack = await fetchPackById(packId);
   if (!pack) return [];
-  
-  // Filter all catalog tracks that match this pack's genre (e.g. Pop/House/Latin/Hip Hop)
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data: packTracks, error: ptError } = await supabase
+      .from('pack_tracks')
+      .select('track_id, position')
+      .eq('pack_id', packId)
+      .order('position', { ascending: true });
+
+    if (!ptError && packTracks && packTracks.length > 0) {
+      const trackIds = packTracks.map((pt: Record<string, unknown>) => pt.track_id);
+      const { data: tracks, error: trError } = await supabase
+        .from('tracks')
+        .select('*')
+        .in('id', trackIds);
+
+      if (!trError && tracks && tracks.length > 0) {
+        const trackMap = new Map(tracks.map((t: Record<string, unknown>) => [t.id, t]));
+        return packTracks
+          .map((pt: Record<string, unknown>) => {
+            const t = trackMap.get(pt.track_id) as Record<string, unknown> | undefined;
+            if (!t) return null;
+            return trackFromSupabase(t);
+          })
+          .filter((t: Track | null): t is Track => t !== null);
+      }
+    }
+  } catch (error) {
+    console.warn('Supabase pack_tracks fetch failed, using genre fallback:', error);
+  }
+
   const allTracks = await fetchTracks();
   const packGenre = pack.genre.toLowerCase();
-  
+
   return allTracks.filter(t => {
     const trackGenre = t.genre.toLowerCase();
     if (packGenre === 'pop' && (trackGenre.includes('pop') || trackGenre.includes('top 40'))) return true;

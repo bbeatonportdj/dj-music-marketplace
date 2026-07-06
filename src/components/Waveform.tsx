@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import '../styles/waveform.css';
 
 interface WaveformProps {
@@ -7,12 +7,10 @@ interface WaveformProps {
 }
 
 const Waveform: React.FC<WaveformProps> = ({ isPlaying, progress }) => {
-  // Generate random bars once
-  const bars = useMemo(() => {
-    return Array.from({ length: 60 }).map(() => ({
-      height: Math.random() * 80 + 20,
-    }));
-  }, []);
+  // Generate random bars once (initialize state lazily to avoid setState in effect)
+  const [bars] = useState<{ height: number }[]>(() =>
+    Array.from({ length: 60 }).map(() => ({ height: Math.random() * 80 + 20 }))
+  );
 
   return (
     <div className={`waveform-container ${isPlaying ? 'playing' : ''}`}>
