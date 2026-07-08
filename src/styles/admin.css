@@ -29,6 +29,12 @@
 .form-row {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
+}
+
+.form-row > * {
+  flex: 1;
+  min-width: 200px;
 }
 
 .form-row .form-group {

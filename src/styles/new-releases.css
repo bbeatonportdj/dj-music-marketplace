@@ -155,7 +155,7 @@
   background: var(--surface-color);
   border-radius: 4px;
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .nr-table {

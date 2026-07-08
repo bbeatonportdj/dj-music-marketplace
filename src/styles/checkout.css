@@ -28,6 +28,12 @@
   top: 20px;
   right: 20px;
   color: var(--text-muted);
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .checkout-step h2 {
@@ -103,7 +109,7 @@
   color: white;
   padding: 12px 15px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .card-row {
