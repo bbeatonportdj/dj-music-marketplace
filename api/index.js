@@ -185,7 +185,7 @@ export default async function handler(req, res) {
     // ─── Auth: Register ───────────────────────────────────────────────
     if (path === '/api/auth/register' && req.method === 'POST') {
       const body = JSON.parse(await getBody(req));
-      const { email, password, display_name, role } = body;
+      const { email, password, display_name, role, phone } = body;
 
       if (!email || !password) {
         return json(res, 400, { error: 'Email and password are required' });
@@ -195,7 +195,7 @@ export default async function handler(req, res) {
         email,
         password,
         options: {
-          data: { full_name: display_name || email.split('@')[0], role: role || 'user' },
+          data: { full_name: display_name || email.split('@')[0], role: role || 'user', phone: phone || '' },
         },
       });
 
@@ -216,6 +216,7 @@ export default async function handler(req, res) {
           email: data.user.email,
           full_name: display_name || email.split('@')[0],
           role: role || 'user',
+          phone: phone || null,
         }, { onConflict: 'id' });
 
       if (profileError) {
@@ -303,6 +304,102 @@ export default async function handler(req, res) {
 
       // Always return success to prevent email enumeration
       return json(res, 200, { message: 'If that email is registered, a reset link has been sent.' });
+    }
+
+    // ─── Auth: Forgot Password via Phone (SMS) ────────────────────────
+    if (path === '/api/auth/forgot-password-phone' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { phone } = body;
+
+      if (!phone) {
+        return json(res, 400, { error: 'Phone number is required' });
+      }
+
+      // Normalize phone: ensure it starts with + (international format)
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+      // Find user by phone in profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('phone', normalizedPhone)
+        .single();
+
+      if (!profile?.email) {
+        // Always return success to prevent phone enumeration
+        return json(res, 200, { message: 'If that phone number is registered, an OTP has been sent.' });
+      }
+
+      // Send OTP via Supabase phone auth
+      const { error } = await authClient.auth.signInWithOtp({
+        phone: normalizedPhone,
+      });
+
+      if (error) {
+        console.error('SMS OTP error:', error.message);
+      }
+
+      return json(res, 200, { message: 'If that phone number is registered, an OTP has been sent.' });
+    }
+
+    // ─── Auth: Verify Phone OTP ────────────────────────────────────────
+    if (path === '/api/auth/verify-phone-otp' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { phone, token } = body;
+
+      if (!phone || !token) {
+        return json(res, 400, { error: 'Phone number and OTP code are required' });
+      }
+
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+      const { data, error } = await authClient.auth.verifyOtp({
+        phone: normalizedPhone,
+        token,
+        type: 'sms',
+      });
+
+      if (error || !data?.session) {
+        return json(res, 401, { error: error?.message || 'Invalid OTP code' });
+      }
+
+      // Find profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('phone', normalizedPhone)
+        .single();
+
+      if (profile) {
+        setAuthCookie(res, data.session.access_token);
+        return json(res, 200, {
+          user: profileToUser(profile),
+          message: 'Phone verified successfully',
+        });
+      }
+
+      // If no profile found, create one
+      const userId = data.session.user?.id;
+      if (userId) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: data.session.user.email || '',
+            full_name: data.session.user.user_metadata?.full_name || 'User',
+            role: 'user',
+            phone: normalizedPhone,
+          }, { onConflict: 'id' });
+
+        const newProfile = await getProfile(supabase, userId);
+        setAuthCookie(res, data.session.access_token);
+        return json(res, 200, {
+          user: profileToUser(newProfile || { id: userId, email: data.session.user.email || '', full_name: 'User', role: 'user' }),
+          message: 'Phone verified successfully',
+        });
+      }
+
+      return json(res, 500, { error: 'Failed to verify phone' });
     }
 
     // ─── Auth: OAuth (Google/Facebook) ────────────────────────────────

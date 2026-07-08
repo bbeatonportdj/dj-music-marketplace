@@ -17,7 +17,7 @@ interface AuthContextType {
   isProducer: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, role?: string, display_name?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, role?: string, display_name?: string, phone?: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, role?: string, display_name?: string) => {
+  const signUp = async (email: string, password: string, role?: string, display_name?: string, phone?: string) => {
     try {
       const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
@@ -88,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email,
           password,
           display_name: display_name || email.split('@')[0],
+          phone: phone || undefined,
           ...(role && { role }),
         }),
       });

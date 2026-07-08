@@ -20,6 +20,11 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMethod, setForgotMethod] = useState<'email' | 'phone'>('email');
+  const [forgotPhone, setForgotPhone] = useState('');
+  const [otpMode, setOtpMode] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const { user, signIn, signInWithGoogle, signInWithFacebook } = useAuth();
@@ -98,21 +103,43 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (forgotLoading || !email) return;
-    setForgotLoading(true);
+    if (forgotLoading) return;
 
+    if (forgotMethod === 'phone') {
+      // Send SMS OTP
+      if (!forgotPhone) return;
+      setForgotLoading(true);
+      try {
+        const res = await fetch(apiUrl('/api/auth/forgot-password-phone'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: forgotPhone }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to send SMS');
+        setOtpMode(true);
+        showNotification('OTP code sent to your phone!', 'success');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setErrorMsg(msg);
+        showNotification(msg, 'error');
+      } finally {
+        setForgotLoading(false);
+      }
+      return;
+    }
+
+    // Email reset
+    if (!email) return;
+    setForgotLoading(true);
     try {
       const res = await fetch(apiUrl('/api/auth/forgot-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send reset email');
-      }
-
+      if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
       setForgotSent(true);
       showNotification('Password reset email sent!', 'success');
     } catch (err: unknown) {
@@ -121,6 +148,29 @@ const Auth = () => {
       showNotification(msg, 'error');
     } finally {
       setForgotLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpLoading || !otpCode || !forgotPhone) return;
+    setOtpLoading(true);
+    try {
+      const res = await fetch(apiUrl('/api/auth/verify-phone-otp'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: forgotPhone, token: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Invalid OTP');
+      showNotification('Phone verified! You are now logged in.', 'success');
+      window.location.href = '/browse';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(msg);
+      showNotification(msg, 'error');
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -183,13 +233,18 @@ const Auth = () => {
               <>
                 <button
                   className="auth-back-btn"
-                  onClick={() => { setForgotMode(false); setErrorMsg(null); }}
+                  onClick={() => { setForgotMode(false); setErrorMsg(null); setOtpMode(false); setOtpCode(''); }}
                 >
                   <ArrowLeft size={16} /> Back to Sign In
                 </button>
-                <h1 className="auth-title">Reset Password</h1>
+                <h1 className="auth-title">
+                  {otpMode ? 'Enter OTP Code' : 'Reset Password'}
+                </h1>
                 <p className="auth-subtitle">
-                  Enter your email and we'll send you a reset link.
+                  {otpMode
+                    ? `Enter the 6-digit code sent to ${forgotPhone}`
+                    : 'Choose how you want to reset your password.'
+                  }
                 </p>
 
                 {errorMsg && (
@@ -199,29 +254,94 @@ const Auth = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleForgotPassword} className="auth-form">
-                  <div className="auth-input-group">
-                    <label>{t('auth.email')}</label>
-                    <div className="auth-input-wrapper">
-                      <Mail size={16} className="auth-input-icon" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="dj@example.com"
-                        required
-                      />
+                {otpMode ? (
+                  <form onSubmit={handleVerifyOtp} className="auth-form">
+                    <div className="auth-input-group">
+                      <label>OTP Code</label>
+                      <div className="auth-input-wrapper">
+                        <Lock size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="000000"
+                          maxLength={6}
+                          className="auth-input-otp"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button type="submit" disabled={forgotLoading} className="auth-submit-btn">
-                    {forgotLoading ? (
-                      <><Loader2 size={18} className="animate-spin" /> Sending...</>
-                    ) : (
-                      <>Send Reset Link <ArrowRight size={18} /></>
-                    )}
-                  </button>
-                </form>
+                    <button type="submit" disabled={otpLoading || otpCode.length < 6} className="auth-submit-btn">
+                      {otpLoading ? (
+                        <><Loader2 size={18} className="animate-spin" /> Verifying...</>
+                      ) : (
+                        <>Verify & Sign In <ArrowRight size={18} /></>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <>
+                    <div className="auth-forgot-toggle">
+                      <button
+                        type="button"
+                        className={`auth-forgot-tab ${forgotMethod === 'email' ? 'active' : ''}`}
+                        onClick={() => setForgotMethod('email')}
+                      >
+                        <Mail size={16} /> Email
+                      </button>
+                      <button
+                        type="button"
+                        className={`auth-forgot-tab ${forgotMethod === 'phone' ? 'active' : ''}`}
+                        onClick={() => setForgotMethod('phone')}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        Phone
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleForgotPassword} className="auth-form">
+                      {forgotMethod === 'email' ? (
+                        <div className="auth-input-group">
+                          <label>{t('auth.email')}</label>
+                          <div className="auth-input-wrapper">
+                            <Mail size={16} className="auth-input-icon" />
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="dj@example.com"
+                              required
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="auth-input-group">
+                          <label>Phone Number</label>
+                          <div className="auth-input-wrapper">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" className="auth-input-icon"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            <input
+                              type="tel"
+                              value={forgotPhone}
+                              onChange={(e) => setForgotPhone(e.target.value)}
+                              placeholder="+66 81 234 5678"
+                              required
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <button type="submit" disabled={forgotLoading} className="auth-submit-btn">
+                        {forgotLoading ? (
+                          <><Loader2 size={18} className="animate-spin" /> Sending...</>
+                        ) : (
+                          <>{forgotMethod === 'email' ? 'Send Reset Link' : 'Send OTP Code'} <ArrowRight size={18} /></>
+                        )}
+                      </button>
+                    </form>
+                  </>
+                )}
               </>
             ) : (
               <>
