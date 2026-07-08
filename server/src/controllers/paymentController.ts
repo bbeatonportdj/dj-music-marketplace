@@ -44,8 +44,8 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     const user = await User.findByPk(order.user_id || '');
     const displayName = user?.display_name || 'Customer';
 
-    // 1. Slip Verification API Integration (If SLIPOK_API_KEY is configured)
-    const slipokKey = process.env.SLIPOK_API_KEY;
+    // 1. Slip Verification API Integration (If SLIPOK_API_KEY or SLIPOK_KEY is configured)
+    const slipokKey = process.env.SLIPOK_API_KEY || process.env.SLIPOK_KEY;
     const slipFile = req.file;
 
     if (slipokKey) {
@@ -101,7 +101,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
         order.status = 'paid';
         await order.save();
       } else {
-        console.log('❌ Payment verification not configured (SLIPOK_API_KEY missing) and simulation is disabled.');
+        console.log('❌ Payment verification not configured (SLIPOK_API_KEY / SLIPOK_KEY missing) and simulation is disabled.');
         return res.status(500).json({ error: 'Payment verification service is currently unconfigured' });
       }
     }
