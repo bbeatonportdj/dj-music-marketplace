@@ -305,6 +305,48 @@ export default async function handler(req, res) {
       return json(res, 200, { message: 'If that email is registered, a reset link has been sent.' });
     }
 
+    // ─── Auth: OAuth (Google/Facebook) ────────────────────────────────
+    if (path === '/api/auth/oauth' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { access_token } = body;
+
+      if (!access_token) {
+        return json(res, 400, { error: 'Access token is required' });
+      }
+
+      // Verify the token with Supabase
+      const { data: userData, error: userErr } = await supabase.auth.getUser(access_token);
+      if (userErr || !userData?.user) {
+        return json(res, 401, { error: 'Invalid OAuth token' });
+      }
+
+      const sbUser = userData.user;
+      const email = sbUser.email;
+      const meta = sbUser.user_metadata || {};
+      const fullName = meta.full_name || meta.name || email?.split('@')[0] || 'User';
+
+      // Get or create profile
+      let profile = await getProfile(supabase, sbUser.id);
+      if (!profile) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: sbUser.id,
+            email,
+            full_name: fullName,
+            role: 'user',
+          }, { onConflict: 'id' });
+        profile = await getProfile(supabase, sbUser.id);
+      }
+
+      // Set HttpOnly cookie with the Supabase access token
+      setAuthCookie(res, access_token);
+
+      return json(res, 200, {
+        user: profileToUser(profile || { id: sbUser.id, email, full_name: fullName, role: 'user' }),
+      });
+    }
+
     // ─── Auth: Me ─────────────────────────────────────────────────────
     if (path === '/api/auth/me' && req.method === 'GET') {
       const user = await getAuthUser(req, supabase);

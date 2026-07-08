@@ -1,3 +1,6 @@
+// Simplified OAuth handler for Auth.tsx
+// After Supabase OAuth redirect, extract the access_token and send to our API
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Disc, Eye, EyeOff, Loader2, ArrowRight, Mail, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -32,46 +35,25 @@ const Auth = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isOauth = params.get('oauth') === '1';
-    const provider = params.get('provider');
-    if (!isOauth || !provider) return;
+    if (!isOauth) return;
 
     (async () => {
       if (!supabase) {
-        showNotification('OAuth is not configured on this client.', 'error');
+        showNotification('OAuth is not configured.', 'error');
         return;
       }
 
       try {
-        let userObj: unknown = null;
-        const sb = supabase as unknown as Record<string, unknown> | null;
-        const authObj = sb?.['auth'] as Record<string, unknown> | undefined;
-        if (authObj && typeof authObj['getSession'] === 'function') {
-          const resp = await (authObj['getSession'] as unknown as () => Promise<unknown>)();
-          const respObj = resp as Record<string, unknown> | undefined;
-          const data = respObj?.['data'] as Record<string, unknown> | undefined;
-          const session = data?.['session'] as Record<string, unknown> | undefined;
-          userObj = session?.['user'] ?? null;
-        } else if (authObj && typeof authObj['session'] === 'function') {
-          const sess = (authObj['session'] as unknown as () => unknown)();
-          const session = sess as Record<string, unknown> | undefined;
-          userObj = session?.['user'] ?? null;
-        }
-
-        if (!userObj || typeof userObj !== 'object') {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session?.access_token) {
           showNotification('OAuth session not found. Try signing in again.', 'error');
           return;
         }
 
-        const u = userObj as Record<string, unknown>;
-        const oauth_id = typeof u.id === 'string' ? u.id : undefined;
-        const emailVal = typeof u.email === 'string' ? u.email : undefined;
-        const meta = u.user_metadata as Record<string, unknown> | undefined;
-        const display_name = meta && (typeof meta.full_name === 'string' ? meta.full_name : (typeof meta.name === 'string' ? meta.name : undefined)) || (emailVal ? emailVal.split('@')[0] : undefined);
-
         const res = await fetch(apiUrl('/api/auth/oauth'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider, email: emailVal, display_name, oauth_id }),
+          body: JSON.stringify({ access_token: session.access_token }),
         });
 
         const data = await res.json();
@@ -334,7 +316,7 @@ const Auth = () => {
                     disabled={loading}
                   >
                     <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.537-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
                     </svg>
                     Facebook
                   </button>
