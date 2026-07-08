@@ -1,7 +1,7 @@
 {
   "name": "dj-marketplace-server",
   "version": "1.0.0",
-  "description": "Backend API Server for RunMusic-storeDj",
+  "description": "Backend API Server for DJ Music Marketplace",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {

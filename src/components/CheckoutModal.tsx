@@ -23,7 +23,7 @@ interface Order {
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, onConfirm, tracks }) => {
   const { showNotification } = useNotifications();
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   const [step, setStep] = useState<'method' | 'processing' | 'success' | 'loading' | 'auth_required'>('method');
   const [method, setMethod] = useState<'promptpay' | 'stripe'>('stripe');
@@ -39,52 +39,54 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
   useEffect(() => {
     if (!isOpen) return;
 
-    if (!token) {
+    if (!user) {
       Promise.resolve().then(() => setStep('auth_required'));
       return;
     }
 
-    const initOrder = async () => {
-      setStep('loading');
-      setErrorMsg(null);
-      try {
-        const paymentMethod = method === 'stripe' ? 'stripe' : 'promptpay';
+    // Only auto-init for PromptPay (Stripe creates order in createStripeSession)
+    if (method === 'promptpay') {
+      const initOrder = async () => {
+        setStep('loading');
+        setErrorMsg(null);
+        try {
+          const res = await fetch(apiUrl('/api/orders'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              track_ids: tracks.map((t) => t.id),
+              payment_method: 'promptpay',
+            }),
+          });
 
-        const res = await fetch(apiUrl('/api/orders'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            track_ids: tracks.map((t) => t.id),
-            payment_method: paymentMethod,
-          }),
-        });
+          const data = await res.json();
 
-        const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to create order');
+          }
 
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to create order');
-        }
+          setOrder(data.order);
+          setQrCodeUrl(data.qr_code_url || '');
 
-        setOrder(data.order);
-        setQrCodeUrl(data.qr_code_url || '');
-
-        if (data.order.status === 'paid') {
-          setStep('success');
-        } else {
+          if (data.order.status === 'paid') {
+            setStep('success');
+          } else {
+            setStep('method');
+          }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          setErrorMsg(message || 'Error initializing order');
           setStep('method');
         }
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        setErrorMsg(message || 'Error initializing order');
-        setStep('method');
-      }
-    };
+      };
 
-    initOrder();
-  }, [isOpen, token, tracks, method]);
+      initOrder();
+    } else {
+      setStep('method');
+    }
+  }, [isOpen, user, tracks, method]);
 
   const createStripeSession = useCallback(async () => {
     if (!order) return;
@@ -96,7 +98,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           track_ids: tracks.map((t) => t.id),
@@ -122,13 +123,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
       setErrorMsg(message || 'Stripe payment failed. Try again.');
       setStep('method');
     }
-  }, [order, token, tracks, showNotification]);
-
-  useEffect(() => {
-    if (step === 'method' && method === 'stripe' && order && order.status === 'pending') {
-      void Promise.resolve().then(() => createStripeSession());
-    }
-  }, [step, method, order, createStripeSession]);
+  }, [order, user, tracks, showNotification]);
 
   if (!isOpen) return null;
 
@@ -138,18 +133,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
     setErrorMsg(null);
 
     try {
-      const dataToSend = new FormData();
-      dataToSend.append('orderId', order.id);
-      if (slipFile) {
-        dataToSend.append('slipFile', slipFile);
-      }
-
       const res = await fetch(apiUrl('/api/payments/verify'), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: dataToSend,
+        body: JSON.stringify({ orderId: order.id }),
       });
 
       const result = await res.json();

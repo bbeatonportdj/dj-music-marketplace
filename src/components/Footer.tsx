@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="footer-section brand-section">
           <div className="footer-logo">
             <Disc size={32} className="logo-icon" />
-            <span>RunMusic-storeDj</span>
+            <span>DJ Music Marketplace</span>
           </div>
           <p className="brand-desc">
             Premium beats and music packs for professional DJs worldwide.
@@ -48,7 +48,7 @@ const Footer = () => {
           <h3>Contact</h3>
           <div className="contact-item">
             <Mail size={18} />
-            <span>support@runmusic-storedj.com</span>
+            <span>support@djmusicmarketplace.com</span>
           </div>
           <p className="newsletter-text">
             Subscribe to get free tracks every week.
@@ -61,7 +61,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2026 RunMusic-storeDj. All rights reserved.</p>
+        <p>&copy; 2026 DJ Music Marketplace. All rights reserved.</p>
         <p className="made-with">Made with 🤍 in DJ community</p>
       </div>
     </footer>

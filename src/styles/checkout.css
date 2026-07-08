@@ -151,15 +151,25 @@
 }
 
 @media (max-width: 600px) {
+  .checkout-overlay {
+    align-items: flex-end;
+  }
+
   .checkout-modal {
     width: 100%;
     max-width: 100%;
-    height: 100%;
-    border-radius: 0;
+    height: 90%;
+    border-radius: 20px 20px 0 0;
     padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    overflow-y: auto;
+  }
+
+  .checkout-step h2 {
+    font-size: 20px;
+  }
+
+  .total-label strong {
+    font-size: 17px;
   }
   
   .payment-methods {
@@ -170,19 +180,43 @@
   .method-card {
     padding: 14px;
     flex-direction: row;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+
+  .method-card svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .method-card span {
+    font-size: 15px;
   }
   
+  .qr-section {
+    margin-bottom: 20px;
+  }
+
   .qr-image-wrapper img {
     width: 180px !important;
     height: 180px !important;
   }
+
+  .slip-upload-zone {
+    width: 100%;
+    justify-content: center;
+  }
   
   .pay-btn {
-    font-size: 14px;
+    font-size: 15px;
     padding: 14px;
   }
   
   .card-section .pay-btn {
     width: 100%;
+  }
+
+  .card-section p {
+    font-size: 13px;
   }
 }

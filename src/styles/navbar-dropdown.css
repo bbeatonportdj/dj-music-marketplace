@@ -162,6 +162,28 @@
   color: #ff5555;
 }
 
+/* Sign Up Button (outline style) */
+.nav-signup-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--outline-variant, #434656);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+  letter-spacing: 0.2px;
+}
+
+.nav-signup-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
 /* Sign In Button */
 .nav-signin-btn {
   display: flex;

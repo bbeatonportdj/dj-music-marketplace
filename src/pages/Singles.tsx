@@ -40,6 +40,19 @@ const GENRES = [
   'Trance'
 ];
 
+const CAMELOT_KEYS = [
+  '1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A',
+  '1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B'
+];
+
+const ENERGY_LEVELS = [
+  { label: 'Low', value: 'low', min: 1, max: 2 },
+  { label: 'Mid', value: 'mid', min: 3, max: 3 },
+  { label: 'High', value: 'high', min: 4, max: 5 },
+];
+
+const VERSION_TYPES = ['clean', 'dirty', 'intro', 'acapella', 'instrumental', 'extended', 'radio', 'club', 'deep'];
+
 const Singles = () => {
   const { currentTrack, isPlaying, playTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
@@ -47,6 +60,11 @@ const Singles = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
+  const [bpmMin, setBpmMin] = useState(0);
+  const [bpmMax, setBpmMax] = useState(200);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
+  const [selectedVersionType, setSelectedVersionType] = useState<string | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +92,15 @@ const Singles = () => {
     const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          track.artist.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = selectedGenre === 'All Genres' || track.genre === selectedGenre;
-    return matchesSearch && matchesGenre;
+    const matchesBpm = track.bpm >= bpmMin && track.bpm <= bpmMax;
+    const matchesKey = selectedKeys.length === 0 || selectedKeys.includes(track.key);
+    const matchesEnergy = !selectedEnergy || (() => {
+      const level = ENERGY_LEVELS.find(e => e.value === selectedEnergy);
+      if (!level) return true;
+      return (track.energy ?? 3) >= level.min && (track.energy ?? 3) <= level.max;
+    })();
+    const matchesVersionType = !selectedVersionType || track.versionType === selectedVersionType;
+    return matchesSearch && matchesGenre && matchesBpm && matchesKey && matchesEnergy && matchesVersionType;
   });
 
   const groupedTracks = useMemo(() => {
@@ -108,47 +134,6 @@ const Singles = () => {
 
   return (
     <div className="singles-layout animate-fade-in">
-      <aside className={`singles-sidebar ${showSidebar ? 'active' : ''}`}>
-        <div className="sidebar-header">
-          <h3>Arsenal Filters</h3>
-          <button className="sidebar-close" onClick={() => setShowSidebar(false)}>✕</button>
-        </div>
-        
-        <div className="filter-group">
-          <label>Intel Search</label>
-          <div className="search-box">
-            <Search size={18} />
-            <input 
-              type="text" 
-              placeholder="Search tracks or edits..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>Genres Pool</label>
-          <ul className="filter-list">
-            <li 
-              className={selectedGenre === 'All Genres' ? 'active' : ''}
-              onClick={() => setSelectedGenre('All Genres')}
-            >
-              All Library
-            </li>
-            {GENRES.map(genre => (
-              <li 
-                key={genre} 
-                className={selectedGenre === genre ? 'active' : ''}
-                onClick={() => setSelectedGenre(genre)}
-              >
-                {genre}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
-
       <main className="singles-main">
         <header className="singles-header">
           <div className="header-left">
@@ -282,6 +267,137 @@ const Singles = () => {
           ))
         )}
       </main>
+
+      <aside className={`singles-sidebar ${showSidebar ? 'active' : ''}`}>
+        <div className="sidebar-header">
+          <h3>Arsenal Filters</h3>
+          <button className="sidebar-close" onClick={() => setShowSidebar(false)}>✕</button>
+        </div>
+        
+        <div className="filter-group">
+          <label>Intel Search</label>
+          <div className="search-box">
+            <Search size={18} />
+            <input 
+              type="text" 
+              placeholder="Search tracks or edits..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>Genres Pool</label>
+          <ul className="filter-list">
+            <li 
+              className={selectedGenre === 'All Genres' ? 'active' : ''}
+              onClick={() => setSelectedGenre('All Genres')}
+            >
+              All Library
+            </li>
+            {GENRES.map(genre => (
+              <li 
+                key={genre} 
+                className={selectedGenre === genre ? 'active' : ''}
+                onClick={() => setSelectedGenre(genre)}
+              >
+                {genre}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="filter-group">
+          <label>Version Type</label>
+          <div className="version-type-grid">
+            {VERSION_TYPES.map(vt => (
+              <button
+                key={vt}
+                className={`vt-chip ${selectedVersionType === vt ? 'active' : ''}`}
+                onClick={() => setSelectedVersionType(selectedVersionType === vt ? null : vt)}
+              >
+                {vt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>BPM Range</label>
+          <div className="bpm-range-inputs">
+            <input
+              type="number"
+              className="bpm-input"
+              min={0}
+              max={200}
+              placeholder="Min"
+              value={bpmMin || ''}
+              onChange={(e) => setBpmMin(Number(e.target.value) || 0)}
+            />
+            <span className="bpm-separator">—</span>
+            <input
+              type="number"
+              className="bpm-input"
+              min={0}
+              max={200}
+              placeholder="Max"
+              value={bpmMax || ''}
+              onChange={(e) => setBpmMax(Number(e.target.value) || 200)}
+            />
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>Camelot Key</label>
+          <div className="key-grid">
+            {CAMELOT_KEYS.map(key => (
+              <button
+                key={key}
+                className={`key-chip ${selectedKeys.includes(key) ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedKeys(prev =>
+                    prev.includes(key)
+                      ? prev.filter(k => k !== key)
+                      : [...prev, key]
+                  );
+                }}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <label>Energy Level</label>
+          <div className="energy-group">
+            {ENERGY_LEVELS.map(level => (
+              <button
+                key={level.value}
+                className={`energy-btn ${selectedEnergy === level.value ? 'active' : ''}`}
+                onClick={() => setSelectedEnergy(selectedEnergy === level.value ? null : level.value)}
+              >
+                {level.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(bpmMin > 0 || bpmMax < 200 || selectedKeys.length > 0 || selectedEnergy || selectedVersionType) && (
+          <button className="clear-filters" onClick={() => {
+            setBpmMin(0);
+            setBpmMax(200);
+            setSelectedKeys([]);
+            setSelectedEnergy(null);
+            setSelectedVersionType(null);
+            setSelectedGenre('All Genres');
+            setSearchQuery('');
+          }}>
+            Clear All Filters
+          </button>
+        )}
+      </aside>
     </div>
   );
 };

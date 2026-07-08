@@ -45,7 +45,7 @@ const Navbar = () => {
         <div className="nav-left">
           <Link to="/" className="logo">
             <Disc size={32} className="logo-icon" />
-            <span>RunMusic-storeDj</span>
+            <span>DJ Music Marketplace</span>
           </Link>
         </div>
 
@@ -195,10 +195,13 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            <Link to="/auth" className="nav-signin-btn desktop-only">
-              <User size={15} />
-              Sign In
-            </Link>
+            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Link to="/register" className="nav-signup-btn">Sign Up</Link>
+              <Link to="/auth" className="nav-signin-btn">
+                <User size={15} />
+                Sign In
+              </Link>
+            </div>
           )}
 
           {/* Hamburger Menu (Mobile Only) */}
@@ -266,10 +269,16 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <Link to="/auth" className="drawer-signin-btn" onClick={() => setMobileMenuOpen(false)}>
-                  <User size={16} />
-                  Sign In / Sign Up
-                </Link>
+                <div className="drawer-auth-links">
+                  <Link to="/register" className="drawer-signin-btn" onClick={() => setMobileMenuOpen(false)}>
+                    <User size={16} />
+                    Sign Up
+                  </Link>
+                  <Link to="/auth" className="drawer-signin-btn" onClick={() => setMobileMenuOpen(false)}>
+                    <User size={16} />
+                    Sign In
+                  </Link>
+                </div>
               )}
             </nav>
           </div>

@@ -107,9 +107,9 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     }
 
     // Register purchases for download access
-    const tracks = order.items
-      .map((item) => (item as Record<string, unknown>).track)
-      .filter(Boolean) as unknown as Track[];
+    const tracks = (order as any).items
+      .map((item: any) => item.track)
+      .filter(Boolean) as Track[];
     const purchases = tracks.map((track) => ({
       user_id: order.user_id,
       track_id: track.id,
@@ -119,7 +119,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     await Purchase.bulkCreate(purchases, { ignoreDuplicates: true });
 
     // Send order confirmation with download links
-    EmailService.sendDownloadLinksEmail(order.email, displayName, order.id, tracks);
+    EmailService.sendDownloadLinksEmail(order.email, displayName, order.id, tracks.map(t => t.toJSON()));
 
     return res.json({
       message: 'Payment verified and completed successfully',
@@ -185,9 +185,9 @@ export const handleWebhook = async (req: Request, res: Response) => {
     await order.save();
 
     // Register purchases
-    const tracks = order.items
-      .map((item) => (item as Record<string, unknown>).track)
-      .filter(Boolean) as unknown as Track[];
+    const tracks = (order as any).items
+      .map((item: any) => item.track)
+      .filter(Boolean) as Track[];
     const purchases = tracks.map((track) => ({
       user_id: order.user_id,
       track_id: track.id,
@@ -197,7 +197,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     // Send confirmation email
     const user = await User.findByPk(order.user_id || '');
-    EmailService.sendDownloadLinksEmail(order.email, user?.display_name || 'Customer', order.id, tracks);
+    EmailService.sendDownloadLinksEmail(order.email, user?.display_name || 'Customer', order.id, tracks.map(t => t.toJSON()));
 
     return res.json({ message: 'Order updated via webhook successfully' });
   } catch (error: unknown) {

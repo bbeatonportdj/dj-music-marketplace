@@ -1,5 +1,5 @@
 -- ============================================================
--- RunMusic-storeDj - Supabase SQL Migration
+-- DJ Music Marketplace - Supabase SQL Migration
 -- Run this in your Supabase SQL Editor:
 -- https://supabase.com/dashboard/project/fbwqgbsalqgcrfxhoure/sql
 -- ============================================================

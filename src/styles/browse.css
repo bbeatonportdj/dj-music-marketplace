@@ -8,7 +8,7 @@
 .browse-sidebar {
   width: 280px;
   background-color: var(--surface-color);
-  border-right: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   padding: 30px 24px;
   position: sticky;
   top: var(--nav-height);
@@ -19,7 +19,7 @@
 }
 
 .browse-sidebar:not(.active) {
-  margin-left: -280px;
+  margin-right: -280px;
   opacity: 0;
   pointer-events: none;
 }
@@ -503,15 +503,15 @@
 
   .browse-sidebar {
     position: fixed;
-    left: 0;
+    right: 0;
     top: 0;
     height: 100vh;
-    transform: translateX(-100%);
-    margin-left: 0 !important;
+    transform: translateX(100%);
+    margin-right: 0 !important;
     opacity: 1 !important;
     pointer-events: auto !important;
     z-index: 999;
-    box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.5);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
@@ -620,5 +620,35 @@
     height: 50px;
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .browse-hero-premium {
+    height: 220px;
+    margin-bottom: 16px;
+  }
+
+  .hero-content h1 {
+    font-size: 24px;
+  }
+
+  .browse-header {
+    padding: 0 12px;
+  }
+
+  .packs-grid {
+    grid-template-columns: 1fr;
+    padding: 0 12px 60px;
+    gap: 20px;
+  }
+
+  .sort-dropdown {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .browse-subtitle {
+    font-size: 16px;
   }
 }

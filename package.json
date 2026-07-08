@@ -1,5 +1,5 @@
 {
-  "name": "runmusic-store-dj",
+  "name": "dj-music-marketplace",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,13 +14,16 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.0",
+    "busboy": "^1.6.0",
     "lucide-react": "^1.16.0",
     "netlify-cli": "^26.1.0",
     "promptpay-qr": "^0.5.0",
     "qrcode": "^1.5.4",
+    "railway": "^3.4.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "stripe": "^22.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

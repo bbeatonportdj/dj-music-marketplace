@@ -45,7 +45,7 @@ const DEFAULT_FORM = {
 };
 
 const ProducerDashboard = () => {
-  const { user, isProducer, isAdmin, token } = useAuth();
+  const { user, isProducer, isAdmin } = useAuth();
   const { showNotification } = useNotifications();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -65,9 +65,7 @@ const ProducerDashboard = () => {
   const fetchMyTracks = useCallback(async () => {
     setTracksLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/music/my'), {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const res = await fetch(apiUrl('/api/music/my'));
       if (res.ok) {
         const data = await res.json();
         setTracks(data as TrackRecord[]);
@@ -77,7 +75,7 @@ const ProducerDashboard = () => {
     } finally {
       setTracksLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (isProducer || isAdmin) fetchMyTracks();
@@ -137,7 +135,6 @@ const ProducerDashboard = () => {
 
       const res = await fetch(apiUrl('/api/music'), {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
         body: dataToSend,
       });
 
@@ -163,7 +160,6 @@ const ProducerDashboard = () => {
     try {
       const res = await fetch(apiUrl(`/api/music/${id}`), {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) {
         const result = await res.json();
@@ -188,7 +184,6 @@ const ProducerDashboard = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(editingTrack),
       });

@@ -63,14 +63,14 @@ export class EmailService {
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
-        <h2 style="color: #6366f1;">Welcome to RunMusic-storeDj! 🎧</h2>
+        <h2 style="color: #6366f1;">Welcome to DJ Music Marketplace! 🎧</h2>
         <p>Dear ${displayName},</p>
         <p>Thank you for signing up to our platform. You are now part of a premium marketplace curated specifically for professional and hobbyist DJs.</p>
         <p>You can now browse tracks by genre, listen to high-quality audio previews (including BPM and key scales), save your favorites, and purchase edits/packs for your DJ sets.</p>
         <br>
         <a href="http://localhost:5173/browse" style="background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Browse Catalog</a>
         <br><br>
-        <p>Best regards,<br>The RunMusic-storeDj Team</p>
+        <p>Best regards,<br>The DJ Music Marketplace Team</p>
       </div>
     `;
 
@@ -78,7 +78,7 @@ export class EmailService {
       const info = await transporter.sendMail({
         from,
         to: toEmail,
-        subject: 'Welcome to RunMusic-storeDj! 🎧',
+        subject: 'Welcome to DJ Music Marketplace! 🎧',
         html,
       });
 
@@ -134,7 +134,7 @@ export class EmailService {
         <p>You can also log in to your account and download your purchased tracks at any time by visiting your purchase history on your Profile dashboard page.</p>
         <p>If you have any questions or require support, feel free to reply to this email.</p>
         <br>
-        <p>Best regards,<br>The RunMusic-storeDj Team</p>
+        <p>Best regards,<br>The DJ Music Marketplace Team</p>
       </div>
     `;
 
@@ -167,7 +167,7 @@ export class EmailService {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
         <h2 style="color: #f59e0b;">New Order Created (Pending Payment) 🛒</h2>
-        <p>A new order has been created on the RunMusic marketplace.</p>
+        <p>A new order has been created on the DJ Music Marketplace.</p>
         <p><strong>Order ID:</strong> ${orderId}</p>
         <p><strong>Customer Email:</strong> ${email}</p>
         <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>

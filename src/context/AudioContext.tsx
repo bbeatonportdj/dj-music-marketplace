@@ -72,7 +72,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const seek = (time: number) => {
     if (audioRef.current) {
-      const maxDuration = Math.min(audioRef.current.duration || 30, 30);
+      const maxDuration = Math.min(audioRef.current.duration || 90, 90);
       const cappedTime = Math.min(time, maxDuration);
       audioRef.current.currentTime = cappedTime;
       setCurrentTime(cappedTime);
@@ -82,7 +82,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       const time = audioRef.current.currentTime;
-      const maxDuration = Math.min(audioRef.current.duration || 30, 30);
+      const maxDuration = Math.min(audioRef.current.duration || 90, 90);
       if (time >= maxDuration) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -97,7 +97,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       const trackDuration = audioRef.current.duration;
-      setDuration(isNaN(trackDuration) ? 30 : Math.min(trackDuration, 30));
+      setDuration(isNaN(trackDuration) ? 90 : Math.min(trackDuration, 90));
     }
   };
 

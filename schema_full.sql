@@ -1,5 +1,5 @@
 -- ============================================================
--- RunMusic-storeDj - Complete Database Schema
+-- DJ Music Marketplace - Complete Database Schema
 -- Run this in your Supabase SQL Editor:
 -- https://supabase.com/dashboard/project/fbwqgbsalqgcrfxhoure/sql
 -- ============================================================

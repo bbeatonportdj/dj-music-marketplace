@@ -8,14 +8,20 @@
 .nr-sidebar {
   width: 280px;
   background-color: var(--surface-color);
-  border-right: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   padding: 24px;
   overflow-y: auto;
   position: sticky;
   top: var(--nav-height);
   height: calc(100vh - var(--nav-height) - var(--player-height));
-  transition: transform 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 10;
+}
+
+.nr-sidebar:not(.active) {
+  margin-right: -280px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .nr-sidebar-header {
@@ -261,7 +267,7 @@
   text-transform: uppercase;
 }
 
-.nr-v-dirty { background: rgba(255, 59, 48, 0.2); color: #ff453a; }
+.nr-v-dirty { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
 .nr-v-clean { background: rgba(52, 199, 89, 0.2); color: #32d74b; }
 .nr-v-intro { background: rgba(10, 132, 255, 0.2); color: #3395ff; }
 
@@ -286,6 +292,154 @@
 .key-badge {
   color: var(--primary-color);
   background: rgba(255, 59, 48, 0.08);
+}
+
+/* BPM Presets */
+.bpm-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bpm-preset-btn {
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.bpm-preset-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.bpm-preset-btn.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Version Type Grid */
+.nr-version-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.nr-vt-chip {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+  text-transform: capitalize;
+}
+
+.nr-vt-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.nr-vt-chip.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Key Grid */
+.nr-key-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.nr-key-chip {
+  padding: 4px 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.nr-key-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.nr-key-chip.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Energy Group */
+.nr-energy-group {
+  display: flex;
+  gap: 6px;
+}
+
+.nr-energy-btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.nr-energy-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.nr-energy-btn.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Clear Filters */
+.nr-clear-filters {
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Sora', sans-serif;
+}
+
+.nr-clear-filters:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 /* Energy Meter */
@@ -405,5 +559,45 @@
     font-size: 10px;
     min-width: 48px;
     padding: 4px 8px;
+  }
+
+  .nr-play-btn-arsenal {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nr-main {
+    padding: 12px 0;
+  }
+
+  .nr-header-left h1 {
+    font-size: 16px;
+  }
+
+  .nr-table th, .nr-table td {
+    padding: 6px 8px;
+  }
+
+  .nr-title-text {
+    font-size: 11px;
+  }
+
+  .nr-track-title-row {
+    gap: 4px;
+  }
+
+  .nr-tags-row {
+    display: none;
+  }
+
+  .nr-action-cell-arsenal {
+    gap: 4px;
+  }
+
+  .nr-icon-btn-arsenal {
+    width: 28px;
+    height: 28px;
   }
 }

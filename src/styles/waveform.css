@@ -5,13 +5,31 @@
   height: 60px;
   width: 100%;
   padding: 10px 0;
+  position: relative;
+}
+
+.waveform-container.interactive {
+  cursor: pointer;
+}
+
+.waveform-hover-line {
+  position: absolute;
+  top: 0;
+  left: var(--hover-pos, 50%);
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .waveform-bar {
   flex: 1;
   background-color: #333;
   border-radius: 2px;
-  transition: background-color 0.2s, height 0.2s;
+  transition: background-color 0.2s, height 0.15s;
+  position: relative;
+  z-index: 0;
 }
 
 .waveform-bar.active {
@@ -22,7 +40,29 @@
   animation: dance 0.6s infinite ease-in-out alternate;
 }
 
+.waveform-container.interactive:hover .waveform-bar {
+  opacity: 0.8;
+}
+
 @keyframes dance {
   from { transform: scaleY(1); }
   to { transform: scaleY(1.3); }
+}
+
+/* Player integration */
+.waveform-player-wrap {
+  flex: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.waveform-player-wrap .waveform-container {
+  height: 40px;
+  padding: 4px 0;
+  gap: 1.5px;
+}
+
+.waveform-player-wrap .waveform-bar {
+  border-radius: 1px;
 }

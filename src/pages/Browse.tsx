@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Pause, ShoppingCart, Check, Search, SlidersHorizontal, ChevronDown, Loader2 } from 'lucide-react';
+import { Play, Pause, ShoppingCart, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { fetchPacks } from '../lib/api';
 import type { Pack } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
@@ -11,9 +11,6 @@ import '../styles/browse.css';
 const Browse = () => {
   const { currentTrack, isPlaying, playTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
-  const [showSidebar, setShowSidebar] = useState(() => window.innerWidth > 1024);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('All Genres');
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
@@ -40,47 +37,6 @@ const Browse = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 1024) {
-        setShowSidebar(false);
-      } else {
-        setShowSidebar(true);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const genres = [
-    'All Genres',
-    'Afro House',
-    'Baile Funk/Favela Bass',
-    'Bass House',
-    'Bounce',
-    'Club House',
-    'Deep House',
-    'Dubstep',
-    'Dutch House',
-    'Electro House',
-    'Exclusive',
-    'Free Download',
-    'Future',
-    'Hard Dance',
-    'Hard Techno',
-    'Hip Hop',
-    'House',
-    'Latin',
-    'Pop',
-    'Progressive House',
-    'Promo',
-    'Remix',
-    'Tech House',
-    'Techno',
-    'Top 40',
-    'Trance'
-  ];
-
   const handlePlay = (e: React.MouseEvent, pack: Pack) => {
     e.preventDefault();
     playTrack({
@@ -92,22 +48,19 @@ const Browse = () => {
     });
   };
 
-  const filteredPacks = packs
-    .filter(p => selectedGenre === 'All Genres' || p.genre === selectedGenre)
-    .filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'popular':
-          return (b.plays || 0) - (a.plays || 0);
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'newest':
-        default:
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      }
-    });
+  const sortedPacks = [...packs].sort((a, b) => {
+    switch (sortBy) {
+      case 'popular':
+        return (b.plays || 0) - (a.plays || 0);
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'newest':
+      default:
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    }
+  });
 
   const getSortLabel = (value: string) => {
     switch (value) {
@@ -121,54 +74,6 @@ const Browse = () => {
 
   return (
     <div className="browse-layout animate-fade-in">
-      {/* Mobile Sidebar Overlay */}
-      <div 
-        className={`sidebar-overlay ${showSidebar ? 'active' : ''}`} 
-        onClick={() => setShowSidebar(false)}
-      ></div>
-
-      {/* Sidebar Filters */}
-      <aside className={`browse-sidebar ${showSidebar ? 'active' : ''}`}>
-        <div className="sidebar-header">
-          <h3>Filters</h3>
-          <button className="sidebar-close" onClick={() => setShowSidebar(false)}>✕</button>
-        </div>
-        
-        <div className="filter-group">
-          <label>Search</label>
-          <div className="search-box">
-            <Search size={18} />
-            <input 
-              type="text" 
-              placeholder="Search packs..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label>Genres</label>
-          <ul className="filter-list">
-            {genres.map(genre => (
-              <li 
-                key={genre} 
-                className={selectedGenre === genre ? 'active' : ''}
-                onClick={() => {
-                  setSelectedGenre(genre);
-                  if (window.innerWidth <= 1024) {
-                    setShowSidebar(false);
-                  }
-                }}
-              >
-                {genre}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
-
-      {/* Main Content */}
       <main className="browse-main">
         <section className="browse-hero-premium">
           <div className="hero-overlay"></div>
@@ -188,10 +93,6 @@ const Browse = () => {
 
         <header className="browse-header">
           <div className="header-left">
-            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
-              <SlidersHorizontal size={20} />
-              <span>{showSidebar ? 'Hide Sidebar' : 'Filters'}</span>
-            </button>
             <h2 className="browse-subtitle">Featured Packs</h2>
           </div>
           
@@ -232,12 +133,12 @@ const Browse = () => {
           </div>
         ) : (
           <div className="packs-grid" id="packs-grid">
-            {filteredPacks.length === 0 ? (
+            {sortedPacks.length === 0 ? (
               <div className="empty-state">
-                <p>No packs found matching your filters.</p>
+                <p>No packs found.</p>
               </div>
             ) : (
-              filteredPacks.map((pack) => (
+              sortedPacks.map((pack) => (
                 <div key={pack.id} className="pack-card-premium">
                   <div className="pack-artwork-wrapper">
                     <Link to={`/pack/${pack.id}`}>

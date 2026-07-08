@@ -1,0 +1,915 @@
+import { createClient } from '@supabase/supabase-js';
+import { google } from 'googleapis';
+import generatePayload from 'promptpay-qr';
+import QRCode from 'qrcode';
+import Stripe from 'stripe';
+import Busboy from 'busboy';
+
+let driveClient = null;
+
+function getDriveClient() {
+  if (driveClient) return driveClient;
+  const raw = process.env.GOOGLE_DRIVE_CREDENTIALS;
+  if (!raw) return null;
+  try {
+    const creds = JSON.parse(raw);
+    const auth = new google.auth.GoogleAuth({
+      credentials: creds,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+    });
+    driveClient = google.drive({ version: 'v3', auth });
+    return driveClient;
+  } catch (e) {
+    console.error('Failed to init Drive client:', e.message);
+    return null;
+  }
+}
+
+function cors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+}
+
+const COOKIE_NAME = 'sb_token';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+
+function setAuthCookie(res, token) {
+  const cookie = [
+    `${COOKIE_NAME}=${token}`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax',
+    `Path=/`,
+    `Max-Age=${COOKIE_MAX_AGE}`,
+  ].join('; ');
+  res.setHeader('Set-Cookie', cookie);
+}
+
+function clearAuthCookie(res) {
+  const cookie = [
+    `${COOKIE_NAME}=`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax',
+    `Path=/`,
+    'Max-Age=0',
+  ].join('; ');
+  res.setHeader('Set-Cookie', cookie);
+}
+
+function getCookie(req, name) {
+  const cookieStr = req.headers.cookie || '';
+  const match = cookieStr.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ─── Rate Limiter ─────────────────────────────────────────────────
+const rateLimitStore = new Map();
+
+function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+
+  if (!rateLimitStore.has(key)) {
+    rateLimitStore.set(key, []);
+  }
+
+  const requests = rateLimitStore.get(key).filter(t => t > windowStart);
+  if (requests.length >= maxRequests) {
+    return false;
+  }
+
+  requests.push(now);
+  rateLimitStore.set(key, requests);
+  return true;
+}
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - 60000;
+  for (const [key, times] of rateLimitStore.entries()) {
+    const filtered = times.filter(t => t > cutoff);
+    if (filtered.length === 0) rateLimitStore.delete(key);
+    else rateLimitStore.set(key, filtered);
+  }
+}, 300000);
+
+// ─── Helpers ──────────────────────────────────────────────────────
+
+async function getBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => { resolve(body); });
+  });
+}
+
+function json(res, status, data) {
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(status).json(data);
+}
+
+function getClientIp(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+}
+
+async function getAuthUser(req, supabase) {
+  // Try cookie first
+  const cookieToken = getCookie(req, COOKIE_NAME);
+  if (cookieToken) {
+    const { data, error } = await supabase.auth.getUser(cookieToken);
+    if (!error && data?.user) return data.user;
+  }
+
+  // Fallback to Authorization header (for backward compat)
+  const auth = req.headers.authorization || '';
+  const headerToken = auth.replace('Bearer ', '');
+  if (headerToken) {
+    const { data, error } = await supabase.auth.getUser(headerToken);
+    if (!error && data?.user) return data.user;
+  }
+
+  return null;
+}
+
+async function getProfile(supabase, userId) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  return data;
+}
+
+function profileToUser(profile) {
+  return {
+    id: profile.id,
+    email: profile.email,
+    display_name: profile.full_name || profile.email?.split('@')[0] || '',
+    role: profile.role || 'user',
+  };
+}
+
+export default async function handler(req, res) {
+  cors(res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Rate limiting
+  const ip = getClientIp(req);
+  const rlKey = `${ip}:${req.method}:${req.url}`;
+  if (!checkRateLimit(rlKey)) {
+    return json(res, 429, { error: 'Too many requests. Please slow down.' });
+  }
+
+  const url = new URL(req.url || '/', 'http://localhost');
+  const path = url.pathname;
+
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://fbwqgbsalqgcrfxhoure.supabase.co';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const anonKey = process.env.VITE_SUPABASE_ANON_KEY || supabaseKey;
+    const authClient = supabaseKey !== anonKey ? createClient(supabaseUrl, anonKey) : supabase;
+
+    // Health
+    if (path === '/api/' || path === '/health' || path === '/api/health') {
+      return json(res, 200, { status: 'OK', timestamp: new Date().toISOString() });
+    }
+
+    // ─── Auth: Register ───────────────────────────────────────────────
+    if (path === '/api/auth/register' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { email, password, display_name, role } = body;
+
+      if (!email || !password) {
+        return json(res, 400, { error: 'Email and password are required' });
+      }
+
+      const { data, error } = await authClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: display_name || email.split('@')[0], role: role || 'user' },
+        },
+      });
+
+      if (error) {
+        const errMsg = error.message || error.error_description || error.msg || JSON.stringify(error);
+        return json(res, 400, { error: errMsg });
+      }
+
+      if (!data.user) {
+        return json(res, 400, { error: 'User creation failed' });
+      }
+
+      // Insert profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: display_name || email.split('@')[0],
+          role: role || 'user',
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.error('Profile insert error:', profileError.message);
+      }
+
+      // Set HttpOnly cookie
+      if (data.session?.access_token) {
+        setAuthCookie(res, data.session.access_token);
+      }
+
+      return json(res, 201, {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          display_name: display_name || email.split('@')[0],
+          role: role || 'user',
+        },
+      });
+    }
+
+    // ─── Auth: Login ──────────────────────────────────────────────────
+    if (path === '/api/auth/login' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { email, password } = body;
+
+      if (!email || !password) {
+        return json(res, 400, { error: 'Email and password are required' });
+      }
+
+      const { data, error } = await authClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data?.user) {
+        return json(res, 401, { error: error?.message || 'Invalid credentials' });
+      }
+
+      // Get or create profile
+      let profile = await getProfile(supabase, data.user.id);
+      if (!profile) {
+        const { insErr } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: data.user.user_metadata?.full_name || email.split('@')[0],
+            role: data.user.user_metadata?.role || 'user',
+          }, { onConflict: 'id' });
+        if (insErr) console.error('Profile insert error:', insErr.message);
+        profile = await getProfile(supabase, data.user.id);
+      }
+
+      // Set HttpOnly cookie
+      setAuthCookie(res, data.session.access_token);
+
+      return json(res, 200, {
+        user: profileToUser(profile),
+      });
+    }
+
+    // ─── Auth: Logout ─────────────────────────────────────────────────
+    if (path === '/api/auth/logout' && req.method === 'POST') {
+      clearAuthCookie(res);
+      return json(res, 200, { message: 'Logged out' });
+    }
+
+    // ─── Auth: Me ─────────────────────────────────────────────────────
+    if (path === '/api/auth/me' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) {
+        return json(res, 401, { error: 'Not authenticated' });
+      }
+
+      const profile = await getProfile(supabase, user.id);
+      return json(res, 200, {
+        user: profileToUser(profile || { id: user.id, email: user.email, full_name: user.email?.split('@')[0], role: 'user' }),
+      });
+    }
+
+    // ─── Auth: Profile Update ─────────────────────────────────────────
+    if (path === '/api/auth/profile' && req.method === 'PUT') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) {
+        return json(res, 401, { error: 'Not authenticated' });
+      }
+
+      const body = JSON.parse(await getBody(req));
+      const { display_name } = body;
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          full_name: display_name || user.email?.split('@')[0],
+        }, { onConflict: 'id' });
+
+      if (error) {
+        return json(res, 500, { error: error.message });
+      }
+
+      const profile = await getProfile(supabase, user.id);
+      return json(res, 200, {
+        user: profileToUser(profile),
+      });
+    }
+
+    // ─── Orders: Create ────────────────────────────────────────────────
+    if (path === '/api/orders' && req.method === 'POST') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const body = JSON.parse(await getBody(req));
+      const { track_ids, payment_method } = body;
+
+      if (!track_ids || !Array.isArray(track_ids) || track_ids.length === 0) {
+        return json(res, 400, { error: 'Track IDs are required' });
+      }
+
+      const { data: tracks, error: trackError } = await supabase
+        .from('tracks')
+        .select('id, title, artist, price')
+        .in('id', track_ids);
+
+      if (trackError || !tracks || tracks.length === 0) {
+        return json(res, 400, { error: 'No valid tracks found' });
+      }
+
+      const total_amount = tracks.reduce((sum, t) => sum + Number(t.price || 0), 0);
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const promptpay_ref = `PP-${timestamp}-${random}`;
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          total_amount,
+          status: total_amount === 0 ? 'paid' : 'pending',
+          payment_method: payment_method || 'promptpay',
+          promptpay_ref,
+        })
+        .select()
+        .single();
+
+      if (orderError) return json(res, 500, { error: orderError.message });
+
+      const orderItems = tracks.map(t => ({
+        order_id: order.id,
+        track_id: t.id,
+        price_at_purchase: t.price,
+      }));
+      await supabase.from('order_items').insert(orderItems);
+
+      let qr_code_url = '';
+      if (order.status === 'pending' && total_amount > 0) {
+        const payload = generatePayload(process.env.PROMPTPAY_ID || '0820014084', { amount: total_amount });
+        qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+      }
+
+      if (order.status === 'paid') {
+        await supabase.from('user_purchases').upsert(
+          tracks.map(t => ({ user_id: user.id, track_id: t.id, purchased_at: new Date() })),
+          { onConflict: 'user_id,track_id', ignoreDuplicates: true }
+        );
+      }
+
+      return json(res, 201, {
+        order,
+        qr_code_url,
+        tracks: tracks.map(t => ({ id: t.id, title: t.title, artist: t.artist, price: t.price })),
+      });
+    }
+
+    // ─── Orders: List ──────────────────────────────────────────────────
+    if (path === '/api/orders' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`*, order_items(id, price_at_purchase, track_id)`)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) return json(res, 500, { error: error.message });
+
+      // Enrich order items with track data
+      const enriched = await Promise.all(orders.map(async (order) => {
+        const items = order.order_items || [];
+        const trackIds = items.map(i => i.track_id);
+        let tracks = [];
+        if (trackIds.length > 0) {
+          const { data: t } = await supabase.from('tracks').select('id, title, artist, artwork_url').in('id', trackIds);
+          tracks = t || [];
+        }
+        return {
+          ...order,
+          order_items: items.map(item => ({
+            ...item,
+            track: tracks.find(t => t.id === item.track_id) || null,
+          })),
+        };
+      }));
+
+      return json(res, 200, enriched);
+    }
+
+    // ─── Orders: Purchased Tracks ──────────────────────────────────────
+    if (path === '/api/orders/purchased' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const { data: purchases, error } = await supabase
+        .from('user_purchases')
+        .select('track_id')
+        .eq('user_id', user.id);
+
+      if (error) return json(res, 500, { error: error.message });
+
+      const trackIds = purchases.map(p => p.track_id);
+      if (trackIds.length === 0) return json(res, 200, []);
+
+      const { data: tracks } = await supabase
+        .from('tracks')
+        .select('*')
+        .in('id', trackIds);
+
+      return json(res, 200, tracks || []);
+    }
+
+function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    const bb = Busboy({ headers: req.headers });
+    let orderId = null;
+    let fileBuffer = null;
+
+    bb.on('field', (name, val) => {
+      if (name === 'orderId') orderId = val;
+    });
+
+    bb.on('file', (fieldname, file, info) => {
+      const chunks = [];
+      file.on('data', (chunk) => chunks.push(chunk));
+      file.on('end', () => {
+        fileBuffer = Buffer.concat(chunks);
+      });
+    });
+
+    bb.on('finish', () => resolve({ orderId, fileBuffer }));
+    bb.on('error', reject);
+
+    req.pipe(bb);
+  });
+}
+
+    // ─── Payments: Verify PromptPay via SlipOK ────────────────────────
+    if (path === '/api/payments/verify' && req.method === 'POST') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const contentType = req.headers['content-type'] || '';
+
+      let orderId;
+      let slipBuffer = null;
+
+      if (contentType.includes('multipart/form-data')) {
+        const parsed = await parseMultipart(req);
+        orderId = parsed.orderId;
+        slipBuffer = parsed.fileBuffer;
+      } else {
+        const raw = await getBody(req);
+        try { orderId = JSON.parse(raw).orderId; } catch { orderId = null; }
+      }
+
+      if (!orderId) return json(res, 400, { error: 'Order ID is required' });
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+
+      if (orderError || !order) return json(res, 404, { error: 'Order not found' });
+      if (order.status === 'paid') return json(res, 200, { message: 'Order is already paid', order });
+      if (order.user_id !== user.id) return json(res, 403, { error: 'Not your order' });
+
+      // SlipOK verification
+      const slipokKey = process.env.SLIPOK_KEY || process.env.SLIPOK_API_KEY;
+      const simulationAllowed = process.env.ALLOW_PAYMENT_SIMULATION === 'true';
+
+      if (slipokKey && slipBuffer) {
+        try {
+          const formData = new FormData();
+          const blob = new Blob([slipBuffer], { type: 'image/png' });
+          formData.append('file', blob, 'slip.png');
+
+          const slipokRes = await fetch(`https://api.slipok.com/api/line/apikey/${slipokKey}`, {
+            method: 'POST',
+            headers: {
+              'x-authorization': slipokKey,
+              'x-provider': 'slipok',
+            },
+            body: formData,
+          });
+
+          const slipokData = await slipokRes.json();
+
+          if (!slipokRes.ok || slipokData.code !== '200') {
+            return json(res, 400, { error: 'Slip verification failed. Please upload a valid payment slip.' });
+          }
+
+          // Verify amount matches
+          const transAmount = parseFloat(slipokData.data?.amount || '0');
+          if (transAmount < order.total_amount) {
+            return json(res, 400, { error: `Payment amount mismatch. Expected ${order.total_amount}, received ${transAmount}` });
+          }
+        } catch (err) {
+          return json(res, 500, { error: `SlipOK verification error: ${err.message}` });
+        }
+      } else if (simulationAllowed) {
+        // Simulation mode fallback
+        console.log('Simulating payment verification for order', orderId);
+      } else {
+        return json(res, 500, { error: 'Payment verification service is not configured' });
+      }
+
+      // Mark order as paid
+      await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('track_id')
+        .eq('order_id', orderId);
+
+      if (items && items.length > 0) {
+        await supabase.from('user_purchases').upsert(
+          items.map(i => ({ user_id: user.id, track_id: i.track_id, purchased_at: new Date() })),
+          { onConflict: 'user_id,track_id', ignoreDuplicates: true }
+        );
+      }
+
+      const { data: updated } = await supabase.from('orders').select('*').eq('id', orderId).single();
+      return json(res, 200, { message: 'Payment verified successfully', order: updated });
+    }
+
+    // ─── Stripe: Create Checkout Session ──────────────────────────────
+    if (path === '/api/stripe/create-checkout-session' && req.method === 'POST') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const body = JSON.parse(await getBody(req));
+      const { track_ids } = body;
+
+      if (!track_ids || !Array.isArray(track_ids) || track_ids.length === 0) {
+        return json(res, 400, { error: 'Track IDs are required' });
+      }
+
+      const { data: tracks, error: trackError } = await supabase
+        .from('tracks')
+        .select('id, title, artist, price')
+        .in('id', track_ids);
+
+      if (trackError || !tracks) return json(res, 400, { error: 'Invalid tracks' });
+
+      const total_amount = tracks.reduce((sum, t) => sum + Number(t.price || 0), 0);
+
+      if (total_amount <= 0) {
+        return json(res, 400, { error: 'Total amount must be greater than 0' });
+      }
+
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey || stripeKey.includes('your_stripe_secret_key')) {
+        return json(res, 500, { error: 'Stripe is not configured' });
+      }
+
+      const stripe = new Stripe(stripeKey);
+
+      // Create pending order in DB
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const promptpay_ref = `STRIPE-${timestamp}-${random}`;
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          total_amount,
+          status: 'pending',
+          payment_method: 'stripe',
+          promptpay_ref,
+        })
+        .select()
+        .single();
+
+      if (orderError) return json(res, 500, { error: orderError.message });
+
+      await supabase.from('order_items').insert(
+        tracks.map(t => ({ order_id: order.id, track_id: t.id, price_at_purchase: t.price }))
+      );
+
+      // Create Stripe Checkout Session
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+      const session = await stripe.checkout.sessions.create({
+        line_items: tracks.map(t => ({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: t.title || 'Untitled Track',
+              description: t.artist || '',
+            },
+            unit_amount: Math.round(Number(t.price) * 100),
+          },
+          quantity: 1,
+        })),
+        mode: 'payment',
+        success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${frontendUrl}/cart`,
+        metadata: {
+          order_id: order.id,
+          user_id: user.id,
+        },
+      });
+
+      return json(res, 200, { url: session.url, order });
+    }
+
+    // ─── Stripe: Webhook ──────────────────────────────────────────────
+    if (path === '/api/stripe/webhook' && req.method === 'POST') {
+      const rawBody = await getBody(req);
+      const sig = req.headers['stripe-signature'];
+
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+      if (!stripeKey || stripeKey.includes('your_stripe_secret_key')) {
+        return json(res, 500, { error: 'Stripe is not configured' });
+      }
+
+      if (!webhookSecret || webhookSecret.includes('your_stripe_webhook_secret')) {
+        return json(res, 500, { error: 'Stripe webhook secret is not configured. Set STRIPE_WEBHOOK_SECRET in environment variables.' });
+      }
+
+      const stripe = new Stripe(stripeKey);
+
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      } catch (err) {
+        return json(res, 400, { error: `Webhook signature verification failed: ${err.message}` });
+      }
+
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const orderId = session.metadata?.order_id;
+        const userId = session.metadata?.user_id;
+
+        if (orderId && userId) {
+          // Mark order as paid
+          await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+
+          // Create user_purchases
+          const { data: items } = await supabase
+            .from('order_items')
+            .select('track_id')
+            .eq('order_id', orderId);
+
+          if (items && items.length > 0) {
+            await supabase.from('user_purchases').upsert(
+              items.map(i => ({ user_id: userId, track_id: i.track_id, purchased_at: new Date() })),
+              { onConflict: 'user_id,track_id', ignoreDuplicates: true }
+            );
+          }
+        }
+      }
+
+      return json(res, 200, { received: true });
+    }
+
+    // ─── Stripe: Session Status ──────────────────────────────────────
+    if (path === '/api/stripe/session-status' && req.method === 'GET') {
+      const sessionId = url.searchParams.get('session_id');
+      if (!sessionId) return json(res, 400, { error: 'Missing session_id' });
+
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (!stripeKey || stripeKey.includes('your_stripe_secret_key')) {
+        return json(res, 500, { error: 'Stripe is not configured' });
+      }
+
+      const stripe = new Stripe(stripeKey);
+
+      try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        return json(res, 200, {
+          status: session.status,
+          payment_status: session.payment_status,
+          order_id: session.metadata?.order_id,
+        });
+      } catch (err) {
+        return json(res, 500, { error: err.message });
+      }
+    }
+
+    // ─── Music Catalog ────────────────────────────────────────────────
+    if (path === '/api/music' && req.method === 'GET') {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        return json(res, 500, { error: error.message });
+      }
+      return json(res, 200, data);
+    }
+
+    // ─── Single Track ─────────────────────────────────────────────────
+    if (path.startsWith('/api/music/') && req.method === 'GET' && !path.startsWith('/api/music')) {
+      // handled below
+    }
+
+    // ─── Preview (same as download, but inline for audio playback) ────
+    if (path.startsWith('/api/preview/') && req.method === 'GET') {
+      const id = path.replace('/api/preview/', '');
+      const { data: track, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !track) {
+        return json(res, 404, { error: 'Track not found' });
+      }
+      if (!track.gdrive_file_id && !track.audio_url) {
+        return json(res, 404, { error: 'No audio available' });
+      }
+
+      const drive = getDriveClient();
+      if (track.gdrive_file_id && drive) {
+        try {
+          const fileMeta = await drive.files.get({
+            fileId: track.gdrive_file_id,
+            fields: 'mimeType',
+          });
+          res.setHeader('Content-Type', fileMeta.data.mimeType || 'audio/mpeg');
+          res.setHeader('Content-Disposition', 'inline');
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          const response = await drive.files.get(
+            { fileId: track.gdrive_file_id, alt: 'media' },
+            { responseType: 'stream' }
+          );
+          response.data.pipe(res);
+          return;
+        } catch (driveErr) {
+          return json(res, 404, { error: 'Audio file not accessible. Try again later.' });
+        }
+      }
+
+      if (track.gdrive_file_id) {
+        return json(res, 404, { error: 'Audio file not accessible' });
+      }
+
+      // Redirect to Supabase Storage directly (has CORS: * header)
+      if (track.audio_url) {
+        return res.redirect(302, track.audio_url);
+      }
+
+      return json(res, 404, { error: 'No audio source found' });
+    }
+
+    // ─── Downloads: List All Purchased Tracks ─────────────────────────
+    if (path === '/api/downloads' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Please sign in' });
+
+      const { data: purchases, error } = await supabase
+        .from('user_purchases')
+        .select('track_id')
+        .eq('user_id', user.id);
+
+      if (error) return json(res, 500, { error: error.message });
+
+      const trackIds = purchases.map(p => p.track_id);
+      if (trackIds.length === 0) return json(res, 200, []);
+
+      const { data: tracks } = await supabase
+        .from('tracks')
+        .select('*')
+        .in('id', trackIds);
+
+      return json(res, 200, tracks || []);
+    }
+
+    // ─── Downloads (requires auth + purchase) ─────────────────────────
+    if (path.startsWith('/api/downloads/') && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Please sign in to download' });
+
+      const id = path.replace('/api/downloads/', '');
+      const { data: track, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !track) return json(res, 404, { error: 'Track not found' });
+      if (!track.gdrive_file_id && !track.audio_url) return json(res, 404, { error: 'No audio available for this track' });
+
+      // Check purchase
+      const { data: purchase } = await supabase
+        .from('user_purchases')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('track_id', id)
+        .single();
+
+      if (!purchase) return json(res, 403, { error: 'You have not purchased this track' });
+
+      // Increment download count
+      await supabase.from('user_purchases').update({ download_count: (purchase.download_count || 0) + 1 }).eq('user_id', user.id).eq('track_id', id);
+
+      const drive = getDriveClient();
+      if (track.gdrive_file_id && drive) {
+        try {
+          const fileMeta = await drive.files.get({
+            fileId: track.gdrive_file_id,
+            fields: 'mimeType, name, size',
+          });
+          const mimeType = fileMeta.data.mimeType || 'audio/mpeg';
+          const fileName = track.title
+            ? `${track.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}.mp3`
+            : `${track.id}.mp3`;
+
+          res.setHeader('Content-Type', mimeType);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+
+          const response = await drive.files.get(
+            { fileId: track.gdrive_file_id, alt: 'media' },
+            { responseType: 'stream' }
+          );
+          response.data.pipe(res);
+          return;
+        } catch (driveErr) {
+          return json(res, 500, { error: 'Failed to stream audio. File may not be accessible.' });
+        }
+      }
+
+      if (track.gdrive_file_id) {
+        return json(res, 500, { error: 'Audio file is not accessible' });
+      }
+
+      if (track.audio_url) {
+        try {
+          const audioRes = await fetch(track.audio_url);
+          if (!audioRes.ok) throw new Error('Failed to fetch audio');
+          const ext = track.audio_url.split('?')[0].split('.').pop()?.toLowerCase() || 'mp3';
+          const mimeMap = { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac', aac: 'audio/aac', m4a: 'audio/mp4', webm: 'audio/webm' };
+          const ct = mimeMap[ext] || 'audio/mpeg';
+          const fileName = `${track.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}.mp3`;
+          res.setHeader('Content-Type', ct);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          const buffer = Buffer.from(await audioRes.arrayBuffer());
+          return res.end(buffer);
+        } catch (fetchErr) {
+          return json(res, 500, { error: 'Failed to fetch audio file' });
+        }
+      }
+
+      return json(res, 404, { error: 'No audio source found' });
+    }
+
+    // ─── Track by ID (fallback) ───────────────────────────────────────
+    const musicIdMatch = path.match(/^\/api\/music\/(.+)$/);
+    if (musicIdMatch && req.method === 'GET') {
+      const id = musicIdMatch[1];
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !data) {
+        return json(res, 404, { error: 'Track not found' });
+      }
+      return json(res, 200, data);
+    }
+
+    return json(res, 404, { error: 'Not found' });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('API error:', msg);
+    return json(res, 500, { error: msg });
+  }
+}

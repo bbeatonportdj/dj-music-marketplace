@@ -1,113 +1,13 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import app from './app.js';
 import { connectDB, sequelize } from './config/db.js';
-
-// Import Routes
-import authRoutes from './routes/auth.js';
-import musicRoutes from './routes/music.js';
-import orderRoutes from './routes/order.js';
-import paymentRoutes from './routes/payment.js';
-import stripeRoutes from './routes/stripe.js';
-import downloadRoutes from './routes/download.js';
-import previewRoutes from './routes/preview.js';
-import prepareRoutes from './routes/prepare.js';
-import adminRoutes from './routes/admin.js';
-
-// Import Models for Sync
 import { Track } from './models/index.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load env files
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dotenv.config();
-
-const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
-
-// Apply Rate Limiter
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests from this IP, please try again after 15 minutes.' }
-});
-app.use(limiter);
-
-// Configure CORS Whitelist
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
-// Raw body for Stripe webhook (must be before express.json())
-app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Serve static uploads
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/music', musicRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/stripe', stripeRoutes);
-app.use('/api/downloads', downloadRoutes);
-app.use('/api/preview', previewRoutes);
-app.use('/api/prepare', prepareRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Root
-app.get('/', (_req, res) => {
-  res.json({ name: 'DJ Marketplace API', version: '1.0.0', status: 'running' });
-});
-
-// Health Check
-app.get('/health', (_req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
-});
-
-// Error handling middleware
-app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const e = (err && typeof err === 'object') ? err as Record<string, unknown> : {};
-  const status = (e.status as number) || (e.statusCode as number) || 500;
-  const message = (e && 'message' in e) ? String((e as Record<string, unknown>).message) : String(err);
-  console.error('Unhandled server error:', message);
-  void _next;
-  res.status(status).json({
-    error: message || 'Internal Server Error',
-  });
-});
-
-// Seed Initial Tracks if DB is Empty
 const seedInitialTracks = async () => {
   const count = await Track.count();
   if (count === 0) {
-    console.log('🌱 Database is empty. Seeding initial DJ tracks...');
+    console.log('Seeding initial DJ tracks...');
     const initialTracks = [
       {
         title: 'Espresso',
@@ -163,7 +63,7 @@ const seedInitialTracks = async () => {
         bpm: 130,
         key: '8B',
         genre: 'Latin',
-        price: 0.00, // Free track
+        price: 0.00,
         audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
         artwork_url: 'https://images.unsplash.com/photo-1514525253361-bee8718a74a2?w=600&h=600&fit=crop',
         is_new: false,
@@ -171,25 +71,20 @@ const seedInitialTracks = async () => {
       }
     ];
     await Track.bulkCreate(initialTracks);
-    console.log('🌱 Seeding completed successfully.');
+    console.log('Seeding completed successfully.');
   }
 };
 
-// Start Server & Sync DB
 const startServer = async () => {
   await connectDB();
-  
-  // Sync all models (force: false preserves data, alter: true updates schema structure)
   await sequelize.sync({ alter: true });
-  console.log('✅ Models synced to database.');
-  
+  console.log('Models synced to database.');
   await seedInitialTracks();
-
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 };
 
 startServer().catch((error) => {
-  console.error('❌ Server failed to start:', error);
+  console.error('Server failed to start:', error);
 });

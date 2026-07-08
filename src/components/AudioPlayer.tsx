@@ -1,6 +1,7 @@
 import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
+import Waveform from './Waveform';
 import '../styles/player.css';
 
 const AudioPlayer = () => {
@@ -18,8 +19,8 @@ const AudioPlayer = () => {
 
   const progress = (currentTime / duration) * 100 || 0;
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    seek(Number(e.target.value));
+  const handleWaveformSeek = (percent: number) => {
+    seek(percent * duration);
   };
 
   return (
@@ -33,7 +34,7 @@ const AudioPlayer = () => {
         <div className="current-track-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div className="current-track-title">{currentTrack.title || t('player.select')}</div>
-            <span className="preview-badge">30s Preview</span>
+            <span className="preview-badge">90s Preview</span>
           </div>
           <div className="current-track-editor">{currentTrack.artist || t('player.various')}</div>
         </div>
@@ -51,18 +52,14 @@ const AudioPlayer = () => {
         </div>
         <div className="progress-container">
           <span className="time">{formatTime(currentTime)}</span>
-          <div className="progress-bar-wrapper">
-            <input 
-              type="range" 
-              min={0} 
-              max={duration || 0} 
-              value={currentTime} 
-              onChange={handleSeek}
-              className="progress-slider"
+          <div className="waveform-player-wrap">
+            <Waveform 
+              isPlaying={isPlaying} 
+              progress={progress} 
+              onSeek={handleWaveformSeek}
+              height={40}
+              barCount={80}
             />
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-            </div>
           </div>
           <span className="time">{formatTime(duration)}</span>
         </div>

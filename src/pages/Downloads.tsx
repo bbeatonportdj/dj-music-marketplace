@@ -21,22 +21,18 @@ interface Track {
 }
 
 const Downloads = () => {
-  const { user, loading: authLoading, token } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { showNotification } = useNotifications();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
 
     const fetchDownloads = async () => {
       try {
-        const res = await fetch(apiUrl('/api/downloads'), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(apiUrl('/api/downloads'));
 
         if (!res.ok) throw new Error('Failed to fetch downloads');
         const data = await res.json();
@@ -51,16 +47,12 @@ const Downloads = () => {
     };
 
     fetchDownloads();
-  }, [user, token, showNotification]);
+  }, [user, showNotification]);
 
   const handleDownload = async (trackId: string, trackTitle: string) => {
     setDownloading(trackId);
     try {
-      const res = await fetch(apiUrl(`/api/downloads/${trackId}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(apiUrl(`/api/downloads/${trackId}`));
 
       if (!res.ok) {
         const err = await res.json();

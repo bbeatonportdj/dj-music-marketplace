@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useFavorites } from '../context/FavoritesContext';
 import Waveform from '../components/Waveform';
+import TrackRecommendations from '../components/TrackRecommendations';
 import '../styles/track-detail.css';
 
 const TrackDetail = () => {
@@ -209,6 +210,13 @@ const TrackDetail = () => {
             View All Singles
           </Link>
         </div>
+
+        {track && (
+          <TrackRecommendations
+            currentId={track.id}
+            genre={track.genre}
+          />
+        )}
       </div>
     </div>
   );

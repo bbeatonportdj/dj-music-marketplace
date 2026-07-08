@@ -17,7 +17,7 @@ interface AuthContextType {
   isProducer: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, role?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, role?: string, display_name?: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -33,31 +33,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isProducer, setIsProducer] = useState(false);
 
-  // Load user from JWT token on mount
+  // Load user from HttpOnly cookie on mount
   useEffect(() => {
     const loadUser = async () => {
-      const savedToken = localStorage.getItem('jwt_token');
-      if (!savedToken) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        const res = await fetch(apiUrl('/api/auth/me'), {
-          headers: {
-            'Authorization': `Bearer ${savedToken}`,
-          },
-        });
+        const res = await fetch(apiUrl('/api/auth/me'));
         
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
-          setToken(savedToken);
           setIsAdmin(data.user.role === 'admin');
           setIsProducer(data.user.role === 'producer');
-        } else {
-          // Token expired or invalid
-          localStorage.removeItem('jwt_token');
         }
       } catch (err) {
         console.error('Failed to load user info:', err);
@@ -83,9 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to login');
       }
 
-      localStorage.setItem('jwt_token', data.token);
       setUser(data.user);
-      setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
       setIsProducer(data.user.role === 'producer');
       return { error: null };
@@ -95,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, role?: string) => {
+  const signUp = async (email: string, password: string, role?: string, display_name?: string) => {
     try {
       const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
@@ -103,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({
           email,
           password,
-          display_name: email.split('@')[0],
+          display_name: display_name || email.split('@')[0],
           ...(role && { role }),
         }),
       });
@@ -114,9 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to register');
       }
 
-      localStorage.setItem('jwt_token', data.token);
       setUser(data.user);
-      setToken(data.token);
       setIsAdmin(data.user.role === 'admin');
       setIsProducer(data.user.role === 'producer');
       return { error: null };
@@ -159,7 +141,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    localStorage.removeItem('jwt_token');
+    try {
+      await fetch(apiUrl('/api/auth/logout'), { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setUser(null);
     setToken(null);
     setIsAdmin(false);
@@ -168,15 +154,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfileName = async (displayName: string) => {
     try {
-      const savedToken = localStorage.getItem('jwt_token');
-      if (!savedToken) throw new Error('Not authenticated');
-
       const res = await fetch(apiUrl('/api/auth/profile'), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${savedToken}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ display_name: displayName }),
       });
 
@@ -208,4 +188,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

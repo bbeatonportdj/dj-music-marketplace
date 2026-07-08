@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { getSupabaseClient } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
 import { Download, Loader2, Clock, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
 import '../styles/orders.css';
@@ -40,41 +39,15 @@ const Orders = () => {
 
     const fetchOrders = async () => {
       try {
-        const client = getSupabaseClient();
-        const { data, error } = await client
-          .from('orders')
-          .select(`
-            id,
-            total_amount,
-            status,
-            created_at,
-            order_items (
-              id,
-              price_at_purchase,
-              track:tracks (
-                id,
-                title,
-                artist,
-                artwork_url
-              )
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        const res = await fetch(apiUrl('/api/orders'));
 
-        if (error) throw error;
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to fetch orders');
+        }
 
-        const normalized = ((data || []) as Array<Record<string, unknown>>).map((order) => ({
-          ...(order as Record<string, unknown>),
-          order_items: ((order.order_items as Array<Record<string, unknown>> | undefined) || []).map((item) => ({
-            ...(item as Record<string, unknown>),
-            track: Array.isArray(item.track)
-              ? (item.track as Array<Record<string, unknown>>)[0] ?? null
-              : (item.track as Record<string, unknown> | null) ?? null,
-          }))
-        })) as Order[];
-
-        setOrders(normalized);
+        const data = await res.json();
+        setOrders(data as Order[]);
       } catch (error: unknown) {
           console.error('Error fetching orders:', error);
           const message = error instanceof Error ? error.message : String(error);
@@ -104,14 +77,7 @@ const Orders = () => {
   const handleDownload = async (trackId: string, trackTitle: string) => {
     setDownloading(trackId);
     try {
-      const token = localStorage.getItem('jwt_token');
-      if (!token) throw new Error('Not authenticated');
-
-      const res = await fetch(apiUrl(`/api/downloads/${trackId}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(apiUrl(`/api/downloads/${trackId}`));
 
       if (!res.ok) {
         const err = await res.json();

@@ -71,7 +71,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       await Purchase.bulkCreate(purchases, { ignoreDuplicates: true });
       
       // Send download link email immediately for free orders
-      EmailService.sendDownloadLinksEmail(req.user.email, req.user.display_name, order.id, tracks);
+      EmailService.sendDownloadLinksEmail(req.user.email, req.user.display_name, order.id, tracks.map(t => t.toJSON()));
     } else {
       // Send admin alert for pending orders
       EmailService.sendAdminOrderNotification(order.id, total_amount, req.user.email);

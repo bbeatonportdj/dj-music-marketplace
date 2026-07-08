@@ -1,5 +1,5 @@
 -- ============================================================
--- RunMusic-storeDj - Schema V2: Orders, Profiles, Purchases
+-- DJ Music Marketplace - Schema V2: Orders, Profiles, Purchases
 -- Run this in your Supabase SQL Editor:
 -- https://supabase.com/dashboard/project/fbwqgbsalqgcrfxhoure/sql
 -- ============================================================

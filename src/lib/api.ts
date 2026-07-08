@@ -220,7 +220,7 @@ const trackFromSupabase = (t: Record<string, unknown>): Track => {
     genre: String(t.genre ?? 'Unknown'),
     price,
     artwork: String(t.artwork_url ?? ''),
-    preview_url: `/api/preview/${id}`,
+    preview_url: t.audio_url ? String(t.audio_url).replace(/\?download=$/, '').replace(/ /g, '%20') : `/api/preview/${id}`,
     full_audio_url: String(t.audio_url ?? ''),
     created_at,
     date: new Date(created_at).toLocaleDateString(),

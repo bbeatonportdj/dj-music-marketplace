@@ -218,6 +218,45 @@
   }
 }
 
+@media (max-width: 480px) {
+  .audio-player {
+    padding: 0 8px;
+    height: 64px;
+  }
+
+  .player-left {
+    width: 40%;
+    gap: 6px;
+  }
+
+  .current-track-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .current-track-title {
+    font-size: 10px;
+  }
+
+  .player-controls {
+    gap: 8px;
+  }
+
+  .player-controls .icon-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  .play-pause-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  :root {
+    --player-height: 64px;
+  }
+}
+
 .preview-badge {
   font-size: 9px;
   background: var(--primary-color);

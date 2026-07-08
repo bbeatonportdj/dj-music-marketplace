@@ -8,7 +8,7 @@
 .singles-sidebar {
   width: 280px;
   background-color: var(--surface-color);
-  border-right: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   padding: 24px;
   position: sticky;
   top: var(--nav-height);
@@ -19,7 +19,7 @@
 }
 
 .singles-sidebar:not(.active) {
-  margin-left: -280px;
+  margin-right: -280px;
   opacity: 0;
   pointer-events: none;
 }
@@ -201,7 +201,7 @@
 
 .status-badge-hot {
   font-size: 9px;
-  background: #ff453a;
+  background: #ff3b30;
   color: #fff;
   padding: 1px 4px;
   border-radius: 2px;
@@ -228,7 +228,7 @@
   letter-spacing: 0.5px;
 }
 
-.v-dirty { background: rgba(255, 59, 48, 0.2); color: #ff453a; }
+.v-dirty { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
 .v-clean { background: rgba(52, 199, 89, 0.2); color: #32d74b; }
 .v-intro { background: rgba(10, 132, 255, 0.2); color: #3395ff; }
 
@@ -276,6 +276,152 @@
   color: var(--primary-color);
   background-color: rgba(255, 59, 48, 0.1);
   border: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+/* BPM Range Inputs */
+.bpm-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bpm-input {
+  width: 100%;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Sora', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.bpm-input:focus {
+  border-color: var(--primary-color);
+}
+
+.bpm-separator {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* Camelot Key Grid */
+.key-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.key-chip {
+  padding: 4px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.key-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.key-chip.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Version Type */
+.version-type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.vt-chip {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+  text-transform: capitalize;
+}
+
+.vt-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.vt-chip.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Energy Level */
+.energy-group {
+  display: flex;
+  gap: 6px;
+}
+
+.energy-btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.energy-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--text-main);
+}
+
+.energy-btn.active {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Clear Filters */
+.clear-filters {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Sora', sans-serif;
+}
+
+.clear-filters:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 /* Energy Meter */
@@ -412,5 +558,41 @@
     font-size: 10px;
     min-width: 48px;
     padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .singles-main {
+    padding: 12px 0;
+  }
+
+  .singles-title {
+    font-size: 16px;
+  }
+
+  .singles-table {
+    min-width: 480px;
+  }
+
+  .singles-table th, .singles-table td {
+    padding: 6px 6px;
+  }
+
+  .track-title-text {
+    font-size: 11px;
+  }
+
+  .tagss-row {
+    display: none;
+  }
+
+  .play-btn-arsenal {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cart-btn-arsenal {
+    min-width: 40px;
+    padding: 4px 6px;
   }
 }

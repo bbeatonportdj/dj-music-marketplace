@@ -119,8 +119,8 @@
 
 .status-error {
   background-color: rgba(255, 59, 48, 0.1);
-  color: #ff453a;
-  border: 1px solid #ff453a;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
 }
 
 .status-success {

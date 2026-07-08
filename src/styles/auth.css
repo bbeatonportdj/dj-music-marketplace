@@ -382,3 +382,30 @@
     padding: 12px;
   }
 }
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 16px 12px;
+  }
+
+  .auth-card-wrapper {
+    gap: 16px;
+  }
+
+  .auth-form-area {
+    padding: 16px;
+  }
+
+  .auth-input-wrapper input {
+    padding: 12px 14px 12px 38px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  .auth-submit-btn {
+    padding: 14px;
+  }
+
+  .social-btn {
+    padding: 12px;
+  }
+}

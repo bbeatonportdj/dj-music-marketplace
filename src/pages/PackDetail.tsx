@@ -11,6 +11,7 @@ import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 import { useNotifications } from '../context/NotificationContext';
 import Waveform from '../components/Waveform';
+import TrackRecommendations from '../components/TrackRecommendations';
 import '../styles/pack-detail.css';
 
 const PackDetail = () => {
@@ -206,6 +207,14 @@ const PackDetail = () => {
               </div>
             ))}
           </div>
+        )}
+
+        {pack && (
+          <TrackRecommendations
+            currentId={pack.id}
+            genre={pack.genre}
+            excludeIds={tracks.map(t => t.id)}
+          />
         )}
       </div>
     </div>

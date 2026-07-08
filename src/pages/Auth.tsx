@@ -85,8 +85,7 @@ const Auth = () => {
           throw new Error(data.error || 'OAuth exchange failed');
         }
 
-        localStorage.setItem('jwt_token', data.token);
-        // Force reload to let AuthProvider pick up the token and load user
+        // Force reload to let AuthProvider pick up user from cookie
         window.location.href = '/browse';
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -172,7 +171,7 @@ const Auth = () => {
         {/* Logo */}
         <div className="auth-logo">
           <Disc size={36} style={{ color: 'var(--accent-color)' }} />
-          <span>RunMusic-storeDj</span>
+          <span>DJ Music Marketplace</span>
         </div>
 
         <div className="auth-card">

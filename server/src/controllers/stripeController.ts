@@ -64,7 +64,7 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
         purchased_at: new Date(),
       }));
       await Purchase.bulkCreate(purchases, { ignoreDuplicates: true });
-      EmailService.sendDownloadLinksEmail(req.user.email, req.user.display_name, order.id, tracks);
+      EmailService.sendDownloadLinksEmail(req.user.email, req.user.display_name, order.id, tracks.map(t => t.toJSON()));
 
       return res.status(201).json({
         order,
@@ -163,9 +163,9 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       order.status = 'paid';
       await order.save();
 
-      const tracks = order.items
-        .map((item) => (item as Record<string, unknown>).track)
-        .filter(Boolean) as unknown as Track[];
+      const tracks = (order as any).items
+        .map((item: any) => item.track)
+        .filter(Boolean) as Track[];
       const purchases = tracks.map((track) => ({
         user_id: order.user_id,
         track_id: track.id,
@@ -178,7 +178,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         order.email,
         user?.display_name || 'Customer',
         order.id,
-        tracks,
+        tracks.map(t => t.toJSON()),
       );
 
       console.log(`✅ Order ${orderId} completed via Stripe webhook`);

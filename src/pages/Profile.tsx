@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, Mail, Shield, Save, Loader2, 
   LogOut, ChevronRight, UserCircle, BarChart3,
-  ShoppingBag, Download, CheckCircle, Clock
+  ShoppingBag, Download, CheckCircle, Clock,
+  Music, HardDrive, CreditCard, Search, ArrowDown, Play
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -34,59 +35,67 @@ interface Order {
 }
 
 const Profile = () => {
-  const { user, signOut, isAdmin, isProducer, token, updateProfileName } = useAuth();
+  const { user, signOut, isAdmin, isProducer, updateProfileName } = useAuth();
   const { showNotification } = useNotifications();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'info' | 'orders'>('info');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'downloads' | 'info' | 'orders'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(() => user?.display_name || '');
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [purchasedTracks, setPurchasedTracks] = useState<any[]>([]);
+  const [purchasedLoading, setPurchasedLoading] = useState(false);
+  const [downloadSearch, setDownloadSearch] = useState('');
   const email = user?.email || '';
 
-  // Initialize displayName when user is loaded
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
 
-  // Load orders when activeTab changes to 'orders'
   useEffect(() => {
-    if (activeTab === 'orders' && token) {
+    const fetchDashboard = async () => {
+      setPurchasedLoading(true);
+      try {
+        const [ordersRes, purchasesRes] = await Promise.all([
+          fetch(apiUrl('/api/orders')),
+          fetch(apiUrl('/api/orders/purchased')),
+        ]);
+        if (ordersRes.ok) setOrders(await ordersRes.json());
+        if (purchasesRes.ok) setPurchasedTracks(await purchasesRes.json());
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      } finally {
+        setPurchasedLoading(false);
+      }
+    };
+    if (activeTab === 'dashboard' || activeTab === 'downloads') fetchDashboard();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
       const fetchOrders = async () => {
         setOrdersLoading(true);
         try {
-          const res = await fetch(apiUrl('/api/orders'), {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setOrders(data);
-          } else {
-            console.error('Failed to fetch orders');
-          }
+          const res = await fetch(apiUrl('/api/orders'));
+          if (res.ok) setOrders(await res.json());
         } catch (err) {
           console.error('Error fetching orders:', err);
         } finally {
           setOrdersLoading(false);
         }
       };
-
       fetchOrders();
     }
-  }, [activeTab, token]);
+  }, [activeTab]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
     const { error } = await updateProfileName(displayName);
     setLoading(false);
-    
     if (error) {
       showNotification(error || 'Failed to update profile', 'error');
     } else {
@@ -98,6 +107,10 @@ const Profile = () => {
     await signOut();
     navigate('/auth');
   };
+
+  const paidOrders = orders.filter(o => o.status === 'paid');
+  const totalDownloads = purchasedTracks.length;
+  const totalSpent = paidOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
 
   if (!user) return null;
 
@@ -117,6 +130,22 @@ const Profile = () => {
 
       <div className="profile-grid">
         <aside className="profile-nav">
+          <button 
+            className={`profile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <BarChart3 size={18} />
+            <span>Dashboard</span>
+          </button>
+
+          <button 
+            className={`profile-nav-item ${activeTab === 'downloads' ? 'active' : ''}`}
+            onClick={() => setActiveTab('downloads')}
+          >
+            <Download size={18} />
+            <span>My Downloads</span>
+          </button>
+
           <button 
             className={`profile-nav-item ${activeTab === 'info' ? 'active' : ''}`}
             onClick={() => setActiveTab('info')}
@@ -157,6 +186,244 @@ const Profile = () => {
         </aside>
 
         <main className="profile-content">
+          {/* ============ DASHBOARD TAB ============ */}
+          {activeTab === 'dashboard' && (
+            <section className="profile-section">
+              <div className="dashboard-stats">
+                <div className="stat-card">
+                  <div className="stat-icon stat-icon-tracks">
+                    <Music size={24} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{totalDownloads}</span>
+                    <span className="stat-label">Purchased Tracks</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon stat-icon-downloads">
+                    <Download size={24} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{totalDownloads}</span>
+                    <span className="stat-label">Available Downloads</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon stat-icon-spent">
+                    <CreditCard size={24} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">${totalSpent.toFixed(2)}</span>
+                    <span className="stat-label">Total Spent</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon stat-icon-account">
+                    <HardDrive size={24} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">
+                      {isAdmin ? 'Admin' : isProducer ? 'Producer' : 'Member'}
+                    </span>
+                    <span className="stat-label">Account Type</span>
+                  </div>
+                </div>
+              </div>
+
+              <h2>My Downloads</h2>
+              {purchasedLoading ? (
+                <div className="profile-loading-spinner" style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                  <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-color)' }} />
+                </div>
+              ) : purchasedTracks.length === 0 ? (
+                <div className="dashboard-empty">
+                  <Music size={40} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                  <p>No purchased tracks yet.</p>
+                  <button onClick={() => navigate('/browse')} className="save-btn" style={{ width: 'auto', display: 'inline-flex', marginTop: '0.5rem' }}>
+                    Browse Catalog
+                  </button>
+                </div>
+              ) : (
+                <div className="dashboard-tracks">
+                  {purchasedTracks.map((track: any) => (
+                    <div key={track.id} className="dashboard-track-item">
+                      <img
+                        src={track.artwork_url || track.artwork || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}
+                        alt={track.title}
+                        className="dashboard-track-art"
+                      />
+                      <div className="dashboard-track-info">
+                        <div className="dashboard-track-title">{track.title}</div>
+                        <div className="dashboard-track-artist">{track.artist}</div>
+                      </div>
+                      <div className="dashboard-track-meta">
+                        <span className="dashboard-track-bpm">{track.bpm} BPM</span>
+                        <span className="dashboard-track-key">{track.key}</span>
+                      </div>
+                      <button
+                        className="dashboard-dl-btn"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
+                            if (!res.ok) throw new Error('Download failed');
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${track.title}.mp3`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          } catch (err: any) {
+                            showNotification(err.message || 'Download failed', 'error');
+                          }
+                        }}
+                      >
+                        <Download size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+          {/* ============ MY DOWNLOADS TAB ============ */}
+          {activeTab === 'downloads' && (
+            <section className="profile-section downloads-section">
+              <div className="downloads-header">
+                <div>
+                  <h2>User <span style={{ color: 'var(--accent-color)' }}>Downloads</span> Manager</h2>
+                  <p className="downloads-subtitle">Manage and access your purchased high-fidelity masters.</p>
+                </div>
+                <button className="bulk-dl-btn" onClick={() => {
+                  purchasedTracks.forEach(async (track: any) => {
+                    try {
+                      const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
+                      if (!res.ok) return;
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${track.title}.mp3`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    } catch {}
+                  });
+                }}>
+                  <ArrowDown size={16} />
+                  Bulk Download
+                </button>
+              </div>
+
+              <div className="downloads-search">
+                <Search size={18} className="search-icon" />
+                <input
+                  type="text"
+                  className="downloads-search-input"
+                  placeholder="Filter my collection..."
+                  value={downloadSearch}
+                  onChange={(e) => setDownloadSearch(e.target.value)}
+                />
+              </div>
+
+              {purchasedLoading ? (
+                <div className="profile-loading-spinner" style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+                  <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-color)' }} />
+                </div>
+              ) : purchasedTracks.length === 0 ? (
+                <div className="dashboard-empty">
+                  <Music size={48} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                  <p>No purchased tracks yet.</p>
+                  <button onClick={() => navigate('/browse')} className="save-btn" style={{ width: 'auto', display: 'inline-flex', marginTop: '0.5rem' }}>
+                    Browse Catalog
+                  </button>
+                </div>
+              ) : (
+                <div className="downloads-table-wrap">
+                  <table className="downloads-table">
+                    <thead>
+                      <tr>
+                        <th>Track Name</th>
+                        <th>Artist</th>
+                        <th>BPM</th>
+                        <th>Key</th>
+                        <th className="col-action">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {purchasedTracks
+                        .filter((track: any) => {
+                          if (!downloadSearch) return true;
+                          const q = downloadSearch.toLowerCase();
+                          return track.title?.toLowerCase().includes(q) ||
+                                 track.artist?.toLowerCase().includes(q);
+                        })
+                        .map((track: any) => (
+                        <tr key={track.id} className="downloads-track-row">
+                          <td>
+                            <div className="downloads-track-cell">
+                              <div className="downloads-track-art-wrap">
+                                <img
+                                  src={track.artwork_url || track.artwork || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}
+                                  alt={track.title}
+                                  className="downloads-track-art"
+                                />
+                                <div className="downloads-track-play">
+                                  <Play size={16} />
+                                </div>
+                              </div>
+                              <span className="downloads-track-title">{track.title}</span>
+                            </div>
+                          </td>
+                          <td className="downloads-artist">{track.artist}</td>
+                          <td><span className="downloads-bpm">{track.bpm}</span></td>
+                          <td><span className="downloads-key">{track.key}</span></td>
+                          <td className="col-action">
+                            <button
+                              className="downloads-dl-btn"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
+                                  if (!res.ok) throw new Error('Download failed');
+                                  const blob = await res.blob();
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `${track.title}.mp3`;
+                                  a.click();
+                                  URL.revokeObjectURL(url);
+                                } catch (err: any) {
+                                  showNotification(err.message || 'Download failed', 'error');
+                                }
+                              }}
+                            >
+                              <Download size={14} />
+                              Download
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="downloads-stats">
+                <div className="downloads-stat-card">
+                  <div className="dstat-label">Total Downloaded</div>
+                  <div className="dstat-value">{purchasedTracks.length}</div>
+                </div>
+                <div className="downloads-stat-card">
+                  <div className="dstat-label">Storage Used</div>
+                  <div className="dstat-value">{(purchasedTracks.length * 8.5).toFixed(1)} <span className="dstat-unit">MB</span></div>
+                </div>
+                <div className="downloads-stat-card">
+                  <div className="dstat-label">License Tier</div>
+                  <div className="dstat-value">PRO</div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* ============ PERSONAL INFO TAB ============ */}
           {activeTab === 'info' && (
             <section className="profile-section">
@@ -353,11 +620,7 @@ const Profile = () => {
                                   title="Download MP3"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    fetch(apiUrl(`/api/downloads/${item.track!.id}`), {
-                                      headers: {
-                                        'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
-                                      },
-                                    }).then(res => {
+                                    fetch(apiUrl(`/api/downloads/${item.track!.id}`)).then(res => {
                                       if (!res.ok) throw new Error('Download failed');
                                       return res.blob();
                                     }).then(blob => {

@@ -53,8 +53,11 @@ const NewReleases = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
-  const [selectedBpm] = useState('All BPM');
-  const [selectedVersion] = useState('All Versions');
+  const [selectedBpm, setSelectedBpm] = useState('All BPM');
+  const [selectedVersion, setSelectedVersion] = useState('All Versions');
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +82,17 @@ const NewReleases = () => {
     });
   };
 
+  const ENERGY_LEVELS = [
+    { label: 'Low', value: 'low', min: 1, max: 2 },
+    { label: 'Mid', value: 'mid', min: 3, max: 3 },
+    { label: 'High', value: 'high', min: 4, max: 5 },
+  ];
+
+  const CAMELOT_KEYS = [
+    '1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A',
+    '1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B'
+  ];
+
   const filteredTracks = tracks.filter(track => {
     const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           track.artist.toLowerCase().includes(searchQuery.toLowerCase());
@@ -90,8 +104,15 @@ const NewReleases = () => {
     const matchesVersion = selectedVersion === 'All Versions' || 
                            track.versionType.toLowerCase() === selectedVersion.toLowerCase() || 
                            track.version.toLowerCase().includes(selectedVersion.toLowerCase());
+
+    const matchesKey = selectedKeys.length === 0 || selectedKeys.includes(track.key);
+    const matchesEnergy = !selectedEnergy || (() => {
+      const level = ENERGY_LEVELS.find(e => e.value === selectedEnergy);
+      if (!level) return true;
+      return (track.energy ?? 3) >= level.min && (track.energy ?? 3) <= level.max;
+    })();
     
-    return matchesSearch && matchesGenre && matchesBpm && matchesVersion;
+    return matchesSearch && matchesGenre && matchesBpm && matchesVersion && matchesKey && matchesEnergy;
   });
 
   const groupedTracks = useMemo(() => {
@@ -120,55 +141,15 @@ const NewReleases = () => {
 
   return (
     <div className="nr-layout animate-fade-in">
-      <aside className="nr-sidebar">
-        <div className="nr-sidebar-header">
-          <h3>INTEL FILTERS</h3>
-          <SlidersHorizontal size={18} />
-        </div>
-        
-        <div className="nr-filter-section">
-          <div className="nr-search-box">
-            <Search size={16} />
-            <input 
-              type="text" 
-              placeholder="Search edits..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="nr-filter-section">
-          <h4>Genre Pool</h4>
-          <ul className="nr-filter-list">
-            <li 
-              className={`nr-filter-item ${selectedGenre === 'All Genres' ? 'active' : ''}`}
-              onClick={() => setSelectedGenre('All Genres')}
-            >
-              <div className="nr-filter-checkbox">
-                {selectedGenre === 'All Genres' && <Check size={12} />}
-              </div>
-              All Genres
-            </li>
-            {GENRES.map(genre => (
-              <li 
-                key={genre} 
-                className={`nr-filter-item ${selectedGenre === genre ? 'active' : ''}`}
-                onClick={() => setSelectedGenre(genre)}
-              >
-                <div className="nr-filter-checkbox">
-                  {selectedGenre === genre && <Check size={12} />}
-                </div>
-                {genre}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
+      {/* Sidebar */}
 
       <main className="nr-main">
         <header className="nr-header">
           <div className="nr-header-left">
+            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
+              <SlidersHorizontal size={20} />
+              <span>{showSidebar ? 'Hide Intel' : 'Intel Filters'}</span>
+            </button>
             <h1>LATEST DROPS</h1>
             <p>Scanning global dancefloors for mission-critical edits.</p>
           </div>
@@ -215,15 +196,15 @@ const NewReleases = () => {
                       
                       return (
                         <tr key={track.id} className={`nr-track-row-arsenal ${isCurrentPlaying ? 'playing' : ''}`}>
-                          <td>
+                          <td onClick={() => handlePlay(track)} style={{ cursor: 'pointer' }}>
                             <div className="nr-play-cell-arsenal">
                               <img src={track.artwork} alt={track.title} />
-                              <button className="nr-play-btn-arsenal" onClick={() => handlePlay(track)}>
+                              <button className="nr-play-btn-arsenal" onClick={(e) => { e.stopPropagation(); handlePlay(track); }}>
                                 {isCurrentPlaying ? <Pause size={14} fill="white" /> : <Play size={14} fill="white" />}
                               </button>
                             </div>
                           </td>
-                          <td>
+                          <td onClick={() => handlePlay(track)} style={{ cursor: 'pointer' }}>
                             <div className="nr-track-info-arsenal">
                               <div className="nr-track-title-row">
                                 <span className="nr-title-text">{track.title}</span>
@@ -252,7 +233,7 @@ const NewReleases = () => {
                             {renderEnergy(track.energy)}
                           </td>
                           <td>
-                            <div className="nr-action-cell-arsenal">
+                            <div className="nr-action-cell-arsenal" onClick={(e) => e.stopPropagation()}>
                               <button 
                                 className="nr-icon-btn-arsenal"
                                 onClick={() => toggleFavorite(track)}
@@ -277,6 +258,129 @@ const NewReleases = () => {
           ))
         )}
       </main>
+
+      <aside className={`nr-sidebar ${showSidebar ? 'active' : ''}`}>
+        <div className="nr-sidebar-header">
+          <h3>INTEL FILTERS</h3>
+          <SlidersHorizontal size={18} />
+        </div>
+        
+        <div className="nr-filter-section">
+          <div className="nr-search-box">
+            <Search size={16} />
+            <input 
+              type="text" 
+              placeholder="Search edits..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="nr-filter-section">
+          <h4>Genre Pool</h4>
+          <ul className="nr-filter-list">
+            <li 
+              className={`nr-filter-item ${selectedGenre === 'All Genres' ? 'active' : ''}`}
+              onClick={() => setSelectedGenre('All Genres')}
+            >
+              <div className="nr-filter-checkbox">
+                {selectedGenre === 'All Genres' && <Check size={12} />}
+              </div>
+              All Genres
+            </li>
+            {GENRES.map(genre => (
+              <li 
+                key={genre} 
+                className={`nr-filter-item ${selectedGenre === genre ? 'active' : ''}`}
+                onClick={() => setSelectedGenre(genre)}
+              >
+                <div className="nr-filter-checkbox">
+                  {selectedGenre === genre && <Check size={12} />}
+                </div>
+                {genre}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="nr-filter-section">
+          <h4>BPM Range</h4>
+          <div className="bpm-presets">
+            {BPM_RANGES.map(range => (
+              <button
+                key={range.label}
+                className={`bpm-preset-btn ${selectedBpm === range.label ? 'active' : ''}`}
+                onClick={() => setSelectedBpm(range.label)}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="nr-filter-section">
+          <h4>Version Type</h4>
+          <div className="nr-version-grid">
+            {['All Versions', 'clean', 'dirty', 'intro', 'acapella', 'instrumental', 'extended', 'radio', 'club', 'deep'].map(v => (
+              <button
+                key={v}
+                className={`nr-vt-chip ${selectedVersion === v ? 'active' : ''}`}
+                onClick={() => setSelectedVersion(v)}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="nr-filter-section">
+          <h4>Camelot Key</h4>
+          <div className="nr-key-grid">
+            {CAMELOT_KEYS.map(key => (
+              <button
+                key={key}
+                className={`nr-key-chip ${selectedKeys.includes(key) ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedKeys(prev =>
+                    prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+                  );
+                }}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="nr-filter-section">
+          <h4>Energy Level</h4>
+          <div className="nr-energy-group">
+            {ENERGY_LEVELS.map(level => (
+              <button
+                key={level.value}
+                className={`nr-energy-btn ${selectedEnergy === level.value ? 'active' : ''}`}
+                onClick={() => setSelectedEnergy(selectedEnergy === level.value ? null : level.value)}
+              >
+                {level.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(selectedBpm !== 'All BPM' || selectedVersion !== 'All Versions' || selectedKeys.length > 0 || selectedEnergy) && (
+          <button className="nr-clear-filters" onClick={() => {
+            setSelectedGenre('All Genres');
+            setSelectedBpm('All BPM');
+            setSelectedVersion('All Versions');
+            setSelectedKeys([]);
+            setSelectedEnergy(null);
+            setSearchQuery('');
+          }}>
+            Clear All Filters
+          </button>
+        )}
+      </aside>
     </div>
   );
 };
