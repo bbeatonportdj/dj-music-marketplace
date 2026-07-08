@@ -78,7 +78,7 @@ const TrackDetail = () => {
     return (
       <div className="track-detail-error">
         <AlertCircle size={64} />
-        <h2>Track Found</h2>
+        <h2>Track Not Found</h2>
         <p>Sorry, we couldn't find the track you're looking for.</p>
         <button className="back-btn" onClick={() => navigate('/singles')}>
           <ArrowLeft size={20} /> {t('pack.back')}

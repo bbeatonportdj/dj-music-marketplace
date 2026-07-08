@@ -25,8 +25,11 @@ function getDriveClient() {
   }
 }
 
-function cors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+function cors(res, req) {
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const origin = req?.headers?.origin || '';
+  const isAllowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', isAllowed ? (origin || '*') : allowedOrigins[0] || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -154,7 +157,7 @@ function profileToUser(profile) {
 }
 
 export default async function handler(req, res) {
-  cors(res);
+  cors(res, req);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -185,7 +188,8 @@ export default async function handler(req, res) {
     // ─── Auth: Register ───────────────────────────────────────────────
     if (path === '/api/auth/register' && req.method === 'POST') {
       const body = JSON.parse(await getBody(req));
-      const { email, password, display_name, role, phone } = body;
+      const { email, password, display_name, phone } = body;
+      const role = 'user';
 
       if (!email || !password) {
         return json(res, 400, { error: 'Email and password are required' });
@@ -195,7 +199,7 @@ export default async function handler(req, res) {
         email,
         password,
         options: {
-          data: { full_name: display_name || email.split('@')[0], role: role || 'user', phone: phone || '' },
+          data: { full_name: display_name || email.split('@')[0], role, phone: phone || '' },
         },
       });
 
@@ -215,7 +219,7 @@ export default async function handler(req, res) {
           id: data.user.id,
           email: data.user.email,
           full_name: display_name || email.split('@')[0],
-          role: role || 'user',
+          role,
           phone: phone || null,
         }, { onConflict: 'id' });
 
@@ -233,7 +237,7 @@ export default async function handler(req, res) {
           id: data.user.id,
           email: data.user.email,
           display_name: display_name || email.split('@')[0],
-          role: role || 'user',
+          role,
         },
       });
     }
@@ -535,7 +539,7 @@ export default async function handler(req, res) {
 
       let qr_code_url = '';
       if (order.status === 'pending' && total_amount > 0) {
-        const payload = generatePayload(process.env.PROMPTPAY_ID || '0820014084', { amount: total_amount });
+        const payload = generatePayload(process.env.PROMPTPAY_ID || process.env.VITE_PROMPTPAY_ID || '0820014084', { amount: total_amount });
         qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
       }
 
@@ -1070,6 +1074,6 @@ function parseMultipart(req) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('API error:', msg);
-    return json(res, 500, { error: msg });
+    return json(res, 500, { error: 'Internal server error' });
   }
 }
