@@ -17,7 +17,7 @@ interface AuthContextType {
   isProducer: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, role?: string, display_name?: string, phone?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, role?: string, display_name?: string, phone?: string) => Promise<{ error: string | null; user?: UserProfile | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -99,8 +99,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to register');
       }
 
-      // Do NOT auto-login after registration — let the user sign in manually
-      return { error: null };
+      // Load user from cookie session (if session was created)
+      const meRes = await fetch(apiUrl('/api/auth/me'));
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        if (meData.user) {
+          setUser(meData.user);
+          setIsAdmin(meData.user.role === 'admin');
+          setIsProducer(meData.user.role === 'producer');
+          return { error: null, user: meData.user };
+        }
+      }
+
+      // No active session — email verification required
+      return { error: null, user: null };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return { error: message };

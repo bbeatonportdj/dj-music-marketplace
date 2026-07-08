@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
-  Play, Pause, Search, Heart, Check, SlidersHorizontal, 
+  Play, Pause, Search, Heart, Check, SlidersHorizontal, X,
   Music, Loader2, Flame, Zap, TrendingUp, Award, Download, ChevronDown
 } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
@@ -259,10 +259,14 @@ const NewReleases = () => {
         )}
       </main>
 
+      <div className={`nr-sidebar-overlay ${showSidebar ? 'active' : ''}`} onClick={() => setShowSidebar(false)} />
+
       <aside className={`nr-sidebar ${showSidebar ? 'active' : ''}`}>
         <div className="nr-sidebar-header">
           <h3>INTEL FILTERS</h3>
-          <SlidersHorizontal size={18} />
+          <button className="nr-sidebar-close" onClick={() => setShowSidebar(false)}>
+            <X size={18} />
+          </button>
         </div>
         
         <div className="nr-filter-section">

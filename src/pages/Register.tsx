@@ -51,10 +51,14 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const { error } = await signUp(email, password, undefined, fullName.trim(), phone.trim() || undefined);
+      const { error, user } = await signUp(email, password, undefined, fullName.trim(), phone.trim() || undefined);
       if (error) throw new Error(error);
-      setSignUpSuccess(true);
-      showNotification('Account created! Check your email to verify.', 'success');
+      if (user) {
+        showNotification('Welcome! Account created and signed in.', 'success');
+      } else {
+        setSignUpSuccess(true);
+        showNotification('Account created! Check your email to verify.', 'success');
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMsg(msg);
