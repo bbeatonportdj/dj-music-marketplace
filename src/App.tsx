@@ -17,6 +17,7 @@ import ProducerDashboard from './pages/ProducerDashboard';
 import Orders from './pages/Orders';
 import Downloads from './pages/Downloads';
 import PaymentSuccess from './pages/PaymentSuccess';
+import ResetPassword from './pages/ResetPassword';
 import { AudioProvider } from './context/AudioContext';
 import { CartProvider } from './context/CartContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -51,6 +52,7 @@ function App() {
                         <Route path="/favorites" element={<Favorites />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route path="/payment/success" element={<PaymentSuccess />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/downloads" element={<Downloads />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/producer" element={<ProducerDashboard />} />

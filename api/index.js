@@ -295,7 +295,7 @@ export default async function handler(req, res) {
       }
 
       const { error } = await authClient.auth.resetPasswordForEmail(email, {
-        redirectTo: `${req.headers.origin || 'https://djmusicmarketplace.com'}/auth`,
+        redirectTo: `${req.headers.origin || 'https://djmusicmarketplace.fun'}/reset-password`,
       });
 
       if (error) {
