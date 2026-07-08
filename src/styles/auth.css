@@ -409,3 +409,44 @@
     padding: 12px;
   }
 }
+
+/* Forgot Password & Back Button */
+.auth-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+}
+
+.auth-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.auth-back-btn:hover {
+  color: white;
+}

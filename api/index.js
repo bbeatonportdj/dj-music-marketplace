@@ -284,6 +284,27 @@ export default async function handler(req, res) {
       return json(res, 200, { message: 'Logged out' });
     }
 
+    // ─── Auth: Forgot Password ────────────────────────────────────────
+    if (path === '/api/auth/forgot-password' && req.method === 'POST') {
+      const body = JSON.parse(await getBody(req));
+      const { email } = body;
+
+      if (!email) {
+        return json(res, 400, { error: 'Email is required' });
+      }
+
+      const { error } = await authClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${req.headers.origin || 'https://djmusicmarketplace.com'}/auth`,
+      });
+
+      if (error) {
+        console.error('Forgot password error:', error.message);
+      }
+
+      // Always return success to prevent email enumeration
+      return json(res, 200, { message: 'If that email is registered, a reset link has been sent.' });
+    }
+
     // ─── Auth: Me ─────────────────────────────────────────────────────
     if (path === '/api/auth/me' && req.method === 'GET') {
       const user = await getAuthUser(req, supabase);

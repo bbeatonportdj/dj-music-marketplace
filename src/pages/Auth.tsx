@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Disc, Eye, EyeOff, Loader2, ArrowRight, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Disc, Eye, EyeOff, Loader2, ArrowRight, Mail, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,28 +12,23 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [signUpAsProducer, setSignUpAsProducer] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('signup') === 'producer';
-  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
-  const { user, signIn, signUp, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { user, signIn, signInWithGoogle, signInWithFacebook } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       navigate('/browse');
     }
   }, [user, navigate]);
 
-  // Handle OAuth redirect from Supabase: exchange Supabase user for server JWT
+  // Handle OAuth redirect from Supabase
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isOauth = params.get('oauth') === '1';
@@ -47,7 +42,6 @@ const Auth = () => {
       }
 
       try {
-        // supabase v2: getSession, fallback to session()
         let userObj: unknown = null;
         const sb = supabase as unknown as Record<string, unknown> | null;
         const authObj = sb?.['auth'] as Record<string, unknown> | undefined;
@@ -70,14 +64,14 @@ const Auth = () => {
 
         const u = userObj as Record<string, unknown>;
         const oauth_id = typeof u.id === 'string' ? u.id : undefined;
-        const email = typeof u.email === 'string' ? u.email : undefined;
+        const emailVal = typeof u.email === 'string' ? u.email : undefined;
         const meta = u.user_metadata as Record<string, unknown> | undefined;
-        const display_name = meta && (typeof meta.full_name === 'string' ? meta.full_name : (typeof meta.name === 'string' ? meta.name : undefined)) || (email ? email.split('@')[0] : undefined);
+        const display_name = meta && (typeof meta.full_name === 'string' ? meta.full_name : (typeof meta.name === 'string' ? meta.name : undefined)) || (emailVal ? emailVal.split('@')[0] : undefined);
 
         const res = await fetch(apiUrl('/api/auth/oauth'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider, email, display_name, oauth_id }),
+          body: JSON.stringify({ provider, email: emailVal, display_name, oauth_id }),
         });
 
         const data = await res.json();
@@ -85,7 +79,6 @@ const Auth = () => {
           throw new Error(data.error || 'OAuth exchange failed');
         }
 
-        // Force reload to let AuthProvider pick up user from cookie
         window.location.href = '/browse';
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -93,6 +86,61 @@ const Auth = () => {
       }
     })();
   }, [showNotification]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setErrorMsg(null);
+
+    if (password.length < 6) {
+      const msg = 'Password must be at least 6 characters';
+      setErrorMsg(msg);
+      showNotification(msg, 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+      showNotification('Login successful!', 'success');
+      navigate('/browse');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error || 'Unknown error');
+      setErrorMsg(msg);
+      showNotification(msg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotLoading || !email) return;
+    setForgotLoading(true);
+
+    try {
+      const res = await fetch(apiUrl('/api/auth/forgot-password'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send reset email');
+      }
+
+      setForgotSent(true);
+      showNotification('Password reset email sent!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(msg);
+      showNotification(msg, 'error');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -112,54 +160,6 @@ const Auth = () => {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-    
-    setErrorMsg(null);
-
-    if (isSignUp && password !== confirmPassword) {
-      const msg = 'Passwords do not match';
-      setErrorMsg(msg);
-      showNotification(msg, 'error');
-      return;
-    }
-
-    if (password.length < 6) {
-      const msg = 'Password must be at least 6 characters';
-      setErrorMsg(msg);
-      showNotification(msg, 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password, signUpAsProducer ? 'producer' : undefined);
-        if (error) throw error;
-        setSignUpSuccess(true);
-        showNotification(
-          '✅ Signed up! Check your email to verify your account.',
-          'success'
-        );
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        showNotification(
-          '🎵 Login successful!',
-          'success'
-        );
-        navigate('/browse');
-      }
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error || 'Unknown error');
-      setErrorMsg(msg);
-      showNotification(msg, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-bg">
@@ -168,56 +168,46 @@ const Auth = () => {
       </div>
 
       <div className="auth-card-wrapper">
-        {/* Logo */}
         <div className="auth-logo">
           <Disc size={36} style={{ color: 'var(--accent-color)' }} />
           <span>DJ Music Marketplace</span>
         </div>
 
         <div className="auth-card">
-          {/* Tabs */}
-          <div className="auth-tabs">
-            <button
-              className={`auth-tab ${!isSignUp ? 'active' : ''}`}
-              onClick={() => setIsSignUp(false)}
-            >
-              {t('auth.login')}
-            </button>
-            <button
-              className={`auth-tab ${isSignUp ? 'active' : ''}`}
-              onClick={() => setIsSignUp(true)}
-            >
-              {t('auth.signup')}
-            </button>
-          </div>
-
           <div className="auth-form-area">
-            {signUpSuccess ? (
+            {forgotSent ? (
               <div className="auth-success-state">
                 <div className="auth-success-icon">
                   <CheckCircle size={48} />
                 </div>
                 <h2>Check your email</h2>
                 <p>
-                  We've sent a verification link to {email}. Please check your inbox and verify your account to continue.
+                  We've sent a password reset link to <strong>{email}</strong>.
+                  Please check your inbox and follow the instructions.
                 </p>
-                <button 
-                  className="auth-submit-btn" 
+                <button
+                  className="auth-submit-btn"
                   onClick={() => {
-                    setSignUpSuccess(false);
-                    setIsSignUp(false);
+                    setForgotMode(false);
+                    setForgotSent(false);
+                    setEmail('');
+                    setPassword('');
                   }}
                 >
-                  {t('auth.login')}
+                  Back to Sign In
                 </button>
               </div>
-            ) : (
+            ) : forgotMode ? (
               <>
-                <h1 className="auth-title">
-                  {isSignUp ? t('auth.create') : t('auth.welcome')}
-                </h1>
+                <button
+                  className="auth-back-btn"
+                  onClick={() => { setForgotMode(false); setErrorMsg(null); }}
+                >
+                  <ArrowLeft size={16} /> Back to Sign In
+                </button>
+                <h1 className="auth-title">Reset Password</h1>
                 <p className="auth-subtitle">
-                  {isSignUp ? t('auth.signup_msg') : t('auth.login_msg')}
+                  Enter your email and we'll send you a reset link.
                 </p>
 
                 {errorMsg && (
@@ -227,7 +217,43 @@ const Auth = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleAuth} className="auth-form">
+                <form onSubmit={handleForgotPassword} className="auth-form">
+                  <div className="auth-input-group">
+                    <label>{t('auth.email')}</label>
+                    <div className="auth-input-wrapper">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="dj@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={forgotLoading} className="auth-submit-btn">
+                    {forgotLoading ? (
+                      <><Loader2 size={18} className="animate-spin" /> Sending...</>
+                    ) : (
+                      <>Send Reset Link <ArrowRight size={18} /></>
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <h1 className="auth-title">{t('auth.welcome')}</h1>
+                <p className="auth-subtitle">{t('auth.login_msg')}</p>
+
+                {errorMsg && (
+                  <div className="auth-error-message" role="alert">
+                    <AlertCircle size={16} />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleLogin} className="auth-form">
                   <div className="auth-input-group">
                     <label>{t('auth.email')}</label>
                     <div className="auth-input-wrapper">
@@ -263,41 +289,21 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  {isSignUp && (
-                    <>
-                      <div className="auth-input-group">
-                        <label>Confirm Password</label>
-                        <div className="auth-input-wrapper">
-                          <Lock size={16} className="auth-input-icon" />
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="••••••••"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <label className="auth-producer-checkbox" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '1rem', fontSize: '13px' }}>
-                        <input
-                          type="checkbox"
-                          checked={signUpAsProducer}
-                          onChange={(e) => setSignUpAsProducer(e.target.checked)}
-                          style={{ accentColor: 'var(--accent-color)' }}
-                        />
-                        <span>Sign up as <strong>Producer/Label</strong> — upload and manage your own tracks</span>
-                      </label>
-                    </>
-                  )}
+                  <div className="auth-forgot-row">
+                    <button
+                      type="button"
+                      className="auth-forgot-link"
+                      onClick={() => { setForgotMode(true); setErrorMsg(null); }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
 
                   <button type="submit" disabled={loading} className="auth-submit-btn">
                     {loading ? (
                       <><Loader2 size={18} className="animate-spin" /> {t('auth.processing')}</>
                     ) : (
-                      <>
-                        {isSignUp ? t('auth.signup') : t('auth.login')}
-                        <ArrowRight size={18} />
-                      </>
+                      <>{t('auth.login')} <ArrowRight size={18} /></>
                     )}
                   </button>
                 </form>
@@ -307,8 +313,8 @@ const Auth = () => {
                 </div>
 
                 <div className="social-auth-buttons">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="social-btn google-btn"
                     onClick={handleGoogleLogin}
                     disabled={loading}
@@ -321,28 +327,24 @@ const Auth = () => {
                     </svg>
                     Google
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="social-btn facebook-btn"
                     onClick={handleFacebookLogin}
                     disabled={loading}
                   >
                     <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
-                      <path d="M16.671 15.542l.532-3.469h-3.328v-2.25c0-.949.465-1.874 1.956-1.874h1.514V5.006s-1.374-.235-2.686-.235c-2.741 0-4.533 1.662-4.533 4.669v2.643H7.078v3.469h3.047v8.385a12.09 12.09 0 003.75 0v-8.385h2.796z" fill="#ffffff"/>
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.537-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
                     </svg>
                     Facebook
                   </button>
                 </div>
 
                 <p className="auth-switch-text">
-                  {isSignUp ? t('auth.have_account') : t('auth.no_account')}{' '}
-                  <span
-                    className="auth-switch-link"
-                    onClick={() => setIsSignUp(!isSignUp)}
-                  >
-                    {isSignUp ? t('auth.login') : t('auth.signup')}
-                  </span>
+                  {t('auth.no_account')}{' '}
+                  <Link to="/register" className="auth-switch-link">
+                    {t('auth.signup')}
+                  </Link>
                 </p>
               </>
             )}
@@ -350,7 +352,7 @@ const Auth = () => {
         </div>
 
         <p className="auth-footer-note">
-          By signing up, you agree to our Terms of Service and Privacy Policy.
+          By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
     </div>

@@ -98,9 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to register');
       }
 
-      setUser(data.user);
-      setIsAdmin(data.user.role === 'admin');
-      setIsProducer(data.user.role === 'producer');
+      // Do NOT auto-login after registration — let the user sign in manually
       return { error: null };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
