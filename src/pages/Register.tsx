@@ -9,7 +9,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +50,7 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const { error, user } = await signUp(email, password, undefined, fullName.trim(), phone.trim() || undefined);
+      const { error, user } = await signUp(email, password, undefined, fullName.trim());
       if (error) throw new Error(error);
       if (user) {
         showNotification('Welcome! Account created and signed in.', 'success');
@@ -173,18 +172,6 @@ const Register = () => {
                   placeholder="name@studio.com"
                   className="register-input"
                   required
-                />
-              </div>
-
-              <div className="register-field">
-                <label htmlFor="phone">Phone Number <span style={{color:'var(--text-dim)',fontSize:'12px'}}>(optional — for SMS reset)</span></label>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+66 81 234 5678"
-                  className="register-input"
                 />
               </div>
 
