@@ -7,9 +7,9 @@ import { useAudio } from '../context/AudioContext';
 import '../styles/home.css';
 
 const GENRE_CRATES = [
-  { name: 'Techno', icon: '⚡', color: '#ff453a' },
+  { name: 'Techno', icon: '🎛️', color: '#ff453a' },
   { name: 'House', icon: '🏠', color: '#ffcc00' },
-  { name: 'Drum & Bass', icon: '🥁', color: '#32d74b' },
+  { name: 'Drum & Bass', icon: '🔊', color: '#32d74b' },
   { name: 'Trance', icon: '🌀', color: '#5e5ce6' },
   { name: 'Hardstyle', icon: '🔥', color: '#ff9f0a' },
   { name: 'Dubstep', icon: '💥', color: '#bf5af2' },
