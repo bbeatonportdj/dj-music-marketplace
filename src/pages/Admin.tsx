@@ -39,6 +39,7 @@ const GENRES = [
   'Bounce',
   'Club House',
   'Deep House',
+  'Drum & Bass',
   'Dubstep',
   'Dutch House',
   'Electro House',
@@ -62,7 +63,7 @@ const GENRES = [
 
 const DEFAULT_FORM = {
   title: '', artist: '', version: '', version_type: 'clean',
-  duration: '', bpm: '', key: '', genre: 'Top 40', price: '1.99',
+  duration: '', bpm: '', key: '', genre: 'Top 40', price: '1.50',
   is_new: true, is_hot: false
 };
 

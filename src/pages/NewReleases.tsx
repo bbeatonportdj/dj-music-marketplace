@@ -25,6 +25,7 @@ const GENRES = [
   'Bounce',
   'Club House',
   'Deep House',
+  'Drum & Bass',
   'Dubstep',
   'Dutch House',
   'Electro House',

@@ -220,7 +220,8 @@ async function insertTrack(data: {
   // Dynamic import — only when needed
   const { Sequelize, DataTypes } = await import('sequelize');
 
-  const dbUrl = process.env.DATABASE_URL!;
+  let dbUrl = process.env.DATABASE_URL!;
+  dbUrl = dbUrl.replace(/\?sslmode=[^&]*/, '').replace(/&sslmode=[^&]*/, '');
   const sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectOptions: {
@@ -250,13 +251,11 @@ async function insertTrack(data: {
     gdrive_file_id:{ type: DataTypes.STRING, defaultValue: null },
     is_new:        { type: DataTypes.BOOLEAN, defaultValue: true },
     is_hot:        { type: DataTypes.BOOLEAN, defaultValue: false },
-    energy:        { type: DataTypes.INTEGER, defaultValue: 3 },
-    popularity_rank: { type: DataTypes.INTEGER, defaultValue: 1 },
+    created_at:    { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+
   }, {
     tableName: 'tracks',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    timestamps: false,
   });
 
   await sequelize.sync();

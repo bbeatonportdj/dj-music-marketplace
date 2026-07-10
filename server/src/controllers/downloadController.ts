@@ -29,12 +29,11 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Track not found' });
     }
 
-    purchase.set('download_count', (Number(purchase.get('download_count') || 0)) + 1);
-    await purchase.save();
-
     const filename = `${track.title.replace(/[^a-zA-Z0-9]/g, '_')}_${track.artist.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
 
+    // Hybrid approach: for tracks with gdrive_file_id, try Google Drive first
     if (track.gdrive_file_id) {
+      // For GDrive files, preserve them as the primary source
       try {
         const { stream, mimeType, fileName, fileSize } = await getDriveFileStream(track.gdrive_file_id);
         const safeName = fileName || filename;
@@ -49,10 +48,37 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Fallback to Supabase Storage for tracks that were re-uploaded with embedded artwork
     if (!track.audio_url) {
       return res.status(404).json({ error: 'Track file not found' });
     }
 
+    // Check if audio_url is from Supabase Storage (image-based)**
+    if (track.audio_url.includes('/storage/v1/object/public/audio/') && !track.audio_url.includes('/uploads/artwork/')) {
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'audio/mpeg');
+
+      const client = track.audio_url.startsWith('https') ? https : http;
+
+      client.get(track.audio_url, (audioRes) => {
+        if (audioRes.statusCode && audioRes.statusCode >= 300 && audioRes.statusCode < 400 && audioRes.headers.location) {
+          const location = String(audioRes.headers.location);
+          const redirectClient = location.startsWith('https') ? https : http;
+          redirectClient.get(location, (redirectRes) => {
+            redirectRes.pipe(res);
+          });
+          return;
+        }
+        audioRes.pipe(res);
+      }).on('error', (err) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('Download stream error:', msg);
+        res.status(500).json({ error: 'Failed to stream file' });
+      });
+      return;
+    }
+
+    // Last resort: Direct download (external services like SoundCloud, etc.)
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'audio/mpeg');
 
@@ -74,6 +100,13 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
       console.error('Download stream error:', msg);
       res.status(500).json({ error: 'Failed to stream file' });
     });
+
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Download error:', message);
+    return res.status(500).json({ error: message || 'Download failed' });
+  }
+};
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -107,6 +140,8 @@ export const getDownloadInfo = async (req: AuthRequest, res: Response) => {
           ...p.track!.toJSON(),
           purchased_at: p.purchased_at,
           download_count: p.get('download_count') || 0,
+          // Add metadata for frontend to show audio source
+          audio_source: p.track!.audio_url?.includes('/storage/v1/object/public/audio/') ? 'supabase' : 'drive',
         }))
     );
   } catch (error: unknown) {

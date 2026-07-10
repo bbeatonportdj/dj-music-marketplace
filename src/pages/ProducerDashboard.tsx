@@ -32,7 +32,7 @@ interface TrackRecord {
 
 const GENRES = [
   'Afro House', 'Baile Funk/Favela Bass', 'Bass House', 'Bounce',
-  'Club House', 'Deep House', 'Dubstep', 'Dutch House', 'Electro House',
+  'Club House', 'Deep House', 'Drum & Bass', 'Dubstep', 'Dutch House', 'Electro House',
   'Exclusive', 'Free Download', 'Future', 'Hard Dance', 'Hard Techno',
   'Hip Hop', 'House', 'Latin', 'Pop', 'Progressive House', 'Promo',
   'Remix', 'Tech House', 'Techno', 'Top 40', 'Trance'
