@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AudioPlayer from './components/AudioPlayer';
 import Footer from './components/Footer';
+import Home from './pages/Home';
 import Browse from './pages/Browse';
 import Singles from './pages/Singles';
 import NewReleases from './pages/NewReleases';
@@ -39,7 +40,7 @@ function App() {
                     <Navbar />
                     <main className="main-content">
                       <Routes>
-                        <Route path="/" element={<Navigate to="/register" replace />} />
+                        <Route path="/" element={<Home />} />
                         <Route path="/browse" element={<Browse />} />
                         <Route path="/new-releases" element={<NewReleases />} />
                         <Route path="/singles" element={<Singles />} />
