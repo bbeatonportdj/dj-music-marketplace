@@ -8,6 +8,8 @@ import QRCode from 'qrcode';
 // PromptPay ID (Phone number or National ID)
 const PROMPTPAY_ID = process.env.PROMPTPAY_ID || '0812345678';
 
+const USD_TO_THB = 33.41;
+
 export const createOrder = async (req: AuthRequest, res: Response) => {
   try {
     const { track_ids, payment_method } = req.body;
@@ -26,19 +28,20 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'No valid tracks found' });
     }
 
-    const total_amount = tracks.reduce((sum, track) => sum + Number(track.price), 0);
+    const total_amount_usd = tracks.reduce((sum, track) => sum + Number(track.price), 0);
+    const total_amount_thb = Math.round(total_amount_usd * USD_TO_THB * 100) / 100;
 
     // Create unique PromptPay reference number
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     const promptpay_ref = `PP-${timestamp}-${random}`;
 
-    // Create Order in DB
+    // Create Order in DB (store USD amount)
     const order = await Order.create({
       user_id: req.user.id,
       email: req.user.email,
-      total_amount,
-      status: total_amount === 0 ? 'paid' : 'pending',
+      total_amount: total_amount_usd,
+      status: total_amount_usd === 0 ? 'paid' : 'pending',
       payment_method: payment_method || 'promptpay',
       promptpay_ref,
     });
@@ -51,17 +54,17 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     }));
     await OrderItem.bulkCreate(orderItems);
 
-    // Generate PromptPay QR if pending & amount > 0
+    // Generate PromptPay QR if pending & amount > 0 (amount in THB)
     let qr_code_url = '';
-    if (order.status === 'pending' && total_amount > 0) {
-      const payload = generatePayload(PROMPTPAY_ID, { amount: total_amount });
+    if (order.status === 'pending' && total_amount_usd > 0) {
+      const payload = generatePayload(PROMPTPAY_ID, { amount: total_amount_thb });
       qr_code_url = await QRCode.toDataURL(payload, {
         width: 300,
         margin: 2,
       });
     }
 
-    // If total_amount is 0, fulfill order immediately (free track purchase)
+    // If amount is 0, fulfill order immediately (free track purchase)
     if (order.status === 'paid') {
       const purchases = tracks.map((track) => ({
         user_id: req.user!.id,
@@ -74,7 +77,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       EmailService.sendDownloadLinksEmail(req.user.email, req.user.display_name, order.id, tracks.map(t => t.toJSON()));
     } else {
       // Send admin alert for pending orders
-      EmailService.sendAdminOrderNotification(order.id, total_amount, req.user.email);
+      EmailService.sendAdminOrderNotification(order.id, total_amount_usd, req.user.email);
     }
 
     return res.status(201).json({

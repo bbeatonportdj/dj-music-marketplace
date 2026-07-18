@@ -5,7 +5,10 @@ import { User } from '../models/index.js';
 import { EmailService } from '../services/emailService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'runmusic_jwt_secret_token_key';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set');
+}
 
 const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
 

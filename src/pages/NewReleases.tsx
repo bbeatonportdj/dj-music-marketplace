@@ -1,13 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   Play, Pause, Search, Heart, Check, SlidersHorizontal, X,
-  Music, Loader2, Flame, Zap, TrendingUp, Award, Download, ChevronDown
+  Music, Loader2, Flame, Zap, TrendingUp, Award, Download, ChevronDown, AlertTriangle, RotateCcw
 } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
+import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 import '../styles/new-releases.css';
 
 const BPM_RANGES = [
@@ -36,6 +40,7 @@ const GENRES = [
   'Hard Techno',
   'Hip Hop',
   'House',
+  'K-Pop',
   'Latin',
   'Pop',
   'Progressive House',
@@ -48,9 +53,14 @@ const GENRES = [
 ];
 
 const NewReleases = () => {
+  const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { user } = useAuth();
+  const { showNotification } = useNotifications();
+  
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
@@ -62,16 +72,33 @@ const NewReleases = () => {
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'newest' | 'bpm' | 'title' | 'rank'>('newest');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
-  useEffect(() => {
-    const loadTracks = async () => {
-      setLoading(true);
+  const loadTracks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
       const data = await fetchTracks();
       setTracks(data);
+    } catch {
+      setError('Failed to load tracks. Please try again.');
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     loadTracks();
   }, []);
+
+  useEffect(() => {
+    if (!showSortMenu) return;
+    const handleClick = () => setShowSortMenu(false);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [showSortMenu]);
 
   const handlePlay = (track: Track) => {
     playTrack({
@@ -81,6 +108,24 @@ const NewReleases = () => {
       preview_url: track.preview_url,
       artwork: track.artwork
     });
+  };
+
+  const handleFreeDownload = async (track: Track) => {
+    if (!user) {
+      showNotification('Please sign in to download', 'error');
+      navigate('/auth');
+      return;
+    }
+    setDownloadingId(track.id);
+    try {
+      await directDownload(track.id, track.title);
+      showNotification(`Downloading "${track.title}"`, 'success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const ENERGY_LEVELS = [
@@ -116,6 +161,17 @@ const NewReleases = () => {
     return matchesSearch && matchesGenre && matchesBpm && matchesVersion && matchesKey && matchesEnergy;
   });
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedGenre !== 'All Genres') count++;
+    if (selectedBpm !== 'All BPM') count++;
+    if (selectedVersion !== 'All Versions') count++;
+    if (selectedKeys.length > 0) count++;
+    if (selectedEnergy) count++;
+    if (searchQuery) count++;
+    return count;
+  }, [selectedGenre, selectedBpm, selectedVersion, selectedKeys, selectedEnergy, searchQuery]);
+
   const groupedTracks = useMemo(() => {
     const groups: Record<string, Track[]> = {};
     filteredTracks.forEach(track => {
@@ -124,11 +180,24 @@ const NewReleases = () => {
       }
       groups[track.genre].push(track);
     });
-    return Object.keys(groups).sort().reduce((acc, genre) => {
+    const sorted = Object.keys(groups).sort().reduce((acc, genre) => {
       acc[genre] = groups[genre];
       return acc;
     }, {} as Record<string, Track[]>);
-  }, [filteredTracks]);
+
+    Object.keys(sorted).forEach(genre => {
+      sorted[genre].sort((a, b) => {
+        switch (sortBy) {
+          case 'bpm': return a.bpm - b.bpm;
+          case 'title': return a.title.localeCompare(b.title);
+          case 'rank': return (a.rank ?? 99) - (b.rank ?? 99);
+          default: return 0;
+        }
+      });
+    });
+
+    return sorted;
+  }, [filteredTracks, sortBy]);
 
   const renderEnergy = (level: number = 3) => {
     return (
@@ -147,18 +216,28 @@ const NewReleases = () => {
       <main className="nr-main">
         <header className="nr-header">
           <div className="nr-header-left">
-            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
+            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)} aria-label={showSidebar ? 'Hide filters' : 'Show filters'}>
               <SlidersHorizontal size={20} />
-              <span>{showSidebar ? 'Hide Intel' : 'Intel Filters'}</span>
+              <span>{showSidebar ? 'Hide Filters' : 'Filters'}</span>
+              {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
             </button>
-            <h1>LATEST DROPS</h1>
-            <p>Scanning global dancefloors for mission-critical edits.</p>
+            <h1>LATEST RELEASES</h1>
+            <p>Browse new tracks for your next set.</p>
           </div>
           <div className="nr-header-right">
-             <div className="sort-dropdown">
+            <div className="sort-dropdown" onClick={() => setShowSortMenu(!showSortMenu)}>
               <TrendingUp size={16} />
-              <span>Sort: <strong>Newest Drops</strong></span>
+              <span>Sort: <strong>{sortBy === 'newest' ? 'Newest' : sortBy === 'bpm' ? 'BPM' : sortBy === 'title' ? 'Title' : 'Rank'}</strong></span>
               <ChevronDown size={16} />
+              {showSortMenu && (
+                <div className="sort-menu">
+                  {(['newest', 'bpm', 'title', 'rank'] as const).map(opt => (
+                    <button key={opt} className={`sort-option ${sortBy === opt ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSortBy(opt); setShowSortMenu(false); }}>
+                      {opt === 'newest' ? 'Newest' : opt === 'bpm' ? 'BPM' : opt === 'title' ? 'Title' : 'Rank'}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -166,17 +245,25 @@ const NewReleases = () => {
         {loading ? (
           <div className="loading-state">
             <Loader2 size={40} className="animate-spin" />
-            <p>Accessing latest intel...</p>
+            <p>Loading tracks...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <AlertTriangle size={40} style={{ opacity: 0.4, marginBottom: '12px' }} />
+            <p>{error}</p>
+            <button className="nr-clear-filters" onClick={loadTracks} style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <RotateCcw size={14} /> Retry
+            </button>
           </div>
         ) : Object.keys(groupedTracks).length === 0 ? (
           <div className="empty-state">
             <Music size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-            <p>No new releases matching your criteria.</p>
+            <p>No tracks matching your filters.</p>
           </div>
         ) : (
           Object.entries(groupedTracks).map(([genre, genreTracks]) => (
             <div key={genre} className="nr-genre-section">
-              <h2 className="nr-genre-title">{genre.toUpperCase()} MISSION</h2>
+              <h2 className="nr-genre-title">{genre.toUpperCase()} <span className="nr-genre-count">{genreTracks.length}</span></h2>
               <div className="nr-table-container arsenal-table">
                 <table className="nr-table">
                   <thead>
@@ -223,7 +310,7 @@ const NewReleases = () => {
                             </div>
                           </td>
                           <td className="col-rank">
-                            <div className="rank-intel">
+                            <div className="rank-cell">
                               <Zap size={12} className="zap-icon" />
                               <span>{track.rank || 99}</span>
                             </div>
@@ -243,9 +330,10 @@ const NewReleases = () => {
                               </button>
                               <button 
                                 className={`nr-add-btn-arsenal ${isInCart(track.id) ? 'added' : ''}`}
-                                onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                                onClick={() => is_free ? handleFreeDownload(track) : addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                                disabled={downloadingId === track.id}
                               >
-                                {isInCart(track.id) ? <Check size={14} /> : (is_free ? <Download size={14} /> : <span>${track.price}</span>)}
+                                {downloadingId === track.id ? <Loader2 size={14} className="animate-spin" /> : isInCart(track.id) ? <Check size={14} /> : (is_free ? <Download size={14} /> : <span>${track.price}</span>)}
                               </button>
                             </div>
                           </td>
@@ -264,7 +352,7 @@ const NewReleases = () => {
 
       <aside className={`nr-sidebar ${showSidebar ? 'active' : ''}`}>
         <div className="nr-sidebar-header">
-          <h3>INTEL FILTERS</h3>
+          <h3>FILTERS</h3>
           <button className="nr-sidebar-close" onClick={() => setShowSidebar(false)}>
             <X size={18} />
           </button>
@@ -278,12 +366,13 @@ const NewReleases = () => {
               placeholder="Search edits..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search tracks by title or artist"
             />
           </div>
         </div>
 
         <div className="nr-filter-section">
-          <h4>Genre Pool</h4>
+          <h4>Genre</h4>
           <ul className="nr-filter-list">
             <li 
               className={`nr-filter-item ${selectedGenre === 'All Genres' ? 'active' : ''}`}
@@ -373,7 +462,7 @@ const NewReleases = () => {
           </div>
         </div>
 
-        {(selectedBpm !== 'All BPM' || selectedVersion !== 'All Versions' || selectedKeys.length > 0 || selectedEnergy) && (
+        {(selectedGenre !== 'All Genres' || selectedBpm !== 'All BPM' || selectedVersion !== 'All Versions' || selectedKeys.length > 0 || selectedEnergy || searchQuery) && (
           <button className="nr-clear-filters" onClick={() => {
             setSelectedGenre('All Genres');
             setSelectedBpm('All BPM');

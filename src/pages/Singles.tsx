@@ -6,10 +6,14 @@ import {
   TrendingUp, Zap
 } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
+import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 import '../styles/singles.css';
 
 const GENRES = [
@@ -30,6 +34,7 @@ const GENRES = [
   'Hard Techno',
   'Hip Hop',
   'House',
+  'K-Pop',
   'Latin',
   'Pop',
   'Progressive House',
@@ -55,9 +60,13 @@ const ENERGY_LEVELS = [
 const VERSION_TYPES = ['clean', 'dirty', 'intro', 'acapella', 'instrumental', 'extended', 'radio', 'club', 'deep'];
 
 const Singles = () => {
+  const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { user } = useAuth();
+  const { showNotification } = useNotifications();
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
@@ -87,6 +96,24 @@ const Singles = () => {
       preview_url: track.preview_url,
       artwork: track.artwork
     });
+  };
+
+  const handleFreeDownload = async (track: Track) => {
+    if (!user) {
+      showNotification('Please sign in to download', 'error');
+      navigate('/auth');
+      return;
+    }
+    setDownloadingId(track.id);
+    try {
+      await directDownload(track.id, track.title);
+      showNotification(`Downloading "${track.title}"`, 'success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const filteredSingles = tracks.filter(track => {
@@ -253,9 +280,10 @@ const Singles = () => {
                             </button>
                             <button 
                               className={`cart-btn-arsenal ${isInCart(track.id) ? 'added' : ''}`}
-                              onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                              onClick={() => is_free ? handleFreeDownload(track) : addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                              disabled={downloadingId === track.id}
                             >
-                              {isInCart(track.id) ? <Check size={14} /> : (is_free ? <Download size={14} /> : <span>${track.price}</span>)}
+                              {downloadingId === track.id ? <Loader2 size={14} className="animate-spin" /> : isInCart(track.id) ? <Check size={14} /> : (is_free ? <Download size={14} /> : <span>${track.price}</span>)}
                             </button>
                           </div>
                         </td>

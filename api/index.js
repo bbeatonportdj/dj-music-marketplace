@@ -28,12 +28,15 @@ function getDriveClient() {
 function cors(res, req) {
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const origin = req?.headers?.origin || '';
-  const isAllowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app');
-  res.setHeader('Access-Control-Allow-Origin', isAllowed ? (origin || '*') : allowedOrigins[0] || '*');
+  const isAllowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin);
+  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0] || 'https://djmusicmarketplace.fun');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://fbwqgbsalqgcrfxhoure.supabase.co https://api.omise.co; media-src 'self' https: blob:;");
 }
 
 const COOKIE_NAME = 'sb_token';
@@ -45,7 +48,7 @@ function setAuthCookie(res, token) {
     'HttpOnly',
     'Secure',
     'SameSite=Lax',
-    `Path=/`,
+    'Path=/api',
     `Max-Age=${COOKIE_MAX_AGE}`,
   ].join('; ');
   res.setHeader('Set-Cookie', cookie);
@@ -57,7 +60,7 @@ function clearAuthCookie(res) {
     'HttpOnly',
     'Secure',
     'SameSite=Lax',
-    `Path=/`,
+    'Path=/api',
     'Max-Age=0',
   ].join('; ');
   res.setHeader('Set-Cookie', cookie);
@@ -70,6 +73,7 @@ function getCookie(req, name) {
 }
 
 // ─── Rate Limiter ─────────────────────────────────────────────────
+// In-memory rate limiter (per-invocation in serverless — best-effort only)
 const rateLimitStore = new Map();
 
 function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
@@ -89,16 +93,6 @@ function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
   rateLimitStore.set(key, requests);
   return true;
 }
-
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
-  const cutoff = Date.now() - 60000;
-  for (const [key, times] of rateLimitStore.entries()) {
-    const filtered = times.filter(t => t > cutoff);
-    if (filtered.length === 0) rateLimitStore.delete(key);
-    else rateLimitStore.set(key, filtered);
-  }
-}, 300000);
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -480,7 +474,7 @@ export default async function handler(req, res) {
         }, { onConflict: 'id' });
 
       if (error) {
-        return json(res, 500, { error: error.message });
+        return json(res, 500, { error: 'Failed to update profile' });
       }
 
       const profile = await getProfile(supabase, user.id);
@@ -510,7 +504,9 @@ export default async function handler(req, res) {
         return json(res, 400, { error: 'No valid tracks found' });
       }
 
-      const total_amount = tracks.reduce((sum, t) => sum + Number(t.price || 0), 0);
+      const USD_TO_THB = 33.41;
+      const total_amount_usd = tracks.reduce((sum, t) => sum + Number(t.price || 0), 0);
+      const total_amount_thb = Math.round(total_amount_usd * USD_TO_THB * 100) / 100;
       const timestamp = Date.now().toString(36).toUpperCase();
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       const promptpay_ref = `PP-${timestamp}-${random}`;
@@ -520,8 +516,8 @@ export default async function handler(req, res) {
         .insert({
           user_id: user.id,
           email: user.email,
-          total_amount,
-          status: total_amount === 0 ? 'paid' : 'pending',
+          total_amount: total_amount_usd,
+          status: total_amount_usd === 0 ? 'paid' : 'pending',
           payment_method: payment_method || 'promptpay',
           promptpay_ref,
         })
@@ -538,9 +534,49 @@ export default async function handler(req, res) {
       await supabase.from('order_items').insert(orderItems);
 
       let qr_code_url = '';
-      if (order.status === 'pending' && total_amount > 0) {
-        const payload = generatePayload(process.env.PROMPTPAY_ID || process.env.VITE_PROMPTPAY_ID || '0820014084', { amount: total_amount });
-        qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+      let omise_charge_id = null;
+      if (order.status === 'pending' && total_amount_usd > 0) {
+        const omiseSkey = process.env.OMISE_SKEY;
+        if (omiseSkey && omiseSkey.startsWith('skey_')) {
+          // Use Omise PromptPay
+          try {
+            const auth = Buffer.from(omiseSkey + ':').toString('base64');
+            const omiseRes = await fetch('https://api.omise.co/charges', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                amount: Math.round(total_amount_thb * 100),
+                currency: 'thb',
+                source: { type: 'promptpay' },
+                metadata: { order_id: order.id },
+              }),
+            });
+            const omiseData = await omiseRes.json();
+            if (omiseRes.ok && omiseData.id) {
+              omise_charge_id = omiseData.id;
+              qr_code_url = omiseData.source?.scannable_code?.image?.url || '';
+              await supabase.from('orders').update({ omise_charge_id }).eq('id', order.id);
+            } else {
+              console.error('Omise charge creation failed');
+              const payload = generatePayload(process.env.VITE_PROMPTPAY_ID || '', { amount: total_amount_thb });
+              qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+            }
+          } catch (omiseErr) {
+            console.error('Omise API call failed');
+            const payload = generatePayload(process.env.VITE_PROMPTPAY_ID || '', { amount: total_amount_thb });
+            qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+          }
+        } else {
+          // Local QR generation (fallback when Omise not configured)
+          const promptpayId = process.env.VITE_PROMPTPAY_ID || '';
+          if (promptpayId) {
+            const payload = generatePayload(promptpayId, { amount: total_amount_thb });
+            qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+          }
+        }
       }
 
       if (order.status === 'paid') {
@@ -568,7 +604,7 @@ export default async function handler(req, res) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) return json(res, 500, { error: error.message });
+      if (error) return json(res, 500, { error: 'Failed to load orders' });
 
       // Enrich order items with track data
       const enriched = await Promise.all(orders.map(async (order) => {
@@ -601,7 +637,7 @@ export default async function handler(req, res) {
         .select('track_id')
         .eq('user_id', user.id);
 
-      if (error) return json(res, 500, { error: error.message });
+      if (error) return json(res, 500, { error: 'Failed to load purchases' });
 
       const trackIds = purchases.map(p => p.track_id);
       if (trackIds.length === 0) return json(res, 200, []);
@@ -616,7 +652,10 @@ export default async function handler(req, res) {
 
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
-    const bb = Busboy({ headers: req.headers });
+    const bb = Busboy({
+      headers: req.headers,
+      limits: { files: 1, fileSize: 10 * 1024 * 1024 }, // 10MB max
+    });
     let orderId = null;
     let fileBuffer = null;
 
@@ -695,10 +734,11 @@ function parseMultipart(req) {
             return json(res, 400, { error: 'Slip verification failed. Please upload a valid payment slip.' });
           }
 
-          // Verify amount matches
+          // Verify amount matches (slip is in THB, order stored in USD)
           const transAmount = parseFloat(slipokData.data?.amount || '0');
-          if (transAmount < order.total_amount) {
-            return json(res, 400, { error: `Payment amount mismatch. Expected ${order.total_amount}, received ${transAmount}` });
+          const expectedThb = Math.round(Number(order.total_amount) * 33.41 * 100) / 100;
+          if (transAmount < expectedThb) {
+            return json(res, 400, { error: `Payment amount mismatch. Expected THB ${expectedThb}, received THB ${transAmount}` });
           }
         } catch (err) {
           return json(res, 500, { error: `SlipOK verification error: ${err.message}` });
@@ -779,7 +819,7 @@ function parseMultipart(req) {
         .select()
         .single();
 
-      if (orderError) return json(res, 500, { error: orderError.message });
+      if (orderError) return json(res, 500, { error: 'Failed to create order' });
 
       await supabase.from('order_items').insert(
         tracks.map(t => ({ order_id: order.id, track_id: t.id, price_at_purchase: t.price }))
@@ -866,6 +906,9 @@ function parseMultipart(req) {
 
     // ─── Stripe: Session Status ──────────────────────────────────────
     if (path === '/api/stripe/session-status' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
       const sessionId = url.searchParams.get('session_id');
       if (!sessionId) return json(res, 400, { error: 'Missing session_id' });
 
@@ -884,18 +927,86 @@ function parseMultipart(req) {
           order_id: session.metadata?.order_id,
         });
       } catch (err) {
-        return json(res, 500, { error: err.message });
+        return json(res, 500, { error: 'Failed to retrieve session' });
       }
+    }
+
+    // ─── Omise Webhook ─────────────────────────────────────────────────
+    if (path === '/api/webhooks/omise' && req.method === 'POST') {
+      const omiseSkey = process.env.OMISE_SKEY;
+
+      if (!omiseSkey || !omiseSkey.startsWith('skey_')) {
+        return json(res, 500, { error: 'Omise is not configured' });
+      }
+
+      // Verify webhook signature if OMISE_WEBHOOK_SECRET is set
+      const webhookSecret = process.env.OMISE_WEBHOOK_SECRET;
+      if (webhookSecret) {
+        const sigHeader = req.headers['x-omise-signature'] || req.headers['authorization'] || '';
+        if (!sigHeader.includes(webhookSecret)) {
+          return json(res, 403, { error: 'Invalid webhook signature' });
+        }
+      }
+
+      try {
+        const rawBody = await getBody(req);
+        const event = JSON.parse(rawBody);
+        if (event.key === 'charge.complete') {
+          const chargeId = event.data?.id;
+          if (chargeId) {
+            const { data: order } = await supabase
+              .from('orders')
+              .select('id, user_id, status')
+              .eq('omise_charge_id', chargeId)
+              .single();
+
+            if (order && order.status !== 'paid') {
+              await supabase.from('orders').update({ status: 'paid' }).eq('id', order.id);
+              const { data: items } = await supabase
+                .from('order_items')
+                .select('track_id')
+                .eq('order_id', order.id);
+              if (items && items.length > 0) {
+                await supabase.from('user_purchases').upsert(
+                  items.map(i => ({ user_id: order.user_id, track_id: i.track_id, purchased_at: new Date() })),
+                  { onConflict: 'user_id,track_id', ignoreDuplicates: true }
+                );
+              }
+            }
+          }
+        }
+        return json(res, 200, { received: true });
+      } catch (err) {
+        return json(res, 400, { error: 'Invalid webhook payload' });
+      }
+    }
+
+    // ─── Order Status (for polling) ────────────────────────────────────
+    if (path === '/api/orders/status' && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Not authenticated' });
+
+      const orderId = url.searchParams.get('order_id');
+      if (!orderId) return json(res, 400, { error: 'Missing order_id' });
+
+      const { data: order } = await supabase
+        .from('orders')
+        .select('id, status')
+        .eq('id', orderId)
+        .eq('user_id', user.id)
+        .single();
+      if (!order) return json(res, 404, { error: 'Order not found' });
+      return json(res, 200, order);
     }
 
     // ─── Music Catalog ────────────────────────────────────────────────
     if (path === '/api/music' && req.method === 'GET') {
       const { data, error } = await supabase
         .from('tracks')
-        .select('*')
+        .select('id, title, artist, version, version_type, duration, bpm, key, genre, price, audio_url, artwork_url, created_at, is_new, is_hot')
         .order('created_at', { ascending: false });
       if (error) {
-        return json(res, 500, { error: error.message });
+        return json(res, 500, { error: 'Failed to load catalog' });
       }
       return json(res, 200, data);
     }
@@ -905,12 +1016,15 @@ function parseMultipart(req) {
       // handled below
     }
 
-    // ─── Preview (same as download, but inline for audio playback) ────
+    // ─── Preview (requires auth, streams 30s clip for audio playback) ────
     if (path.startsWith('/api/preview/') && req.method === 'GET') {
+      const user = await getAuthUser(req, supabase);
+      if (!user) return json(res, 401, { error: 'Please sign in to preview' });
+
       const id = path.replace('/api/preview/', '');
       const { data: track, error } = await supabase
         .from('tracks')
-        .select('*')
+        .select('id, title, artist, gdrive_file_id, audio_url, price')
         .eq('id', id)
         .single();
       if (error || !track) {
@@ -920,33 +1034,111 @@ function parseMultipart(req) {
         return json(res, 404, { error: 'No audio available' });
       }
 
+      // If user already purchased, serve full file via download endpoint
+      const { data: purchase } = await supabase
+        .from('user_purchases')
+        .select('track_id')
+        .eq('user_id', user.id)
+        .eq('track_id', id)
+        .single();
+
+      if (purchase) {
+        // Redirect to download endpoint for full file
+        return res.redirect(302, `/api/downloads/${id}`);
+      }
+
+      // Free tracks — serve full stream with download rate limit
+      if (!track.price || Number(track.price) === 0) {
+        // Rate limit free previews too (prevent abuse)
+        const prevKey = `prev:${user.id}`;
+        if (!checkRateLimit(prevKey, 30, 3600000)) {
+          return json(res, 429, { error: 'Preview limit reached. Max 30 per hour.' });
+        }
+
+        const drive = getDriveClient();
+        if (track.gdrive_file_id && drive) {
+          try {
+            const fileMeta = await drive.files.get({
+              fileId: track.gdrive_file_id,
+              fields: 'mimeType',
+            });
+            res.setHeader('Content-Type', fileMeta.data.mimeType || 'audio/mpeg');
+            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Cache-Control', 'private, max-age=300');
+            const response = await drive.files.get(
+              { fileId: track.gdrive_file_id, alt: 'media' },
+              { responseType: 'stream' }
+            );
+            response.data.pipe(res);
+            return;
+          } catch (driveErr) {
+            return json(res, 404, { error: 'Audio file not accessible.' });
+          }
+        }
+        if (track.audio_url) {
+          return res.redirect(302, track.audio_url);
+        }
+        return json(res, 404, { error: 'No audio source found' });
+      }
+
+      // Paid tracks — serve 30-second preview clip via Google Drive range request
       const drive = getDriveClient();
       if (track.gdrive_file_id && drive) {
         try {
           const fileMeta = await drive.files.get({
             fileId: track.gdrive_file_id,
-            fields: 'mimeType',
+            fields: 'mimeType, size',
           });
-          res.setHeader('Content-Type', fileMeta.data.mimeType || 'audio/mpeg');
+          const mimeType = fileMeta.data.mimeType || 'audio/mpeg';
+          const fileSize = parseInt(fileMeta.data.size || '0', 10);
+
+          // For MP3, 30s ≈ ~480KB at 128kbps; use first 640KB to be safe
+          const previewBytes = Math.min(640 * 1024, fileSize);
+
+          res.setHeader('Content-Type', mimeType);
           res.setHeader('Content-Disposition', 'inline');
-          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.setHeader('Accept-Ranges', 'bytes');
+          res.setHeader('Content-Range', `bytes 0-${previewBytes - 1}/${fileSize}`);
+          res.setHeader('Content-Length', String(previewBytes));
+          res.setHeader('Cache-Control', 'private, max-age=300');
+
           const response = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },
             { responseType: 'stream' }
           );
-          response.data.pipe(res);
+
+          let bytesSent = 0;
+          response.data.on('data', (chunk) => {
+            bytesSent += chunk.length;
+            if (bytesSent <= previewBytes) {
+              res.write(chunk);
+            } else {
+              // Truncate — only send the portion needed for 30s preview
+              const remaining = previewBytes - (bytesSent - chunk.length);
+              if (remaining > 0) {
+                res.write(chunk.slice(0, remaining));
+              }
+              response.data.destroy();
+              res.end();
+            }
+          });
+
+          response.data.on('end', () => {
+            if (!res.writableEnded) res.end();
+          });
+
+          response.data.on('error', () => {
+            if (!res.writableEnded) res.end();
+          });
+
           return;
         } catch (driveErr) {
-          return json(res, 404, { error: 'Audio file not accessible. Try again later.' });
+          return json(res, 404, { error: 'Audio preview not available.' });
         }
       }
 
-      if (track.gdrive_file_id) {
-        return json(res, 404, { error: 'Audio file not accessible' });
-      }
-
-      // Redirect to Supabase Storage directly (has CORS: * header)
       if (track.audio_url) {
+        // For Supabase-hosted audio, redirect (can't easily range-limit)
         return res.redirect(302, track.audio_url);
       }
 
@@ -963,7 +1155,7 @@ function parseMultipart(req) {
         .select('track_id')
         .eq('user_id', user.id);
 
-      if (error) return json(res, 500, { error: error.message });
+      if (error) return json(res, 500, { error: 'Failed to load downloads' });
 
       const trackIds = purchases.map(p => p.track_id);
       if (trackIds.length === 0) return json(res, 200, []);
@@ -982,21 +1174,43 @@ function parseMultipart(req) {
       if (!user) return json(res, 401, { error: 'Please sign in to download' });
 
       const id = path.replace('/api/downloads/', '');
+
+      // Rate limit: max 20 downloads per hour per user
+      const dlKey = `dl:${user.id}`;
+      if (!checkRateLimit(dlKey, 20, 3600000)) {
+        return json(res, 429, { error: 'Download limit reached. Max 20 downloads per hour.' });
+      }
+
       const { data: track, error } = await supabase
         .from('tracks')
-        .select('*')
+        .select('id, title, artist, gdrive_file_id, audio_url, price')
         .eq('id', id)
         .single();
       if (error || !track) return json(res, 404, { error: 'Track not found' });
       if (!track.gdrive_file_id && !track.audio_url) return json(res, 404, { error: 'No audio available for this track' });
 
+      const isFree = !track.price || Number(track.price) === 0;
+
       // Check purchase
-      const { data: purchase } = await supabase
+      let { data: purchase } = await supabase
         .from('user_purchases')
         .select('*')
         .eq('user_id', user.id)
         .eq('track_id', id)
         .single();
+
+      // Free tracks: auto-create purchase record if not exists
+      if (!purchase && isFree) {
+        const { data: newPurchase } = await supabase
+          .from('user_purchases')
+          .upsert(
+            { user_id: user.id, track_id: id, download_count: 0, purchased_at: new Date() },
+            { onConflict: 'user_id,track_id' }
+          )
+          .select()
+          .single();
+        purchase = newPurchase || { download_count: 0 };
+      }
 
       if (!purchase) return json(res, 403, { error: 'You have not purchased this track' });
 
@@ -1012,12 +1226,13 @@ function parseMultipart(req) {
           });
           const mimeType = fileMeta.data.mimeType || 'audio/mpeg';
           const fileName = track.title
-            ? `${track.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}.mp3`
+            ? `${track.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_') || 'track'}.mp3`
             : `${track.id}.mp3`;
 
           res.setHeader('Content-Type', mimeType);
           res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.setHeader('Cache-Control', 'private, no-store');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
 
           const response = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },
@@ -1041,12 +1256,28 @@ function parseMultipart(req) {
           const ext = track.audio_url.split('?')[0].split('.').pop()?.toLowerCase() || 'mp3';
           const mimeMap = { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac', aac: 'audio/aac', m4a: 'audio/mp4', webm: 'audio/webm' };
           const ct = mimeMap[ext] || 'audio/mpeg';
-          const fileName = `${track.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}.mp3`;
+          const fileName = `${(track.title || 'track').replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_') || 'track'}.mp3`;
           res.setHeader('Content-Type', ct);
           res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-          res.setHeader('Cache-Control', 'public, max-age=3600');
-          const buffer = Buffer.from(await audioRes.arrayBuffer());
-          return res.end(buffer);
+          res.setHeader('Cache-Control', 'private, no-store');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+          // Stream the response instead of buffering in memory
+          const reader = audioRes.body?.getReader();
+          if (reader) {
+            const pump = async () => {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(value);
+              }
+              res.end();
+            };
+            pump().catch(() => { if (!res.writableEnded) res.end(); });
+          } else {
+            const buffer = Buffer.from(await audioRes.arrayBuffer());
+            return res.end(buffer);
+          }
+          return;
         } catch (fetchErr) {
           return json(res, 500, { error: 'Failed to fetch audio file' });
         }
@@ -1061,7 +1292,7 @@ function parseMultipart(req) {
       const id = musicIdMatch[1];
       const { data, error } = await supabase
         .from('tracks')
-        .select('*')
+        .select('id, title, artist, version, version_type, duration, bpm, key, genre, price, audio_url, artwork_url, created_at, is_new, is_hot')
         .eq('id', id)
         .single();
       if (error || !data) {

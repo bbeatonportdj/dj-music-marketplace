@@ -121,7 +121,7 @@ const Downloads = () => {
                   style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover' }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '600', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{track.title}</div>
+                  <div style={{ fontWeight: '600', fontSize: '15px' }}>{track.title}</div>
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{track.artist} {track.version && `(${track.version})`}</div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
                     <span>{track.bpm} BPM</span>

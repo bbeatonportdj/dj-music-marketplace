@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, CreditCard, Smartphone, CheckCircle, AlertCircle, Upload, LogIn, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { X, CreditCard, Smartphone, CheckCircle, AlertCircle, LogIn, ExternalLink } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { PROMPTPAY_ID } from '../lib/promptpay';
+
 import { apiUrl } from '../lib/apiBase';
 import '../styles/checkout.css';
 
@@ -19,22 +19,53 @@ interface Order {
   id: string;
   status: string;
   promptpay_ref?: string;
+  omise_charge_id?: string | null;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, onConfirm, tracks }) => {
   const { showNotification } = useNotifications();
   const { user } = useAuth();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [step, setStep] = useState<'method' | 'processing' | 'success' | 'loading' | 'auth_required'>('method');
   const [method, setMethod] = useState<'promptpay' | 'stripe'>('stripe');
   const [order, setOrder] = useState<Order | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [, setStripeUrl] = useState<string>('');
-  const [slipFile, setSlipFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [usingOmise, setUsingOmise] = useState(false);
 
-  const USD_TO_THB = 35.00;
+  const USD_TO_THB = 33.41;
   const totalThb = total * USD_TO_THB;
+
+  // Poll order status when using Omise
+  const startPolling = useCallback((orderId: string) => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(apiUrl(`/api/orders/status?order_id=${orderId}`), { credentials: 'include' });
+        const data = await res.json();
+        if (data.status === 'paid') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          localStorage.setItem('last_successful_order', JSON.stringify({
+            order: { id: orderId, status: 'paid' },
+            payment_date: new Date().toISOString(),
+          }));
+          setStep('success');
+          showNotification('Payment successful!', 'success');
+        }
+      } catch {
+        // ignore poll errors
+      }
+    }, 3000);
+  }, [showNotification]);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,7 +75,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
       return;
     }
 
-    // Only auto-init for PromptPay (Stripe creates order in createStripeSession)
     if (method === 'promptpay') {
       const initOrder = async () => {
         setStep('loading');
@@ -70,10 +100,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
           setOrder(data.order);
           setQrCodeUrl(data.qr_code_url || '');
 
+          const isOmise = data.order.omise_charge_id || data.qr_code_url?.startsWith('http');
+          setUsingOmise(!!isOmise);
+
           if (data.order.status === 'paid') {
             setStep('success');
           } else {
             setStep('method');
+            if (isOmise) {
+              startPolling(data.order.id);
+            }
           }
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : String(err);
@@ -86,7 +122,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
     } else {
       setStep('method');
     }
-  }, [isOpen, user, tracks, method]);
+
+    return () => stopPolling();
+  }, [isOpen, user, tracks, method, startPolling, stopPolling]);
 
   const createStripeSession = useCallback(async () => {
     if (!order) return;
@@ -129,6 +167,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
 
   const handlePromptPayVerify = async () => {
     if (!order) return;
+    stopPolling();
     setStep('processing');
     setErrorMsg(null);
 
@@ -147,10 +186,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
         throw new Error(result.error || 'Payment verification failed');
       }
 
-      // Save order to localStorage as requested
       localStorage.setItem('last_successful_order', JSON.stringify({
         ...result.order,
-        payment_date: new Date().toISOString()
+        payment_date: new Date().toISOString(),
       }));
 
       setStep('success');
@@ -163,14 +201,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
   };
 
   const handleFinish = () => {
+    stopPolling();
     onConfirm();
     onClose();
     setStep('method');
     setOrder(null);
     setQrCodeUrl('');
     setStripeUrl('');
-    setSlipFile(null);
     setErrorMsg(null);
+    setUsingOmise(false);
   };
 
   return (
@@ -225,7 +264,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
               >
                 <Smartphone size={32} />
                 <span>PromptPay QR</span>
-                <small style={{ opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>Scan & upload slip</small>
+                <small style={{ opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>Scan to pay</small>
               </div>
             </div>
 
@@ -249,32 +288,18 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
 
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                   <p style={{ fontWeight: '600', margin: '0 0 4px 0' }}>Scan QR to pay ฿{totalThb.toFixed(2)}</p>
-                  <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0' }}>PromptPay ID: <strong>{PROMPTPAY_ID}</strong></p>
+                  {usingOmise && (
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                      กำลังรอการยืนยันการชำระเงิน...
+                    </p>
+                  )}
                 </div>
 
-                <div style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', padding: '10px', borderRadius: '8px', textAlign: 'center', marginBottom: '1.25rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                  <p style={{ fontSize: '13px', margin: '0', color: 'var(--text-main)' }}>
-                    📢 กรุณาแจ้งสลิปการโอนเงินที่ Line: <strong style={{ color: 'var(--accent-color)' }}>@musicstore</strong>
-                  </p>
-                </div>
-
-                <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Upload Payment Slip (Optional)</label>
-                  <label className="slip-upload-zone" style={{ border: '1px dashed var(--border-color)', borderRadius: '6px', padding: '10px 15px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: 'rgba(255, 255, 255, 0.02)' }}>
-                    <Upload size={16} />
-                    <span>{slipFile ? slipFile.name : 'Select slip image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => setSlipFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                </div>
-
-                <button className="pay-btn" onClick={handlePromptPayVerify}>
-                  {slipFile ? 'Upload Slip & Verify' : 'ฉันได้ชำระเงินแล้ว'}
-                </button>
+                {!usingOmise && (
+                  <button className="pay-btn" onClick={handlePromptPayVerify}>
+                    ฉันได้ชำระเงินแล้ว
+                  </button>
+                )}
               </div>
             ) : (
               <div className="card-section" style={{ textAlign: 'center', padding: '1rem 0' }}>

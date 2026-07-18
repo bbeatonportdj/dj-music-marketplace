@@ -50,6 +50,7 @@ const GENRES = [
   'Hard Techno',
   'Hip Hop',
   'House',
+  'K-Pop',
   'Latin',
   'Pop',
   'Progressive House',

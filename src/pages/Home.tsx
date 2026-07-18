@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Music, Zap, TrendingUp, Award, Clock, ChevronRight, ExternalLink } from 'lucide-react';
+import { Play, Pause, Music, Zap, TrendingUp, Award, Clock, ChevronRight, ExternalLink, Download } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
+import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import '../styles/home.css';
 
 const GENRE_CRATES = [
@@ -18,9 +21,30 @@ const GENRE_CRATES = [
 function Home() {
   const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack } = useAudio();
+  const { user } = useAuth();
+  const { showNotification } = useNotifications();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'latest' | 'popular'>('latest');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleFreeDownload = async (track: Track) => {
+    if (!user) {
+      showNotification('Please sign in to download', 'error');
+      navigate('/auth');
+      return;
+    }
+    setDownloadingId(track.id);
+    try {
+      await directDownload(track.id, track.title);
+      showNotification(`Downloading "${track.title}"`, 'success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchTracks().then(data => {
@@ -182,15 +206,29 @@ function Home() {
                 <span className={`home-track-price ${track.price === 0 ? 'free' : ''}`}>
                   {track.price === 0 ? 'FREE' : `$${track.price.toFixed(2)}`}
                 </span>
-                <button
-                  className="home-track-play-btn"
-                  onClick={e => {
-                    e.stopPropagation();
-                    playTrack(track);
-                  }}
-                >
-                  {currentTrack?.id === track.id && isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                </button>
+                {track.price === 0 ? (
+                  <button
+                    className="home-track-play-btn"
+                    disabled={downloadingId === track.id}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleFreeDownload(track);
+                    }}
+                    title="Download Free"
+                  >
+                    <Download size={16} />
+                  </button>
+                ) : (
+                  <button
+                    className="home-track-play-btn"
+                    onClick={e => {
+                      e.stopPropagation();
+                      playTrack(track);
+                    }}
+                  >
+                    {currentTrack?.id === track.id && isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                  </button>
+                )}
               </div>
             ))}
           </div>

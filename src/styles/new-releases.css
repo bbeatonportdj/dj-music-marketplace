@@ -8,7 +8,7 @@
 .nr-sidebar {
   width: 280px;
   background-color: var(--surface-color);
-  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   padding: 24px;
   overflow-y: auto;
   position: sticky;
@@ -60,7 +60,14 @@
 }
 
 .nr-filter-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.nr-filter-section:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 
 .nr-filter-section h4 {
@@ -195,16 +202,17 @@
 
 .nr-track-row-arsenal {
   border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.1s ease;
+  transition: background-color 0.1s ease, box-shadow 0.1s ease;
 }
 
 .nr-track-row-arsenal:hover {
-  background-color: rgba(255, 59, 48, 0.04);
+  background-color: rgba(255, 59, 48, 0.08);
+  box-shadow: inset 3px 0 0 var(--primary-color);
 }
 
 .nr-track-row-arsenal.playing {
   background-color: rgba(255, 59, 48, 0.1);
-  border-left: 3px solid var(--primary-color);
+  box-shadow: inset 3px 0 0 var(--primary-color);
 }
 
 .nr-table td {
@@ -215,9 +223,9 @@
 /* Row elements */
 .nr-play-cell-arsenal {
   position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 2px;
+  width: 48px;
+  height: 48px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
@@ -263,7 +271,6 @@
   font-weight: 500;
   font-size: 14px;
   color: var(--text-main);
-  white-space: nowrap;
 }
 
 .nr-artist-text {
@@ -460,6 +467,124 @@
   color: var(--primary-color);
 }
 
+/* Genre Section Headers */
+.nr-genre-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-main);
+  padding: 12px 16px;
+  margin: 0 0 0 0;
+  border-left: 3px solid var(--primary-color);
+  background: rgba(255, 59, 48, 0.04);
+}
+
+.nr-genre-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-light);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0;
+}
+
+/* Genre Section */
+.nr-genre-section {
+  margin-bottom: 40px;
+}
+
+.nr-genre-section .nr-table-container {
+  border-radius: 0 4px 4px 4px;
+}
+
+/* Filter Badge */
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.filter-badge {
+  background: var(--primary-color);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Sort Menu */
+.sort-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.sort-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 20;
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.sort-option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: 'Sora', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.sort-option:hover {
+  background: var(--surface-light);
+  color: var(--text-main);
+}
+
+.sort-option.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Error State */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.error-state p {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+}
+
 /* Energy Meter */
 .energy-meter-arsenal {
   display: flex;
@@ -469,6 +594,20 @@
 
 .energy-meter-arsenal .active {
   color: var(--primary-color);
+}
+
+/* Rank Cell */
+.rank-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rank-cell .zap-icon {
+  color: var(--text-dim);
 }
 
 /* Actions */
@@ -608,6 +747,11 @@
     display: none;
   }
   
+  .nr-genre-title {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+  
   .nr-table th, .nr-table td {
     padding: 8px 10px;
   }
@@ -628,8 +772,8 @@
   }
 
   .nr-play-btn-arsenal {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 }
 

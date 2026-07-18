@@ -5,11 +5,13 @@ import {
   Share2, Link as LinkIcon, Loader2, AlertCircle, Download
 } from 'lucide-react';
 import { fetchPackById, fetchTracksByPackId } from '../lib/api';
+import { directDownload } from '../lib/download';
 import type { Pack, Track } from '../lib/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 import Waveform from '../components/Waveform';
 import TrackRecommendations from '../components/TrackRecommendations';
 import '../styles/pack-detail.css';
@@ -21,7 +23,9 @@ const PackDetail = () => {
   const { currentTrack, isPlaying, playTrack, togglePlay, currentTime, duration } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { showNotification } = useNotifications();
+  const { user } = useAuth();
   const [showShare, setShowShare] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [pack, setPack] = useState<Pack | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -29,6 +33,28 @@ const PackDetail = () => {
 
   // Calculate real progress for the Waveform
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleFreeDownload = async () => {
+    if (!pack) return;
+    if (!user) {
+      showNotification('Please sign in to download', 'error');
+      navigate('/auth');
+      return;
+    }
+    setDownloading(true);
+    try {
+      // Download first track of pack (or all if multiple)
+      for (const track of tracks) {
+        await directDownload(track.id, track.title);
+      }
+      showNotification(`Downloading "${pack.title}"`, 'success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -144,14 +170,25 @@ const PackDetail = () => {
             ) : (
               <div className="price-tag">${pack.price.toFixed(2)}</div>
             )}
-            <button
-              className={`buy-now-btn ${isInCart(pack.id) ? 'added' : ''}`}
-              onClick={() => addToCart(pack as unknown as Parameters<typeof addToCart>[0])}
-              disabled={isInCart(pack.id)}
-            >
-              {pack.is_free ? <Download size={20} /> : <ShoppingCart size={20} />}
-              {isInCart(pack.id) ? 'Added' : pack.is_free ? 'Download Free' : t('pack.add_to_cart')}
-            </button>
+            {pack.is_free ? (
+              <button
+                className="buy-now-btn"
+                onClick={handleFreeDownload}
+                disabled={downloading}
+              >
+                {downloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                {downloading ? 'Downloading...' : 'Download Free'}
+              </button>
+            ) : (
+              <button
+                className={`buy-now-btn ${isInCart(pack.id) ? 'added' : ''}`}
+                onClick={() => addToCart(pack as unknown as Parameters<typeof addToCart>[0])}
+                disabled={isInCart(pack.id)}
+              >
+                <ShoppingCart size={20} />
+                {isInCart(pack.id) ? 'Added' : t('pack.add_to_cart')}
+              </button>
+            )}
           </div>
         </div>
       </div>

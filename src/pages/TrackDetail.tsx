@@ -6,11 +6,13 @@ import {
   Calendar, Music2, BarChart3, Loader2, AlertCircle
 } from 'lucide-react';
 import { fetchTrackById, type Track } from '../lib/api';
+import { directDownload } from '../lib/download';
 import { useLanguage } from '../context/LanguageContext';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
 import Waveform from '../components/Waveform';
 import TrackRecommendations from '../components/TrackRecommendations';
 import '../styles/track-detail.css';
@@ -23,9 +25,11 @@ const TrackDetail = () => {
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { showNotification } = useNotifications();
+  const { user } = useAuth();
   const [showShare, setShowShare] = useState(false);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const loadTrack = async () => {
@@ -40,6 +44,25 @@ const TrackDetail = () => {
 
   // Calculate real progress for the Waveform
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleFreeDownload = async () => {
+    if (!track) return;
+    if (!user) {
+      showNotification('Please sign in to download', 'error');
+      navigate('/auth');
+      return;
+    }
+    setDownloading(true);
+    try {
+      await directDownload(track.id, track.title);
+      showNotification(`Downloading "${track.title}"`, 'success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      showNotification(message, 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handlePlay = () => {
     if (!track) return;
@@ -141,14 +164,25 @@ const TrackDetail = () => {
           </div>
 
           <div className="track-actions-primary">
-            <button 
-              className={`buy-now-btn ${isInCart(track.id) ? 'added' : ''}`}
-              onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
-              disabled={isInCart(track.id)}
-            >
-              {track.price === 0 ? <Download size={20} /> : <ShoppingCart size={20} />}
-              {isInCart(track.id) ? 'Added to Cart' : track.price === 0 ? 'Download Free' : `Add to Cart — $${track.price.toFixed(2)}`}
-            </button>
+            {track.price === 0 ? (
+              <button 
+                className="buy-now-btn"
+                onClick={handleFreeDownload}
+                disabled={downloading}
+              >
+                {downloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                {downloading ? 'Downloading...' : 'Download Free'}
+              </button>
+            ) : (
+              <button 
+                className={`buy-now-btn ${isInCart(track.id) ? 'added' : ''}`}
+                onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                disabled={isInCart(track.id)}
+              >
+                <ShoppingCart size={20} />
+                {isInCart(track.id) ? 'Added to Cart' : `Add to Cart — $${track.price.toFixed(2)}`}
+              </button>
+            )}
             <button 
               className={`favorite-btn ${isFavorite(track.id) ? 'active' : ''}`}
               onClick={() => toggleFavorite({
