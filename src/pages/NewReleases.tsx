@@ -27,6 +27,7 @@ const GENRES = [
   'Baile Funk/Favela Bass',
   'Bass House',
   'Big Room',
+  'Bounce',
   'Drum & Bass',
   'EDM',
   'Hard Dance',
