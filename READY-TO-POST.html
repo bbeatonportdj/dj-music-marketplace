@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ready to Post - Content Pack</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; line-height: 1.8; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2rem; background: linear-gradient(135deg, #ff006e, #8338ec); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .section { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .section h2 { color: #8338ec; margin-bottom: 16px; }
+        .post-card { background: #111; border: 1px solid #444; border-radius: 8px; padding: 16px; margin: 12px 0; }
+        .post-card .label { color: #ff006e; font-weight: bold; margin-bottom: 8px; }
+        .copy-box { background: #222; border: 1px solid #444; padding: 16px; border-radius: 8px; margin: 8px 0; position: relative; cursor: pointer; transition: all 0.2s; white-space: pre-line; }
+        .copy-box:hover { border-color: #8338ec; background: #2a2a2e; }
+        .copy-box:active { transform: scale(0.98); }
+        .copy-box::after { content: "📋 คลิกคัดลอก"; position: absolute; right: 12px; top: 12px; font-size: 0.8rem; color: #888; background: #333; padding: 4px 8px; border-radius: 4px; }
+        .copy-box.copied::after { content: "✅ คัดลอกแล้ว!"; color: #00ff88; background: #003311; }
+        .highlight { padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+        .highlight.green { background: #003311; border: 1px solid #00ff88; }
+        .highlight.yellow { background: #333300; border: 1px solid #ffcc00; }
+        .action-btn { display: inline-block; background: linear-gradient(135deg, #ff006e, #8338ec); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px 4px; transition: transform 0.2s; }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn.facebook { background: linear-gradient(135deg, #1877f2, #0064e0); }
+        .action-btn.tiktok { background: linear-gradient(135deg, #000, #333); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; }
+        .checklist { list-style: none; margin: 12px 0; }
+        .checklist li { padding: 10px 0; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #222; }
+        .checklist li:last-child { border-bottom: none; }
+        .checklist li::before { content: "☐"; font-size: 1.3rem; color: #8338ec; }
+        .checklist li.checked::before { content: "☑"; color: #00ff88; }
+        .checklist li.checked { color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Ready to Post Content Pack</h1>
+        <p class="subtitle">ทุกอย่างพร้อมแล้ว → คัดลอก → โพสต์!</p>
+
+        <!-- FIRST POST - FACEBOOK -->
+        <div class="section">
+            <h2>📘 โพสต์แรกบน Facebook</h2>
+            
+            <div class="post-card">
+                <div class="label">📝 Post เปิดตัว</div>
+                <div class="copy-box" onclick="copyText(this)">🔥 BEAT VAULT is LIVE!
+
+🎧 Premium DJ edits & remixes
+📀 1,800+ tracks | 17 genres
+✅ BPM + Key + Version info
+💰 Starting at $0.50 | FREE tracks!
+
+Shop now 👉 djmusicmarketplace.fun
+
+#DJ #MusicProduction #BeatVault #DJEdit #NewMusic</div>
+            </div>
+
+            <div class="highlight yellow">
+                💡 <strong>เคล็ดลับ:</strong> โพสต์ตอน 19:00-21:00 (คนดูเยอะสุด)
+            </div>
+
+            <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" class="action-btn facebook">→ เปิด Facebook Page โพสต์เลย</a>
+        </div>
+
+        <!-- FIRST POST - TIKTOK -->
+        <div class="section">
+            <h2>🎵 โพสต์แรกบน TikTok</h2>
+            
+            <div class="post-card">
+                <div class="label">📝 Caption สำหรับวิดีโอแรก</div>
+                <div class="copy-box" onclick="copyText(this)">DJs ต้องรู้! 🔥 เว็บนี้มี track ให้โหลด free ด้วย!
+
+✅ 1,800+ tracks
+✅ BPM + Key info
+✅ Free tracks available!
+
+👉 djmusicmarketplace.fun
+
+#DJ #DJEdit #MusicProduction #BeatVault #FreeMusic</div>
+            </div>
+
+            <div class="highlight green">
+                🎬 <strong>วิดีโอแรก:</strong> ถ่าย screen recording หน้าเว็บ → ตัดต่อ 15 วิ → โพสต์!
+            </div>
+
+            <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" class="action-btn tiktok">→ เปิด TikTok โพสต์เลย</a>
+        </div>
+
+        <!-- CONTENT CALENDAR -->
+        <div class="section">
+            <h2>📅 Content Calendar - สัปดาห์ที่ 1</h2>
+            
+            <div class="post-card">
+                <div class="label">วันจันทร์ - Facebook</div>
+                <div class="copy-box" onclick="copyText(this)">🗳️ GENRE POLL: เพลงแนวไหนที่ชอบ mix มากที่สุด?
+
+🔥 Techno
+🎹 House
+🥁 Drum & Bass
+🎤 Hip Hop
+⚡ Hard Dance
+
+Comment below! 👇
+
+#DJ #MusicPoll #BeatVault</div>
+            </div>
+
+            <div class="post-card">
+                <div class="label">วันพุธ - TikTok</div>
+                <div class="copy-box" onclick="copyText(this)">💡 DJ TIP: ใช้ Camelot Key ช่วย mix ให้ smooth
+
+Tracks ใน Key เดียวกัน → mix ได้สวยสุด!
+
+หา tracks ด้วย Key ได้ที่ 👉 djmusicmarketplace.fun
+
+#DJTips #HarmonicMixing #CamelotKey</div>
+            </div>
+
+            <div class="post-card">
+                <div class="label">วันศุกร์ - Facebook + TikTok</div>
+                <div class="copy-box" onclick="copyText(this)">🆓 FREE DOWNLOAD!
+
+Track: Techno Night Drive
+🎵 BPM: 128 | Key: 8A
+🎧 Genre: Techno
+
+Sign up & download FREE 👇
+djmusicmarketplace.fun
+
+#FreeMusic #DJ #BeatVault #DJEdit</div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="section">
+            <h2>⚡ Quick Actions</h2>
+            
+            <div class="grid">
+                <div>
+                    <h3 style="color:#1877f2; margin-bottom:12px;">📘 Facebook</h3>
+                    <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" class="action-btn facebook">โพสต์แรก</a>
+                </div>
+                <div>
+                    <h3 style="color:#000; margin-bottom:12px;">🎵 TikTok</h3>
+                    <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" class="action-btn tiktok">โพสต์วิดีโอแรก</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHECKLIST -->
+        <div class="section">
+            <h2>✅ Checklist วันนี้</h2>
+            
+            <ul class="checklist">
+                <li onclick="toggleCheck(this)">คัดลอก Post เปิดตัว (Facebook)</li>
+                <li onclick="toggleCheck(this)">โพสต์บน Facebook</li>
+                <li onclick="toggleCheck(this)">ถ่าย screen recording</li>
+                <li onclick="toggleCheck(this)">ตัดต่อวิดีโอ 15 วิ</li>
+                <li onclick="toggleCheck(this)">โพสต์บน TikTok</li>
+                <li onclick="toggleCheck(this)">แชร์ TikTok ไป Facebook</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copyText(el) {
+            const text = el.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                el.classList.add('copied');
+                setTimeout(() => el.classList.remove('copied'), 2000);
+            });
+        }
+
+        function toggleCheck(li) {
+            li.classList.toggle('checked');
+        }
+    </script>
+</body>
+</html>
