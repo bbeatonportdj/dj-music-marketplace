@@ -24,6 +24,7 @@ const BPM_RANGES = [
 
 const GENRES = [
   'Afro House',
+  'Baile Funk/Favela Bass',
   'Bass House',
   'Big Room',
   'Drum & Bass',

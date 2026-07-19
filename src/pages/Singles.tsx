@@ -18,6 +18,7 @@ import '../styles/singles.css';
 
 const GENRES = [
   'Afro House',
+  'Baile Funk/Favela Bass',
   'Bass House',
   'Big Room',
   'Drum & Bass',
