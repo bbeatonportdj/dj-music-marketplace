@@ -28,15 +28,23 @@ function getDriveClient() {
 function cors(res, req) {
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const origin = req?.headers?.origin || '';
-  const isAllowed = allowedOrigins.length === 0 || allowedOrigins.includes(origin);
-  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0] || 'https://djmusicmarketplace.fun');
+  
+  // SECURITY: If no allowed origins configured, block all cross-origin requests
+  if (allowedOrigins.length === 0) {
+    res.setHeader('Access-Control-Allow-Origin', 'https://djmusicmarketplace.fun');
+  } else {
+    const isAllowed = allowedOrigins.includes(origin);
+    res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0]);
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://fbwqgbsalqgcrfxhoure.supabase.co https://api.omise.co; media-src 'self' https: blob:;");
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://fbwqgbsalqgcrfxhoure.supabase.co https://api.omise.co; media-src 'self' https: blob:; frame-ancestors 'none';");
 }
 
 const COOKIE_NAME = 'sb_token';
@@ -75,6 +83,7 @@ function getCookie(req, name) {
 // ─── Rate Limiter ─────────────────────────────────────────────────
 // In-memory rate limiter (per-invocation in serverless — best-effort only)
 const rateLimitStore = new Map();
+const authRateLimitStore = new Map();
 
 function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
   const now = Date.now();
@@ -94,13 +103,42 @@ function checkRateLimit(key, maxRequests = 30, windowMs = 60000) {
   return true;
 }
 
+// SECURITY: Stricter rate limit for auth endpoints (5 attempts per minute)
+function checkAuthRateLimit(key, maxRequests = 5, windowMs = 60000) {
+  const now = Date.now();
+  const windowStart = now - windowMs;
+
+  if (!authRateLimitStore.has(key)) {
+    authRateLimitStore.set(key, []);
+  }
+
+  const requests = authRateLimitStore.get(key).filter(t => t > windowStart);
+  if (requests.length >= maxRequests) {
+    return false;
+  }
+
+  requests.push(now);
+  authRateLimitStore.set(key, requests);
+  return true;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────
 
-async function getBody(req) {
-  return new Promise((resolve) => {
+async function getBody(req, maxSize = 1048576) {
+  return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (c) => { body += c; });
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > maxSize) {
+        req.destroy();
+        reject(new Error('Body too large'));
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', () => { resolve(body); });
+    req.on('error', (err) => { reject(err); });
   });
 }
 
@@ -111,6 +149,11 @@ function json(res, status, data) {
 
 function getClientIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+}
+
+// SECURITY: UUID validation helper
+function isValidUUID(str) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
 async function getAuthUser(req, supabase) {
@@ -181,12 +224,28 @@ export default async function handler(req, res) {
 
     // ─── Auth: Register ───────────────────────────────────────────────
     if (path === '/api/auth/register' && req.method === 'POST') {
+      // SECURITY: Auth-specific rate limiting
+      const authRlKey = `auth:${ip}`;
+      if (!checkAuthRateLimit(authRlKey)) {
+        return json(res, 429, { error: 'Too many attempts. Please try again later.' });
+      }
+
       const body = JSON.parse(await getBody(req));
       const { email, password, display_name, phone } = body;
       const role = 'user';
 
       if (!email || !password) {
         return json(res, 400, { error: 'Email and password are required' });
+      }
+
+      // SECURITY: Enforce password minimum length
+      if (password.length < 6) {
+        return json(res, 400, { error: 'Password must be at least 6 characters' });
+      }
+
+      // SECURITY: Basic email format check
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json(res, 400, { error: 'Invalid email format' });
       }
 
       const { data, error } = await authClient.auth.signUp({
@@ -198,7 +257,11 @@ export default async function handler(req, res) {
       });
 
       if (error) {
-        const errMsg = error.message || error.error_description || error.msg || JSON.stringify(error);
+        const errMsg = error.message || error.error_description || error.msg || 'Registration failed';
+        // Don't leak internal Supabase errors
+        if (errMsg.includes('supabase') || errMsg.includes('database') || errMsg.includes('internal')) {
+          return json(res, 400, { error: 'Registration failed. Please try again.' });
+        }
         return json(res, 400, { error: errMsg });
       }
 
@@ -238,6 +301,12 @@ export default async function handler(req, res) {
 
     // ─── Auth: Login ──────────────────────────────────────────────────
     if (path === '/api/auth/login' && req.method === 'POST') {
+      // SECURITY: Auth-specific rate limiting
+      const authRlKey = `auth:${ip}`;
+      if (!checkAuthRateLimit(authRlKey)) {
+        return json(res, 429, { error: 'Too many attempts. Please try again later.' });
+      }
+
       const body = JSON.parse(await getBody(req));
       const { email, password } = body;
 
@@ -699,6 +768,11 @@ function parseMultipart(req) {
 
       if (!orderId) return json(res, 400, { error: 'Order ID is required' });
 
+      // SECURITY: Validate order ID format
+      if (!isValidUUID(orderId)) {
+        return json(res, 400, { error: 'Invalid order ID format' });
+      }
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .select('*')
@@ -741,7 +815,7 @@ function parseMultipart(req) {
             return json(res, 400, { error: `Payment amount mismatch. Expected THB ${expectedThb}, received THB ${transAmount}` });
           }
         } catch (err) {
-          return json(res, 500, { error: `SlipOK verification error: ${err.message}` });
+           return json(res, 500, { error: 'Payment verification failed' });
         }
       } else if (simulationAllowed) {
         // Simulation mode fallback
@@ -874,7 +948,7 @@ function parseMultipart(req) {
       try {
         event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       } catch (err) {
-        return json(res, 400, { error: `Webhook signature verification failed: ${err.message}` });
+         return json(res, 400, { error: 'Invalid webhook signature' });
       }
 
       if (event.type === 'checkout.session.completed') {
@@ -988,6 +1062,11 @@ function parseMultipart(req) {
 
       const orderId = url.searchParams.get('order_id');
       if (!orderId) return json(res, 400, { error: 'Missing order_id' });
+
+      // SECURITY: Validate order ID format
+      if (!isValidUUID(orderId)) {
+        return json(res, 400, { error: 'Invalid order ID format' });
+      }
 
       const { data: order } = await supabase
         .from('orders')
@@ -1305,6 +1384,10 @@ function parseMultipart(req) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('API error:', msg);
+    // SECURITY: Handle body too large specifically
+    if (msg === 'Body too large') {
+      return json(res, 413, { error: 'Request body too large' });
+    }
     return json(res, 500, { error: 'Internal server error' });
   }
 }
