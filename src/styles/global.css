@@ -1,23 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Anton&display=swap');
 
 :root {
-  --bg-color: #000000;
-  --surface-color: #0c0c0c;
+  /* Sonic Edge Design System */
+  --bg-color: #131313;
+  --surface-color: #131313;
+  --surface-dim: #131313;
+  --surface-bright: #393939;
+  --surface-gray: #121212;
+  --surface-container-lowest: #0e0e0e;
+  --surface-container-low: #1b1b1b;
+  --surface-container: #1f1f1f;
+  --surface-container-high: #2a2a2a;
+  --surface-container-highest: #353535;
   --surface-light: #161616;
-  --primary-color: #ff3b30;
-  --secondary-color: #b3b3b3;
-  --accent-color: #ff3b30;
-  --accent-color-rgb: 255, 59, 48;
-  --text-main: #ffffff;
-  --text-muted: #888888;
-  --text-dim: #666666;
-  --border-color: #1a1a1a;
-  --player-height: 90px;
-  --nav-height: 70px;
+  --surface-variant: #353535;
   
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.05);
-  --red-glow: 0 0 20px rgba(255, 59, 48, 0.2);
+  /* Primary - Electric Red */
+  --primary-color: #FF3B30;
+  --primary: #ffb4aa;
+  --on-primary: #690003;
+  --primary-container: #ff5545;
+  --on-primary-container: #5c0002;
+  --inverse-primary: #c0000a;
+  --accent-color: #FF3B30;
+  --accent-color-rgb: 255, 59, 48;
+  --electric-red: #FF3B30;
+  
+  /* Secondary */
+  --secondary: #c6c6c7;
+  --on-secondary: #2f3131;
+  --secondary-container: #454747;
+  --on-secondary-container: #b4b5b5;
+  
+  /* Tertiary */
+  --tertiary: #c8c6c5;
+  --on-tertiary: #313030;
+  --tertiary-container: #929090;
+  --on-tertiary-container: #2a2a2a;
+  
+  /* Text */
+  --text-main: #e2e2e2;
+  --on-surface: #e2e2e2;
+  --on-surface-variant: #e7bdb7;
+  --text-muted: #888888;
+  --muted-text: #888888;
+  --text-dim: #666666;
+  
+  /* Borders & Outlines */
+  --border-color: #2A2A2A;
+  --border-gray: #2A2A2A;
+  --outline: #ad8883;
+  --outline-variant: #5d3f3b;
+  
+  /* Functional */
+  --success-green: #34C759;
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+  
+  /* Layout */
+  --player-height: 80px;
+  --nav-height: 70px;
+  --container-max: 1440px;
+  --gutter: 24px;
+  --margin-mobile: 16px;
+  --margin-desktop: 64px;
+  
+  /* Effects */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --red-glow: 0 0 30px rgba(255, 59, 48, 0.3);
   --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -49,11 +102,28 @@ button {
   transition: all 0.2s ease;
 }
 
-/* Premium Typography */
+/* Premium Typography - Sonic Edge */
 h1, h2, h3, h4, h5 {
-  font-family: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* Label Caps - JetBrains Mono */
+.label-caps {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Price Display */
+.price-display {
+  font-family: 'Sora', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.0;
 }
 
 h1 {

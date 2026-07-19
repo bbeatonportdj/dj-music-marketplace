@@ -1,6 +1,12 @@
-import { Disc, Mail, Facebook, Music } from 'lucide-react';
+import { Disc, Mail, Facebook } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import '../styles/footer.css';
+
+const TikTokIcon = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
+  </svg>
+);
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -10,11 +16,11 @@ const Footer = () => {
       <div className="footer-content">
         <div className="footer-section brand-section">
           <div className="footer-logo">
-            <Disc size={32} className="logo-icon" />
+            <Disc size={28} className="logo-icon" />
             <span>BEAT VAULT</span>
           </div>
           <p className="brand-desc">
-            Premium DJ edits, remixes & acapellas. 1,800+ tracks across 17 genres with BPM, Key & Version info.
+            High-performance audio gear for the global underground. Engineered for precision, built for impact.
           </p>
           <div className="social-links">
             <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" rel="noopener noreferrer" className="social-link">
@@ -22,7 +28,7 @@ const Footer = () => {
               <span>Facebook</span>
             </a>
             <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" rel="noopener noreferrer" className="social-link">
-              <Music size={20} />
+              <TikTokIcon size={20} />
               <span>TikTok</span>
             </a>
           </div>
@@ -41,17 +47,17 @@ const Footer = () => {
         <div className="footer-section links-section">
           <h3>Support</h3>
           <ul>
+            <li><a href="#">Support</a></li>
             <li><a href="#">FAQ</a></li>
-            <li><a href="#">Refund Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
-            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
           </ul>
         </div>
 
         <div className="footer-section contact-section">
           <h3>Contact</h3>
           <div className="contact-item">
-            <Mail size={18} />
+            <Mail size={16} />
             <span>support@djmusicmarketplace.com</span>
           </div>
           <p className="newsletter-text">
@@ -65,8 +71,8 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2026 DJ Music Marketplace. All rights reserved.</p>
-        <p className="made-with">Made with 🤍 in DJ community</p>
+        <span>&copy; 2026 BEAT VAULT. HIGH-PERFORMANCE AUDIO GEAR.</span>
+        <span className="made-with">MADE WITH INTENSITY BY DJ COMMUNITY</span>
       </div>
     </footer>
   );

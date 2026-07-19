@@ -1,12 +1,12 @@
-/* ── Home Page ──────────────────────────────────── */
+/* ── Sonic Edge Home Page ──────────────────────────── */
 .home {
   width: 100%;
 }
 
 .home-container {
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 32px var(--margin-desktop);
 }
 
 /* ── Loading ────────────────────────────────────── */
@@ -36,9 +36,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Hero / Stats ───────────────────────────────── */
+/* ── Sonic Edge Hero / Stats ───────────────────────── */
 .home-hero {
-  margin-bottom: 48px;
+  margin-bottom: 64px;
 }
 
 .home-hero-content {
@@ -46,37 +46,38 @@
 }
 
 .home-hero-title {
-  font-family: 'Anton', sans-serif;
+  font-family: 'Sora', sans-serif;
   font-size: 72px;
-  line-height: 0.9;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
   text-transform: uppercase;
-  color: var(--text-main);
-  margin-bottom: 8px;
+  color: var(--on-surface);
+  margin-bottom: 16px;
 }
 
 .home-hero-accent {
-  color: var(--accent-color);
+  color: var(--electric-red);
 }
 
 .home-hero-subtitle {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--muted-text);
 }
 
 .home-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--gutter);
 }
 
 .home-stat-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
+  background: var(--surface-gray);
+  border: 1px solid var(--border-gray);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -86,6 +87,10 @@
   overflow: hidden;
 }
 
+.home-stat-card:hover {
+  border-color: var(--electric-red);
+}
+
 .home-stat-card::after {
   content: '';
   position: absolute;
@@ -93,7 +98,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(--stat-color, var(--accent-color));
+  background: var(--electric-red);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;

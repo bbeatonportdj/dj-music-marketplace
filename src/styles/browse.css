@@ -301,30 +301,33 @@
   font-weight: 600;
 }
 
-/* Premium Grid & Cards */
+/* Sonic Edge Track Cards */
 .packs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 40px;
-  padding: 0 40px 80px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--gutter);
+  padding: 0 var(--margin-desktop) 80px;
 }
 
 .pack-card-premium {
-  background-color: transparent;
-  transition: transform 0.3s ease;
+  background-color: var(--surface-gray);
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
 }
 
 .pack-card-premium:hover {
-  transform: translateY(-8px);
+  border-color: var(--electric-red);
+  transform: translateY(-4px);
 }
 
 .pack-artwork-wrapper {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 0px;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: var(--card-shadow);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .pack-artwork-img {
