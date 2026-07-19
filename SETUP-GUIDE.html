@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Guide - BEAT VAULT</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        .step {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .step:hover { border-color: #8338ec; }
+        .step.done { border-color: #00ff88; opacity: 0.7; }
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .step-num {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .step-title { font-size: 1.3rem; font-weight: bold; }
+        .step-time {
+            background: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+        .instruction {
+            background: #111;
+            border-left: 3px solid #8338ec;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .instruction strong { color: #8338ec; }
+        .url {
+            background: #222;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-family: monospace;
+            color: #00ff88;
+            word-break: break-all;
+            display: block;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .url:hover { background: #2a2a2a; }
+        .click-here {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 12px 0;
+            transition: transform 0.2s;
+        }
+        .click-here:hover { transform: scale(1.05); }
+        .warning {
+            background: #331a00;
+            border: 1px solid #ff6600;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .success {
+            background: #003311;
+            border: 1px solid #00ff88;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .checklist { list-style: none; margin: 12px 0; }
+        .checklist li {
+            padding: 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checklist li::before {
+            content: "☐";
+            font-size: 1.3rem;
+            color: #8338ec;
+        }
+        .checklist li.checked::before {
+            content: "☑";
+            color: #00ff88;
+        }
+        .btn-copy {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        .btn-copy:hover { background: #444; }
+        .score-bar {
+            background: #222;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .hidden { display: none; }
+        code {
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Setup Guide — ทำตามทีละขั้น</h1>
+        
+        <div class="score-bar">
+            <div class="score-fill" id="scoreBar" style="width: 0%">0%</div>
+        </div>
+        <p style="text-align:center; margin-bottom:20px; color:#888;">
+            ทำเสร็จกี่ขั้น? <span id="scoreText">0/5</span>
+        </p>
+
+        <!-- STEP 1 -->
+        <div class="step" id="step1">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">หมุน Supabase Key</div>
+                <span class="step-time">⏱ 3 นาที</span>
+            </div>
+            
+            <p>ขั้นตอนนี้ทำให้ <strong>password เก่าใช้ไม่ได้</strong> — กันคนอื่นเข้าระบบคุณ</p>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 1:</strong> คลิกลิงก์นี้เปิด Supabase Dashboard
+            </div>
+            <a href="https://supabase.com/dashboard" target="_blank" class="click-here">→ เปิด Supabase Dashboard</a>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 2:</strong> เลือกโปรเจคของคุณ → คลิก <code>Settings</code> → <code>API</code>
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 3:</strong> หาหัวข้อ <strong>"service_role key"</strong> → คลิก <strong>Regenerate</strong> → ยืนยัน
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 4:</strong> กดปุ่ม <strong>Copy</strong> เพื่อคัดลอก key ใหม่
+            </div>
+
+            <div class="warning">
+                ⚠️ <strong>เก็บ key นี้ไว้!</strong> ต้องเอาไปใส่ใน Vercel (ขั้นตอนถัดไป)
+            </div>
+
+            <ul class="checklist" data-step="1">
+                <li onclick="toggleCheck(this)">เปิด Supabase Dashboard แล้ว</li>
+                <li onclick="toggleCheck(this)">หา service_role key เจอแล้ว</li>
+                <li onclick="toggleCheck(this)">กด Regenerate แล้ว</li>
+                <li onclick="toggleCheck(this)">คัดลอก key ใหม่แล้ว</li>
+            </ul>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step" id="step2">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">แก้ Key ใน Vercel</div>
+                <span class="step-time">⏱ 2 นาที</span>
+            </div>
+            
+            <p>เอา key ที่คัดลอกมาใส่ใน Vercel เพื่อให้เว็บใช้ key ใหม่</p>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 1:</strong> คลิกลิงก์นี้เปิด Vercel Dashboard
+            </div>
+            <a href="https://vercel.com/dashboard" target="_blank" class="click-here">→ เปิด Vercel Dashboard</a>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 2:</strong> คลิกโปรเจค <strong>music-marketplace</strong> → <strong>Settings</strong> → <strong>Environment Variables</strong>
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 3:</strong> หา <code>SUPABASE_SERVICE_ROLE_KEY</code> → คลิก <strong>Edit</strong> → วาง key ใหม่ → กด <strong>Save</strong>
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 4:</strong> ทำเหมือนกันกับ <code>JWT_SECRET</code> (ถ้ามี)
+            </div>
+
+            <ul class="checklist" data-step="2">
+                <li onclick="toggleCheck(this)">เปิด Vercel Dashboard แล้ว</li>
+                <li onclick="toggleCheck(this)">เจอ Environment Variables แล้ว</li>
+                <li onclick="toggleCheck(this)">แก้ SUPABASE_SERVICE_ROLE_KEY แล้ว</li>
+                <li onclick="toggleCheck(this)">กด Save แล้ว</li>
+            </ul>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step" id="step3">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">ทดสอบจ่ายเงินจริง</div>
+                <span class="step-time">⏱ 3 นาที</span>
+            </div>
+            
+            <p>ทดสอบว่า PromptPay QR ทำงานได้จริง</p>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 1:</strong> คลิกลิงก์นี้เปิดเว็บ BEAT VAULT
+            </div>
+            <a href="https://djmusicmarketplace.fun" target="_blank" class="click-here">→ เปิด BEAT VAULT</a>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 2:</strong> Login ด้วย email/password ของคุณ
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 3:</strong> ไปที่ <strong>Browse</strong> → เลือก track ที่มีราคา (เช่น $0.50-$0.90) → กด <strong>Add to Cart</strong>
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 4:</strong> กด <strong>Checkout</strong> → เลือก <strong>PromptPay QR</strong>
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 5:</strong> เปิด app ธนาคาร → สแกน QR → โอนเงินตามจำนวนที่แสดง
+            </div>
+            
+            <div class="instruction">
+                <strong>ขั้นที่ 6:</strong> กลับมากดปุ่ม <strong>"ฉันได้ชำระเงินแล้ว"</strong>
+            </div>
+
+            <div class="success">
+                ✅ <strong>สำเร็จ!</strong> ถ้า track ปลดล็อคให้ download = ระบบทำงานถูกต้อง
+            </div>
+
+            <ul class="checklist" data-step="3">
+                <li onclick="toggleCheck(this)">เปิดเว็บแล้ว</li>
+                <li onclick="toggleCheck(this)">Login ได้แล้ว</li>
+                <li onclick="toggleCheck(this)">เลือก track + Add to Cart แล้ว</li>
+                <li onclick="toggleCheck(this)">QR แสดงแล้ว</li>
+                <li onclick="toggleCheck(this)">โอนเงินแล้ว</li>
+                <li onclick="toggleCheck(this)">Download ได้แล้ว</li>
+            </ul>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step" id="step4">
+            <div class="step-header">
+                <div class="step-num">4</div>
+                <div class="step-title">ลบ .env จาก Git History</div>
+                <span class="step-time">⏱ 1 นาที</span>
+            </div>
+            
+            <p>ลบ password ที่เคย commit ไว้ใน git</p>
+            
+            <div class="instruction">
+                <strong>เปิด Terminal แล้วรันคำสั่งนี้:</strong>
+            </div>
+            
+            <div style="background:#111; padding:16px; border-radius:8px; font-family:monospace; margin:12px 0; position:relative;">
+                <button class="btn-copy" onclick="copyCommand()" style="position:absolute; top:8px; right:8px;">📋 คัดลอก</button>
+                <div id="commands">
+                    <div>brew install bfg</div>
+                    <div>bfg --delete-files .env</div>
+                    <div>git push origin main --force</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                ⚠️ <strong>คำสั่งนี้จะ force push</strong> — ถ้ามีคนร่วมโปรเจคอยู่ ต้องระวัง
+            </div>
+
+            <ul class="checklist" data-step="4">
+                <li onclick="toggleCheck(this)">เปิด Terminal แล้ว</li>
+                <li onclick="toggleCheck(this)">รัน brew install bfg แล้ว</li>
+                <li onclick="toggleCheck(this)">รัน bfg --delete-files .env แล้ว</li>
+                <li onclick="toggleCheck(this)">รัน git push --force แล้ว</li>
+            </ul>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step" id="step5">
+            <div class="step-header">
+                <div class="step-num">5</div>
+                <div class="step-title">สร้าง Social Media</div>
+                <span class="step-time">⏱ 5 นาที</span>
+            </div>
+            
+            <p>สร้าง Facebook Page + TikTok สำหรับโปรโมท</p>
+            
+            <div class="instruction">
+                <strong>Facebook:</strong> สร้าง Page ชื่อ "BEAT VAULT"
+            </div>
+            <a href="https://facebook.com/pages/create" target="_blank" class="click-here">→ สร้าง Facebook Page</a>
+            
+            <div style="background:#111; padding:12px; border-radius:8px; margin:12px 0;">
+                <p style="color:#888; margin-bottom:8px;">คัดลอก bio นี้ไปใส่:</p>
+                <div style="font-family:monospace; color:#00ff88; font-size:0.9rem;">
+🎵 BEAT VAULT - Premium DJ Edits & Music
+
+🎧 Professional DJ edits, remixes & acapellas
+📀 1,800+ tracks across 17 genres
+🔥 BPM, Key & Version info for every track
+💰 Starting at $0.50 | Many tracks FREE
+
+👉 Shop now: djmusicmarketplace.fun
+                </div>
+            </div>
+
+            <div class="instruction">
+                <strong>TikTok:</strong> สมัคร account ชื่อ @beatvault
+            </div>
+
+            <ul class="checklist" data-step="5">
+                <li onclick="toggleCheck(this)">สร้าง Facebook Page แล้ว</li>
+                <li onclick="toggleCheck(this)">ใส่ bio Facebook แล้ว</li>
+                <li onclick="toggleCheck(this)">สมัคร TikTok แล้ว</li>
+                <li onclick="toggleCheck(this)">ใส่ bio TikTok แล้ว</li>
+            </ul>
+        </div>
+
+        <!-- DONE -->
+        <div class="step" id="doneStep" style="display:none; border-color: #00ff88;">
+            <div class="step-header">
+                <div class="step-num" style="background: linear-gradient(135deg, #00ff88, #00cc66);">✓</div>
+                <div class="step-title">เสร็จทุกขั้นตอน! 🎉</div>
+            </div>
+            <div class="success">
+                ✅ <strong>ยินดีด้วย!</strong> เว็บของคุณปลอดภัยแล้ว พร้อมโปรโมทได้เลย!
+            </div>
+            <p style="margin-top:12px;">
+                <strong>ขั้นตอนถัดไป:</strong> เริ่มโพสต์บน Facebook/TikTok ตาม <code>MARKETING-CALENDAR.md</code>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function toggleCheck(li) {
+            li.classList.toggle('checked');
+            updateScore();
+        }
+
+        function updateScore() {
+            const total = document.querySelectorAll('.checklist li').length;
+            const checked = document.querySelectorAll('.checklist li.checked').length;
+            const percent = Math.round((checked / total) * 100);
+            
+            document.getElementById('scoreBar').style.width = percent + '%';
+            document.getElementById('scoreBar').textContent = percent + '%';
+            document.getElementById('scoreText').textContent = checked + '/' + total;
+
+            if (checked === total) {
+                document.getElementById('doneStep').style.display = 'block';
+            }
+        }
+
+        function copyCommand() {
+            const text = document.getElementById('commands').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('คัดลอกคำสั่งแล้ว! นำไปวางใน Terminal ได้เลย');
+            });
+        }
+    </script>
+</body>
+</html>
