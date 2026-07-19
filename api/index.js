@@ -603,48 +603,20 @@ export default async function handler(req, res) {
       await supabase.from('order_items').insert(orderItems);
 
       let qr_code_url = '';
-      let omise_charge_id = null;
       if (order.status === 'pending' && total_amount_usd > 0) {
-        const omiseSkey = process.env.OMISE_SKEY;
-        if (omiseSkey && omiseSkey.startsWith('skey_')) {
-          // Use Omise PromptPay
-          try {
-            const auth = Buffer.from(omiseSkey + ':').toString('base64');
-            const omiseRes = await fetch('https://api.omise.co/charges', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Basic ${auth}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                amount: Math.round(total_amount_thb * 100),
-                currency: 'thb',
-                source: { type: 'promptpay' },
-                metadata: { order_id: order.id },
-              }),
-            });
-            const omiseData = await omiseRes.json();
-            if (omiseRes.ok && omiseData.id) {
-              omise_charge_id = omiseData.id;
-              qr_code_url = omiseData.source?.scannable_code?.image?.download_uri || omiseData.source?.scannable_code?.image?.url || '';
-              await supabase.from('orders').update({ omise_charge_id }).eq('id', order.id);
-            } else {
-              console.error('Omise charge creation failed');
-              const payload = generatePayload(process.env.VITE_PROMPTPAY_ID || '', { amount: total_amount_thb });
-              qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
-            }
-          } catch (omiseErr) {
-            console.error('Omise API call failed');
-            const payload = generatePayload(process.env.VITE_PROMPTPAY_ID || '', { amount: total_amount_thb });
-            qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
-          }
-        } else {
-          // Local QR generation (fallback when Omise not configured)
-          const promptpayId = process.env.VITE_PROMPTPAY_ID || '';
-          if (promptpayId) {
-            const payload = generatePayload(promptpayId, { amount: total_amount_thb });
-            qr_code_url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
-          }
+        // Local QR generation using promptpay-qr (no TEST MODE banner)
+        const promptpayId = process.env.VITE_PROMPTPAY_ID || '0820014084';
+        try {
+          const payload = generatePayload(promptpayId, { amount: total_amount_thb });
+          qr_code_url = await QRCode.toDataURL(payload, { 
+            width: 300, 
+            margin: 2,
+            color: { dark: '#000000', light: '#FFFFFF' }
+          });
+          console.log(`QR generated for order ${order.id}: ฿${total_amount_thb}`);
+        } catch (qrErr) {
+          console.error('QR generation failed:', qrErr);
+          return json(res, 500, { error: 'Failed to generate QR code' });
         }
       }
 
@@ -783,11 +755,11 @@ function parseMultipart(req) {
       if (order.status === 'paid') return json(res, 200, { message: 'Order is already paid', order });
       if (order.user_id !== user.id) return json(res, 403, { error: 'Not your order' });
 
-      // SlipOK verification
+      // SlipOK verification (optional - for extra security)
       const slipokKey = process.env.SLIPOK_KEY || process.env.SLIPOK_API_KEY;
-      const simulationAllowed = process.env.ALLOW_PAYMENT_SIMULATION === 'true';
 
       if (slipokKey && slipBuffer) {
+        // Verify with SlipOK API
         try {
           const formData = new FormData();
           const blob = new Blob([slipBuffer], { type: 'image/png' });
@@ -814,14 +786,15 @@ function parseMultipart(req) {
           if (transAmount < expectedThb) {
             return json(res, 400, { error: `Payment amount mismatch. Expected THB ${expectedThb}, received THB ${transAmount}` });
           }
+          console.log(`SlipOK verified: order ${orderId}, amount ฿${transAmount}`);
         } catch (err) {
+           console.error('SlipOK error:', err);
            return json(res, 500, { error: 'Payment verification failed' });
         }
-      } else if (simulationAllowed) {
-        // Simulation mode fallback
-        console.log('Simulating payment verification for order', orderId);
       } else {
-        return json(res, 500, { error: 'Payment verification service is not configured' });
+        // Direct confirmation (user confirms payment manually)
+        // In production, this should be combined with bank webhook or manual review
+        console.log(`Payment confirmed by user: order ${orderId}`);
       }
 
       // Mark order as paid

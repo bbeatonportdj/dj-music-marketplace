@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, CreditCard, Smartphone, CheckCircle, AlertCircle, LogIn, ExternalLink } from 'lucide-react';
+import { X, Smartphone, CheckCircle, AlertCircle, LogIn, Clock, Copy, Check } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -19,46 +19,44 @@ interface Order {
   id: string;
   status: string;
   promptpay_ref?: string;
-  omise_charge_id?: string | null;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, onConfirm, tracks }) => {
   const { showNotification } = useNotifications();
   const { user } = useAuth();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [step, setStep] = useState<'method' | 'processing' | 'success' | 'loading' | 'auth_required'>('method');
-  const [method, setMethod] = useState<'promptpay' | 'stripe'>('stripe');
   const [order, setOrder] = useState<Order | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-  const [, setStripeUrl] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [usingOmise, setUsingOmise] = useState(false);
+  const [paymentTimer, setPaymentTimer] = useState(300);
+  const [copied, setCopied] = useState(false);
 
   const USD_TO_THB = 33.41;
   const totalThb = total * USD_TO_THB;
 
-  // Poll order status when using Omise
-  const startPolling = useCallback((orderId: string) => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(apiUrl(`/api/orders/status?order_id=${orderId}`), { credentials: 'include' });
-        const data = await res.json();
-        if (data.status === 'paid') {
-          if (pollRef.current) clearInterval(pollRef.current);
-          localStorage.setItem('last_successful_order', JSON.stringify({
-            order: { id: orderId, status: 'paid' },
-            payment_date: new Date().toISOString(),
-          }));
-          setStep('success');
-          showNotification('Payment successful!', 'success');
+  // Countdown timer for payment
+  useEffect(() => {
+    if (step !== 'method' || !order) return;
+
+    setPaymentTimer(300);
+    timerRef.current = setInterval(() => {
+      setPaymentTimer(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setErrorMsg('QR code expired. Please create a new order.');
+          return 0;
         }
-      } catch {
-        // ignore poll errors
-      }
-    }, 3000);
-  }, [showNotification]);
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [step, order]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -75,20 +73,19 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
       return;
     }
 
-    if (method === 'promptpay') {
-      const initOrder = async () => {
-        setStep('loading');
-        setErrorMsg(null);
-        try {
-          const res = await fetch(apiUrl('/api/orders'), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              track_ids: tracks.map((t) => t.id),
-              payment_method: 'promptpay',
+    const initOrder = async () => {
+      setStep('loading');
+      setErrorMsg(null);
+      try {
+        const res = await fetch(apiUrl('/api/orders'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            track_ids: tracks.map((t) => t.id),
+            payment_method: 'promptpay',
             }),
           });
 
@@ -101,16 +98,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
           setOrder(data.order);
           setQrCodeUrl(data.qr_code_url || '');
 
-          const isOmise = data.order.omise_charge_id || data.qr_code_url?.startsWith('http');
-          setUsingOmise(!!isOmise);
-
           if (data.order.status === 'paid') {
             setStep('success');
           } else {
             setStep('method');
-            if (isOmise) {
-              startPolling(data.order.id);
-            }
           }
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : String(err);
@@ -120,50 +111,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
       };
 
       initOrder();
-    } else {
-      setStep('method');
-    }
 
-    return () => stopPolling();
-  }, [isOpen, user, tracks, method, startPolling, stopPolling]);
-
-  const createStripeSession = useCallback(async () => {
-    if (!order) return;
-    setStep('processing');
-    setErrorMsg(null);
-
-    try {
-      const res = await fetch(apiUrl('/api/stripe/create-checkout-session'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          track_ids: tracks.map((t) => t.id),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create Stripe session');
-      }
-
-      if (data.url) {
-        setStripeUrl(data.url);
-        setStep('success');
-        window.location.href = data.url;
-      } else if (data.order?.status === 'paid') {
-        setStep('success');
-        showNotification('Payment successful!', 'success');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setErrorMsg(message || 'Stripe payment failed. Try again.');
-      setStep('method');
-    }
-  }, [order, user, tracks, showNotification]);
+    return () => {
+      stopPolling();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isOpen, user, tracks, stopPolling]);
 
   if (!isOpen) return null;
 
@@ -189,6 +142,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
         throw new Error(result.error || 'Payment verification failed');
       }
 
+      if (timerRef.current) clearInterval(timerRef.current);
       localStorage.setItem('last_successful_order', JSON.stringify({
         ...result.order,
         payment_date: new Date().toISOString(),
@@ -203,6 +157,18 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
     }
   };
 
+  const handleCopyAmount = () => {
+    navigator.clipboard.writeText(totalThb.toFixed(2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleFinish = () => {
     stopPolling();
     onConfirm();
@@ -210,9 +176,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
     setStep('method');
     setOrder(null);
     setQrCodeUrl('');
-    setStripeUrl('');
     setErrorMsg(null);
-    setUsingOmise(false);
+    setPaymentTimer(300);
   };
 
   return (
@@ -252,70 +217,81 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
               </div>
             )}
 
-            <div className="payment-methods">
+            <div className="payment-methods" style={{ justifyContent: 'center' }}>
               <div
-                className={`method-card ${method === 'stripe' ? 'active' : ''}`}
-                onClick={() => setMethod('stripe')}
-              >
-                <CreditCard size={32} />
-                <span>Credit Card (Stripe)</span>
-                <small style={{ opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>Visa, MC, PromptPay</small>
-              </div>
-              <div
-                className={`method-card ${method === 'promptpay' ? 'active' : ''}`}
-                onClick={() => setMethod('promptpay')}
+                className={`method-card active`}
+                style={{ borderColor: 'var(--accent-color)', background: 'rgba(var(--accent-color-rgb), 0.1)' }}
               >
                 <Smartphone size={32} />
                 <span>PromptPay QR</span>
-                <small style={{ opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>Scan to pay</small>
+                <small style={{ opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>Scan to pay with any Thai bank app</small>
               </div>
             </div>
 
-            {method === 'promptpay' ? (
-              <div className="qr-section">
-                {order && (
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '-0.5rem', marginBottom: '1rem' }}>
-                    Ref: {order.promptpay_ref}
-                  </p>
-                )}
-
-                {qrCodeUrl ? (
-                  <div className="qr-image-wrapper" style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }}>
-                    <img src={qrCodeUrl} alt="PromptPay QR Code" style={{ borderRadius: '8px', border: '4px solid white', width: '220px', height: '220px' }} />
-                  </div>
-                ) : (
-                  <div className="qr-placeholder">
-                    <div className="spinner"></div>
-                  </div>
-                )}
-
-                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                  <p style={{ fontWeight: '600', margin: '0 0 4px 0' }}>Scan QR to pay ฿{totalThb.toFixed(2)}</p>
-                  {usingOmise && (
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                      กำลังรอการยืนยันการชำระเงิน...
-                    </p>
-                  )}
-                </div>
-
-                {!usingOmise && (
-                  <button className="pay-btn" onClick={handlePromptPayVerify}>
-                    ฉันได้ชำระเงินแล้ว
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="card-section" style={{ textAlign: 'center', padding: '1rem 0' }}>
-                <CreditCard size={48} style={{ color: 'var(--accent-color)', marginBottom: '0.75rem' }} />
-                <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Pay with Credit Card or PromptPay via Stripe</p>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                  You will be redirected to Stripe's secure checkout page.
+            <div className="qr-section">
+              {order && (
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                  Ref: {order.promptpay_ref}
                 </p>
-                <button className="pay-btn" onClick={createStripeSession}>
-                  <ExternalLink size={18} /> Pay ${total.toFixed(2)} with Stripe
-                </button>
+              )}
+
+              {qrCodeUrl ? (
+                <div className="qr-image-wrapper" style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }}>
+                  <img src={qrCodeUrl} alt="PromptPay QR Code" style={{ borderRadius: '8px', border: '4px solid white', width: '220px', height: '220px' }} />
+                </div>
+              ) : (
+                <div className="qr-placeholder">
+                  <div className="spinner"></div>
+                </div>
+              )}
+
+              <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                <p style={{ fontWeight: '600', margin: '0 0 4px 0' }}>Scan QR to pay</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '8px 0' }}>
+                  <span style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent-color)' }}>฿{totalThb.toFixed(2)}</span>
+                  <button 
+                    onClick={handleCopyAmount}
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      color: copied ? '#4ade80' : 'var(--text-muted)',
+                      padding: '4px'
+                    }}
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
+                
+                {paymentTimer > 0 && step === 'method' && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '6px',
+                    color: paymentTimer < 60 ? '#f87171' : 'var(--text-muted)',
+                    fontSize: '14px',
+                    marginTop: '8px'
+                  }}>
+                    <Clock size={14} />
+                    <span>QR expires in {formatTimer(paymentTimer)}</span>
+                  </div>
+                )}
               </div>
-            )}
+
+              <button 
+                className="pay-btn" 
+                onClick={handlePromptPayVerify}
+                disabled={paymentTimer <= 0}
+                style={{ opacity: paymentTimer <= 0 ? 0.5 : 1 }}
+              >
+                <CheckCircle size={18} /> ฉันได้ชำระเงินแล้ว
+              </button>
+              
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '12px' }}>
+                หลังชำระเงิน กรุณากดปุ่มเพื่อยืนยันการชำระ
+              </p>
+            </div>
           </div>
         )}
 
