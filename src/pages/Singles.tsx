@@ -29,6 +29,7 @@ const GENRES = [
   'Latin',
   'Other',
   'Psy Trance',
+  'Tech House',
   'Techno',
   'TikTok Dance',
   'Top 40',
