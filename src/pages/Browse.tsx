@@ -5,7 +5,7 @@ import { fetchPacks } from '../lib/api';
 import type { Pack } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
-import FeaturedArtists from '../components/FeaturedArtists';
+
 import '../styles/browse.css';
 
 const Browse = () => {
@@ -89,7 +89,6 @@ const Browse = () => {
           </div>
         </section>
 
-        <FeaturedArtists />
 
         <header className="browse-header">
           <div className="header-left">
