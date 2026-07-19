@@ -85,6 +85,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
             headers: {
               'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({
               track_ids: tracks.map((t) => t.id),
               payment_method: 'promptpay',
@@ -137,6 +138,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           track_ids: tracks.map((t) => t.id),
         }),
@@ -177,6 +179,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, total, o
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ orderId: order.id }),
       });
 

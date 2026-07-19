@@ -557,7 +557,7 @@ export default async function handler(req, res) {
             const omiseData = await omiseRes.json();
             if (omiseRes.ok && omiseData.id) {
               omise_charge_id = omiseData.id;
-              qr_code_url = omiseData.source?.scannable_code?.image?.url || '';
+              qr_code_url = omiseData.source?.scannable_code?.image?.download_uri || omiseData.source?.scannable_code?.image?.url || '';
               await supabase.from('orders').update({ omise_charge_id }).eq('id', order.id);
             } else {
               console.error('Omise charge creation failed');
