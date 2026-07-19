@@ -7,7 +7,6 @@ import { Disc, Eye, EyeOff, Loader2, ArrowRight, Mail, Lock, AlertCircle, CheckC
 import { useLanguage } from '../context/LanguageContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
 import '../styles/auth.css';
 
@@ -36,43 +35,6 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // Handle OAuth redirect from Supabase
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isOauth = params.get('oauth') === '1';
-    if (!isOauth) return;
-
-    (async () => {
-      if (!supabase) {
-        showNotification('OAuth is not configured.', 'error');
-        return;
-      }
-
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session?.access_token) {
-          showNotification('OAuth session not found. Try signing in again.', 'error');
-          return;
-        }
-
-        const res = await fetch(apiUrl('/api/auth/oauth'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: session.access_token }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'OAuth exchange failed');
-        }
-
-        window.location.href = '/browse';
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        showNotification(msg || 'OAuth flow failed', 'error');
-      }
-    })();
-  }, [showNotification]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
