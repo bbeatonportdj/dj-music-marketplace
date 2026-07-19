@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial - วิธีทำทีละขั้น</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.8;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            background: #1a1a2e;
+            border: 2px solid #333;
+            color: #888;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .tab:hover { border-color: #8338ec; color: #fff; }
+        .tab.active {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border-color: #8338ec;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Content Sections */
+        .content { display: none; }
+        .content.active { display: block; }
+        
+        /* Step Cards */
+        .step-card {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .step-card h3 {
+            color: #8338ec;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-card h3 .num {
+            background: #8338ec;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        /* Screenshot-style boxes */
+        .screenshot {
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .screenshot .header {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            margin: -16px -16px 12px -16px;
+            border-bottom: 1px solid #444;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .screenshot .content { padding: 8px 0; }
+        
+        /* Action buttons */
+        .action-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 8px 4px;
+            transition: transform 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn.green { background: linear-gradient(135deg, #00ff88, #00cc66); }
+        
+        /* Highlight boxes */
+        .highlight {
+            background: #1a0033;
+            border: 1px solid #8338ec;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .highlight.green {
+            background: #003311;
+            border-color: #00ff88;
+        }
+        .highlight.yellow {
+            background: #333300;
+            border-color: #ffcc00;
+        }
+        .highlight.red {
+            background: #330000;
+            border-color: #ff4444;
+        }
+        
+        /* Click to copy */
+        .copy-box {
+            background: #111;
+            border: 1px solid #444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            position: relative;
+            cursor: pointer;
+        }
+        .copy-box:hover { border-color: #8338ec; }
+        .copy-box::after {
+            content: "📋 คลิกคัดลอก";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        /* Progress tracker */
+        .progress {
+            background: #222;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            transition: width 0.5s;
+        }
+        
+        /* Checklist */
+        .checklist { list-style: none; margin: 12px 0; }
+        .checklist li {
+            padding: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #222;
+        }
+        .checklist li:last-child { border-bottom: none; }
+        .checklist li::before {
+            content: "☐";
+            font-size: 1.3rem;
+            color: #8338ec;
+            transition: all 0.2s;
+        }
+        .checklist li.checked::before {
+            content: "☑";
+            color: #00ff88;
+        }
+        .checklist li.checked { color: #888; }
+        
+        /* Arrow indicator */
+        .arrow {
+            display: inline-block;
+            color: #ff006e;
+            font-size: 1.2rem;
+            margin: 0 4px;
+        }
+        
+        /* Screen mockup */
+        .screen {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .screen-titlebar {
+            background: #222;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .screen-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .screen-dot.red { background: #ff5f56; }
+        .screen-dot.yellow { background: #ffbd2e; }
+        .screen-dot.green { background: #27c93f; }
+        .screen-body { padding: 16px; }
+        
+        /* Numbered circle */
+        .circle-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #8338ec;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        /* Video placeholder */
+        .video-placeholder {
+            background: #1a1a2e;
+            border: 2px dashed #333;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        .video-placeholder .icon { font-size: 3rem; margin-bottom: 12px; }
+        
+        .done-section {
+            display: none;
+            background: linear-gradient(135deg, #003311, #002200);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+        .done-section.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Tutorial — ทำตามทีละขั้น</h1>
+        <p class="subtitle">คลิกแท็บเพื่อดูขั้นตอนแต่ละส่วน</p>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('supabase')">1. หมุน Supabase Key</div>
+            <div class="tab" onclick="showTab('vercel')">2. แก้ Key ใน Vercel</div>
+            <div class="tab" onclick="showTab('testpay')">3. ทดสอบจ่ายเงิน</div>
+        </div>
+
+        <!-- ==================== TAB 1: SUPABASE ==================== -->
+        <div class="content active" id="supabase">
+            <div class="step-card">
+                <h3><span class="num">1</span> เปิด Supabase Dashboard</h3>
+                
+                <p>คลิกปุ่มนี้เพื่อเปิด Supabase Dashboard:</p>
+                <a href="https://supabase.com/dashboard" target="_blank" class="action-btn">→ เปิด Supabase Dashboard</a>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">supabase.com/dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Login</div>
+                            <div class="content">
+                                <div style="color:#00ff88;">Email: [อีเมลของคุณ]</div>
+                                <div style="color:#00ff88;">Password: [รหัสผ่านของคุณ]</div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#8338ec;">"Sign In"</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight yellow">
+                            ⚠️ <strong>ถ้าลืมรหัสผ่าน:</strong> คลิก "Forgot password" แล้วเช็คอีเมล
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">2</span> เลือกโปรเจค</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Dashboard (หลัง Login)</div>
+                            <div class="content">
+                                <div>คุณจะเห็น list โปรเจคทั้งหมด</div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกที่ <strong style="color:#8338ec;">โปรเจคของคุณ</strong> (ชื่อเดียวกับที่สร้างไว้)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight">
+                            💡 <strong>ถ้ามีแค่โปรเจคเดียว</strong> จะเข้าอัตโนมัติ
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">3</span> ไปที่ Settings → API</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Project Dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">แถบเมนูด้านซ้าย</div>
+                            <div class="content">
+                                <div style="color:#666;">┌─────────────────┐</div>
+                                <div style="color:#666;">│ 🔧 Settings     │ <span class="arrow">→</span> <strong style="color:#8338ec;">คลิกที่นี่</strong></div>
+                                <div style="color:#666;">│ 📊 Database     │</div>
+                                <div style="color:#666;">│ 🔑 API          │ <span class="arrow">→</span> <strong style="color:#00ff88;">แล้วคลิกที่นี่</strong></div>
+                                <div style="color:#666;">│ 📈 Logs         │</div>
+                                <div style="color:#666;">└─────────────────┘</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">4</span> หา service_role key</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Settings → API</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า API Settings</div>
+                            <div class="content">
+                                <div style="margin-bottom:16px;">
+                                    <strong style="color:#ff006e;">Project API keys</strong>
+                                </div>
+                                <div style="background:#222; padding:12px; border-radius:6px; margin-bottom:8px;">
+                                    <div style="color:#888;">anon public</div>
+                                    <div style="color:#00ff88; font-family:monospace;">eyJhbGciOi... (key ยาวๆ)</div>
+                                </div>
+                                <div style="background:#222; padding:12px; border-radius:6px; border:2px solid #ff006e;">
+                                    <div style="color:#ff006e;">⚡ service_role (SECRET)</div>
+                                    <div style="color:#00ff88; font-family:monospace;">eyJhbGciOi... (key ยาวๆ)</div>
+                                    <div style="margin-top:8px;">
+                                        <button onclick="alert('คัดลอก key ด้วยมือจากหน้า Supabase')" class="action-btn">📋 คัดลอก key นี้</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight red">
+                            🔴 <strong>สำคัญ!</strong> อย่าแชร์ key นี้กับใคร มันเป็น master key ของ database
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">5</span> กด Regenerate</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">API Settings</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">ถัดจาก service_role key</div>
+                            <div class="content">
+                                <div style="margin-bottom:8px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#ff006e;">"Regenerate"</strong> ที่อยู่ถัดจาก service_role key
+                                </div>
+                                <div style="margin-top:12px; background:#330000; padding:8px; border-radius:4px;">
+                                    ⚠️ จะมี popup ถามว่า "Are you sure?" → คลิก <strong>"Yes, regenerate"</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight green">
+                            ✅ <strong>ทำเสร็จแล้ว!</strong> ตอนนี้คุณมี key ใหม่แล้ว → ขั้นตอนถัดไปคือเอาไปใส่ใน Vercel
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checklist" data-section="supabase">
+                <li onclick="toggleCheck(this)">เปิด Supabase Dashboard ได้แล้ว</li>
+                <li onclick="toggleCheck(this)">Login ได้แล้ว</li>
+                <li onclick="toggleCheck(this)">เจอ service_role key แล้ว</li>
+                <li onclick="toggleCheck(this)">กด Regenerate แล้ว</li>
+                <li onclick="toggleCheck(this)">คัดลอก key ใหม่แล้ว</li>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: VERCEL ==================== -->
+        <div class="content" id="vercel">
+            <div class="step-card">
+                <h3><span class="num">1</span> เปิด Vercel Dashboard</h3>
+                
+                <a href="https://vercel.com/dashboard" target="_blank" class="action-btn">→ เปิด Vercel Dashboard</a>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">vercel.com/dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Login</div>
+                            <div class="content">
+                                <div style="color:#00ff88;">Email: [อีเมลเดียวกับที่สมัคร Vercel]</div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิก <strong style="color:#8338ec;">"Log In"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">2</span> เลือกโปรเจค music-marketplace</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Dashboard</div>
+                            <div class="content">
+                                <div>คุณจะเห็น list โปรเจคทั้งหมด</div>
+                                <div style="margin-top:12px; background:#222; padding:12px; border-radius:6px;">
+                                    <div style="color:#8338ec;">📦 music-marketplace</div>
+                                    <div style="color:#888; font-size:0.85rem;">djmusicmarketplace.fun</div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกที่ <strong style="color:#8338ec;">"music-marketplace"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">3</span> ไปที่ Settings → Environment Variables</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Project Dashboard</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">แถบเมนูด้านบน</div>
+                            <div class="content">
+                                <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                                    <span style="color:#666;">Project</span>
+                                    <span style="color:#666;">Deployments</span>
+                                    <span style="color:#666;">Analytics</span>
+                                    <strong style="color:#8338ec;">Settings</strong> <span class="arrow">→</span> คลิกที่นี่
+                                </div>
+                                <div style="margin-top:12px; padding-left:24px;">
+                                    <div style="color:#666;">General</div>
+                                    <div style="color:#666;">Domains</div>
+                                    <div style="color:#666;">Git</div>
+                                    <strong style="color:#00ff88;">Environment Variables</strong> <span class="arrow">→</span> แล้วคลิกที่นี่
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">4</span> แก้ key ตัวเก่าเป็นตัวใหม่</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Environment Variables</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">รายการ Environment Variables</div>
+                            <div class="content">
+                                <div style="margin-bottom:12px;">หา <code style="color:#ff006e;">SUPABASE_SERVICE_ROLE_KEY</code></div>
+                                <div style="background:#222; padding:12px; border-radius:6px; margin-bottom:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="color:#888;">Key:</div>
+                                            <div style="color:#00ff88; font-family:monospace;">SUPABASE_SERVICE_ROLE_KEY</div>
+                                        </div>
+                                        <button style="background:#333; border:1px solid #555; color:white; padding:6px 12px; border-radius:4px; cursor:pointer;">Edit</button>
+                                    </div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#8338ec;">"Edit"</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="screen" style="margin-top:16px;">
+                            <div class="screen-titlebar">
+                                <div class="screen-dot red"></div>
+                                <div class="screen-dot yellow"></div>
+                                <div class="screen-dot green"></div>
+                                <span style="color:#888; margin-left:12px;">Edit Variable</span>
+                            </div>
+                            <div class="screen-body">
+                                <div class="screenshot">
+                                    <div class="header">หน้าแก้ไข</div>
+                                    <div class="content">
+                                        <div style="margin-bottom:8px;">Value:</div>
+                                        <div style="background:#111; padding:12px; border-radius:4px; border:1px solid #444; font-family:monospace; color:#00ff88;">
+                                            [วาง key ใหม่ที่คัดลอกมาจาก Supabase ที่นี่]
+                                        </div>
+                                        <div style="margin-top:12px;">
+                                            <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#00ff88;">"Save"</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight green">
+                            ✅ <strong>เสร็จแล้ว!</strong> ตอนนี้เว็บใช้ key ใหม่แล้ว
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checklist" data-section="vercel">
+                <li onclick="toggleCheck(this)">เปิด Vercel Dashboard ได้แล้ว</li>
+                <li onclick="toggleCheck(this)">เลือกโปรเจค music-marketplace แล้ว</li>
+                <li onclick="toggleCheck(this)">เจอ Environment Variables แล้ว</li>
+                <li onclick="toggleCheck(this)">แก้ SUPABASE_SERVICE_ROLE_KEY แล้ว</li>
+                <li onclick="toggleCheck(this)">กด Save แล้ว</li>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: TEST PAYMENT ==================== -->
+        <div class="content" id="testpay">
+            <div class="step-card">
+                <h3><span class="num">1</span> เปิดเว็บ BEAT VAULT</h3>
+                
+                <a href="https://djmusicmarketplace.fun" target="_blank" class="action-btn">→ เปิด BEAT VAULT</a>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">djmusicmarketplace.fun</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้าแรก</div>
+                            <div class="content">
+                                <div style="margin-bottom:8px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#8338ec;">"Login"</strong> ที่มุมขวาบน
+                                </div>
+                                <div style="margin-top:12px; color:#888;">
+                                    (ถ้ายังไม่มี account ให้สมัครก่อน → คลิก "Sign Up")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">2</span> Login ด้วย email/password</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Login Page</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Login</div>
+                            <div class="content">
+                                <div style="margin-bottom:8px;">Email:</div>
+                                <div style="background:#111; padding:8px 12px; border-radius:4px; border:1px solid #444;">
+                                    your@email.com
+                                </div>
+                                <div style="margin:12px 0 8px 0;">Password:</div>
+                                <div style="background:#111; padding:8px 12px; border-radius:4px; border:1px solid #444;">
+                                    ••••••••
+                                </div>
+                                <div style="margin-top:16px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#00ff88;">"Sign In"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">3</span> เลือก track ที่มีราคา</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Browse Page</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Browse</div>
+                            <div class="content">
+                                <div style="margin-bottom:8px;">
+                                    <span class="arrow">→</span> คลิกแท็บ <strong style="color:#8338ec;">"Browse"</strong> ที่เมนูด้านบน
+                                </div>
+                                <div style="margin-top:12px; background:#222; padding:12px; border-radius:6px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="color:#8338ec;">Techno Night Drive</div>
+                                            <div style="color:#888; font-size:0.85rem;">BPM: 128 | Key: 8A</div>
+                                        </div>
+                                        <div style="color:#00ff88;">$0.60</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#8338ec;">"Add to Cart"</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight yellow">
+                            💡 <strong>เลือก track ที่มีราคา $0.50-$0.90</strong> (ไม่ใช่ FREE)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">4</span> ไปที่ Checkout</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Cart</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">ตะกร้าสินค้า</div>
+                            <div class="content">
+                                <div style="background:#222; padding:12px; border-radius:6px; margin-bottom:12px;">
+                                    <div style="color:#8338ec;">Techno Night Drive</div>
+                                    <div style="color:#00ff88;">$0.60</div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#00ff88;">"Checkout"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">5</span> เลือก PromptPay QR</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">Checkout</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หน้า Checkout</div>
+                            <div class="content">
+                                <div style="margin-bottom:12px;">เลือกวิธีจ่ายเงิน:</div>
+                                <div style="background:#222; padding:12px; border-radius:6px; border:2px solid #8338ec; margin-bottom:8px;">
+                                    <div style="color:#8338ec;">📱 PromptPay QR</div>
+                                    <div style="color:#888; font-size:0.85rem;">สแกน QR ด้วย app ธนาคาร</div>
+                                </div>
+                                <div style="margin-top:16px;">
+                                    <span class="arrow">→</span> คลิกปุ่ม <strong style="color:#00ff88;">"Pay with PromptPay"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">6</span> สแกน QR + โอนเงิน</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">PromptPay QR</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">QR Code แสดงแล้ว</div>
+                            <div class="content" style="text-align:center;">
+                                <div style="background:#fff; width:200px; height:200px; margin:0 auto; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                                    <div style="color:#000;">📱 QR Code</div>
+                                </div>
+                                <div style="margin-top:12px; color:#00ff88; font-size:1.2rem;">
+                                    จำนวนเงิน: ฿19.98
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight">
+                            <strong>ขั้นตอนการโอน:</strong>
+                            <ol style="margin-top:8px; padding-left:20px;">
+                                <li>เปิด <strong>app ธนาคาร</strong> (SCB, KBank, BBL, etc.)</li>
+                                <li>เลือก <strong>"สแกน QR"</strong> หรือ <strong>"PromptPay"</strong></li>
+                                <li>สแกน QR code ที่แสดงในเว็บ</li>
+                                <li>ตรวจสอบจำนวนเงิน → กด <strong>"ยืนยัน"</strong></li>
+                                <li>รอจนกว่า app จะบอกว่า <strong>"สำเร็จ"</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="num">7</span> ยืนยันการชำระเงิน</h3>
+                
+                <div class="screen">
+                    <div class="screen-titlebar">
+                        <div class="screen-dot red"></div>
+                        <div class="screen-dot yellow"></div>
+                        <div class="screen-dot green"></div>
+                        <span style="color:#888; margin-left:12px;">กลับมาที่เว็บ</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screenshot">
+                            <div class="header">หลังโอนเงินเสร็จ</div>
+                            <div class="content">
+                                <div style="margin-bottom:12px;">
+                                    <span class="arrow">→</span> กลับมาที่เว็บ → คลิกปุ่ม <strong style="color:#00ff88;">"ฉันได้ชำระเงินแล้ว"</strong>
+                                </div>
+                                <div style="margin-top:12px; background:#003311; padding:12px; border-radius:6px; border:1px solid #00ff88;">
+                                    <div style="color:#00ff88;">✅ Payment Successful!</div>
+                                    <div style="color:#888; margin-top:4px;">Track ปลดล็อคแล้ว → คลิก "Download" ได้เลย</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="highlight green">
+                            ✅ <strong>สำเร็จ!</strong> ถ้าเห็นปุ่ม "Download" = ระบบทำงานถูกต้อง
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checklist" data-section="testpay">
+                <li onclick="toggleCheck(this)">เปิดเว็บ + Login ได้แล้ว</li>
+                <li onclick="toggleCheck(this)">เลือก track + Add to Cart แล้ว</li>
+                <li onclick="toggleCheck(this)">QR Code แสดงแล้ว</li>
+                <li onclick="toggleCheck(this)">สแกน QR + โอนเงินแล้ว</li>
+                <li onclick="toggleCheck(this)">กด "ฉันได้ชำระเงินแล้ว" แล้ว</li>
+                <li onclick="toggleCheck(this)">Download ได้แล้ว</li>
+            </div>
+        </div>
+
+        <!-- DONE SECTION -->
+        <div class="done-section" id="doneSection">
+            <h2 style="color:#00ff88; margin-bottom:12px;">🎉 ยินดีด้วย! ทำเสร็จทุกขั้นตอน!</h2>
+            <p>ตอนนี้:</p>
+            <ul style="margin:12px 0 12px 20px;">
+                <li>✅ Secrets ปลอดภัยแล้ว</li>
+                <li>✅ จ่ายเงินทำงานได้จริง</li>
+                <li>✅ พร้อมโปรโมทได้เลย!</li>
+            </ul>
+            <p><strong>ขั้นตอนถัดไป:</strong> สร้าง Facebook Page + TikTok แล้วเริ่มโพสต์</p>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function toggleCheck(li) {
+            li.classList.toggle('checked');
+            checkAllDone();
+        }
+
+        function checkAllDone() {
+            const allChecked = document.querySelectorAll('.checklist li:not(.checked)').length === 0;
+            if (allChecked) {
+                document.getElementById('doneSection').classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>
