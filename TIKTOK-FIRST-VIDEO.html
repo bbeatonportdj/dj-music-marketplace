@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First TikTok Video Script</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; line-height: 1.8; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2rem; background: linear-gradient(135deg, #ff006e, #8338ec); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .video-card { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .video-card h2 { color: #8338ec; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .video-card h2 .num { background: #8338ec; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .script { background: #111; border: 1px solid #444; border-radius: 8px; padding: 16px; margin: 12px 0; }
+        .script .time { color: #ff006e; font-weight: bold; margin-bottom: 8px; }
+        .script .scene { margin-bottom: 12px; padding-left: 16px; border-left: 3px solid #8338ec; }
+        .copy-box { background: #111; border: 1px solid #444; padding: 16px; border-radius: 8px; margin: 8px 0; position: relative; cursor: pointer; transition: all 0.2s; }
+        .copy-box:hover { border-color: #8338ec; background: #1a1a2e; }
+        .copy-box:active { transform: scale(0.98); }
+        .copy-box::after { content: "📋 คลิกคัดลอก"; position: absolute; right: 12px; top: 12px; font-size: 0.8rem; color: #888; background: #333; padding: 4px 8px; border-radius: 4px; }
+        .copy-box.copied::after { content: "✅ คัดลอกแล้ว!"; color: #00ff88; background: #003311; }
+        .highlight { padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+        .highlight.green { background: #003311; border: 1px solid #00ff88; }
+        .highlight.yellow { background: #333300; border: 1px solid #ffcc00; }
+        .phone-frame { background: #000; border: 3px solid #333; border-radius: 24px; padding: 20px; max-width: 280px; margin: 16px auto; }
+        .phone-screen { background: #111; border-radius: 16px; padding: 16px; min-height: 500px; position: relative; }
+        .phone-header { text-align: center; padding: 12px; border-bottom: 1px solid #333; margin-bottom: 12px; }
+        .storyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+        .storyboard-item { background: #222; border-radius: 8px; padding: 12px; text-align: center; }
+        .storyboard-item .num { color: #8338ec; font-weight: bold; margin-bottom: 4px; }
+        .storyboard-item .desc { font-size: 0.85rem; color: #888; }
+        .action-btn { display: inline-block; background: linear-gradient(135deg, #ff006e, #8338ec); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px 4px; transition: transform 0.2s; }
+        .action-btn:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 วิดีโอแรกบน TikTok</h1>
+        <p class="subtitle">Script สำเร็จรูป → ถ่ายตามได้เลย!</p>
+
+        <!-- VIDEO 1 -->
+        <div class="video-card">
+            <h2><span class="num">1</span> แนะนำตัว (Hook)</h2>
+            
+            <div class="highlight yellow">
+                🎯 <strong>เป้าหมาย:</strong> ดึงความสนใจใน 3 วินาทีแรก
+            </div>
+
+            <div class="script">
+                <div class="time">⏱️ ความยาว: 15-30 วินาที</div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 0-3 (Hook):</strong><br>
+                    "DJs ต้องรู้! เว็บนี้มี track ให้โหลด free ด้วย"
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 3-10 (Show):</strong><br>
+                    Screen recording: แสดงหน้าเว็บ → แสดง tracks → แสดงวิธี download
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 10-15 (CTA):</strong><br>
+                    "เข้าไปลองที่ djmusicmarketplace.fun"
+                </div>
+            </div>
+
+            <h3>📝 Caption สำหรับโพสต์:</h3>
+            <div class="copy-box" onclick="copyText(this)">DJs ต้องรู้! 🔥 เว็บนี้มี track ให้โหลด free ด้วย!
+
+✅ 1,800+ tracks
+✅ BPM + Key info
+✅ Free tracks available!
+
+👉 djmusicmarketplace.fun
+
+#DJ #DJEdit #MusicProduction #BeatVault #FreeMusic</div>
+        </div>
+
+        <!-- VIDEO 2 -->
+        <div class="video-card">
+            <h2><span class="num">2</span> BPM Tip</h2>
+            
+            <div class="highlight yellow">
+                🎯 <strong>เป้าหมาย:</strong> ให้ความรู้เรื่อง BPM
+            </div>
+
+            <div class="script">
+                <div class="time">⏱️ ความยาว: 20-30 วินาที</div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 0-3 (Hook):</strong><br>
+                    "รู้มั้ยว่า track 128 BPM เล่นคู่กับ track 128 BPM ได้สวยสุด?"
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 3-15 (Show):</strong><br>
+                    Screen recording: แสดงวิธี filter BPM ในเว็บ → เลือก 128 BPM → แสดง tracks
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 15-20 (CTA):</strong><br>
+                    "ลอง filter BPM ที่ beatvault.fun"
+                </div>
+            </div>
+
+            <h3>📝 Caption สำหรับโพสต์:</h3>
+            <div class="copy-box" onclick="copyText(this)">รู้มั้ยว่า? 🎧 Track 128 BPM เล่นคู่กันได้สวยสุด!
+
+✅ หา track ด้วย BPM ได้
+✅ 1,800+ tracks พร้อมใช้
+
+ลอง filter BPM ที่ djmusicmarketplace.fun
+
+#DJTips #BPM #HarmonicMixing #BeatVault</div>
+        </div>
+
+        <!-- VIDEO 3 -->
+        <div class="video-card">
+            <h2><span class="num">3</span> Free Track</h2>
+            
+            <div class="highlight green">
+                🎯 <strong>เป้าหมาย:</strong> โปรโมท track ฟรี
+            </div>
+
+            <div class="script">
+                <div class="time">⏱️ ความยาว: 15-20 วินาที</div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 0-3 (Hook):</strong><br>
+                    " track นี้ free นะ! ไม่ต้องจ่ายเงิน!"
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 3-10 (Show):</strong><br>
+                    Screen recording: แสดง track ที่ราคา FREE → กด Download
+                </div>
+                
+                <div class="scene">
+                    <strong>วินาทีที่ 10-15 (CTA):</strong><br>
+                    "สมัครสมาชิกฟรี → โหลดได้เลย!"
+                </div>
+            </div>
+
+            <h3>📝 Caption สำหรับโพสต์:</h3>
+            <div class="copy-box" onclick="copyText(this)">🆓 track นี้ FREE นะ!
+
+ไม่ต้องจ่ายเงิน → สมัครสมาชิก → โหลดได้เลย!
+
+✅ 1,800+ tracks
+✅ บาง track ฟรี!
+
+👉 djmusicmarketplace.fun
+
+#FreeMusic #DJ #BeatVault #FreeDownload</div>
+        </div>
+
+        <!-- STORYBOARD -->
+        <div class="video-card">
+            <h2>📐 Storyboard สำหรับวิดีโอแรก</h2>
+            
+            <div class="storyboard">
+                <div class="storyboard-item">
+                    <div class="num">0-3 วิ</div>
+                    <div class="desc">Hook: "DJs ต้องรู้!"</div>
+                </div>
+                <div class="storyboard-item">
+                    <div class="num">3-10 วิ</div>
+                    <div class="desc">Screen recording หน้าเว็บ</div>
+                </div>
+                <div class="storyboard-item">
+                    <div class="num">10-15 วิ</div>
+                    <div class="desc">CTA: "ลองเลย!"</div>
+                </div>
+            </div>
+
+            <div class="highlight green">
+                💡 <strong>เคล็ดลับ:</strong><br>
+                • ใช้ TikTok ถ่าย screen recording ได้เลย<br>
+                • เพิ่ม text overlay ที่มุมบน<br>
+                • ใส่เพลง background ที่สนุกๆ<br>
+                • ความยาว 15-30 วินาทีกำลังดี
+            </div>
+        </div>
+
+        <!-- NEXT STEPS -->
+        <div class="video-card">
+            <h2>🚀 ขั้นตอนถัดไป</h2>
+            
+            <ol style="padding-left:20px;">
+                <li style="margin-bottom:8px;">ถ่ายวิดีโอแรกตาม script ด้านบน</li>
+                <li style="margin-bottom:8px;">โพสต์บน TikTok</li>
+                <li style="margin-bottom:8px;">แชร์ไปที่ Facebook Page</li>
+                <li style="margin-bottom:8px;">รอ 24 ชม. → ดูยอด views</li>
+            </ol>
+
+            <div class="highlight yellow">
+                📊 <strong>KPIs:</strong><br>
+                • Views: 100+ ใน 24 ชม.<br>
+                • Likes: 10+<br>
+                • Follows: 5+<br>
+                • Website clicks: 2+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyText(el) {
+            const text = el.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                el.classList.add('copied');
+                setTimeout(() => el.classList.remove('copied'), 2000);
+            });
+        }
+    </script>
+</body>
+</html>
