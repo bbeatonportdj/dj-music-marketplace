@@ -97,23 +97,10 @@ const Register = () => {
           <div className="register-brand-overlay" />
           <div className="register-brand-content">
             <div className="register-brand-header">
-              <h1 className="register-brand-title">DJ Music Marketplace</h1>
+              <h1 className="register-brand-title">BEAT VAULT</h1>
               <p className="register-brand-subtitle">
-                The elite ecosystem for professional music producers and performance DJs.
+                1,800+ tracks across 17 genres with BPM, Key & Version info.
               </p>
-            </div>
-            <div className="register-brand-card">
-              <div className="register-wave">
-                <span className="register-wave-bar" style={{ animationDelay: '0.1s' }} />
-                <span className="register-wave-bar" style={{ animationDelay: '0.3s' }} />
-                <span className="register-wave-bar" style={{ animationDelay: '0.5s' }} />
-                <span className="register-wave-bar" style={{ animationDelay: '0.2s' }} />
-                <span className="register-wave-bar" style={{ animationDelay: '0.4s' }} />
-              </div>
-              <p className="register-brand-quote">
-                "This platform changed how I source tracks for my sets."
-              </p>
-              <p className="register-brand-author">— Alex Rivera, Global Headliner</p>
             </div>
           </div>
         </div>
