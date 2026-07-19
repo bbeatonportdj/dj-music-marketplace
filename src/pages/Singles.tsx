@@ -52,7 +52,7 @@ const VERSION_TYPES = ['clean', 'dirty', 'intro', 'acapella', 'instrumental', 'e
 
 const Singles = () => {
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, playTrack } = useAudio();
+  const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { user } = useAuth();
@@ -205,7 +205,16 @@ const Singles = () => {
                       const isCurrentPlaying = currentTrack?.id === track.id && isPlaying;
                       
                       return (
-                      <tr key={track.id} className={`track-row-arsenal ${isCurrentPlaying ? 'playing' : ''}`}>
+                      <tr 
+                        key={track.id} 
+                        className={`track-row-arsenal ${isCurrentPlaying ? 'playing' : ''}`}
+                        onMouseEnter={() => preloadTrack({
+                          id: track.id,
+                          title: track.title,
+                          artist: track.artist,
+                          preview_url: track.preview_url,
+                        })}
+                      >
                         <td className="col-play">
                           <div className="play-cell-arsenal">
                             <img src={track.artwork} alt="" className="track-img-arsenal" />

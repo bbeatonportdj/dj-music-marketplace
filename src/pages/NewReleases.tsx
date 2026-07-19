@@ -45,7 +45,7 @@ const GENRES = [
 
 const NewReleases = () => {
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, playTrack } = useAudio();
+  const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { user } = useAuth();
   const { showNotification } = useNotifications();
@@ -225,7 +225,16 @@ const NewReleases = () => {
                   const num = String(idx + 1).padStart(2, '0');
 
                   return (
-                    <div key={track.id} className={`nr-track-row ${isCurrentPlaying ? 'playing' : ''}`}>
+                    <div 
+                      key={track.id} 
+                      className={`nr-track-row ${isCurrentPlaying ? 'playing' : ''}`}
+                      onMouseEnter={() => preloadTrack({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist,
+                        preview_url: track.preview_url,
+                      })}
+                    >
                       <div className="nr-row-left">
                         <span className="nr-row-num">{num}</span>
                         <button className="nr-row-play" onClick={() => handlePlay(track)}>

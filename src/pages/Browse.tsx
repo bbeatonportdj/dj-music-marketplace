@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 import '../styles/browse.css';
 
 const Browse = () => {
-  const { currentTrack, isPlaying, playTrack } = useAudio();
+  const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,7 +138,16 @@ const Browse = () => {
               </div>
             ) : (
               sortedPacks.map((pack) => (
-                <div key={pack.id} className="pack-card-premium">
+                <div 
+                  key={pack.id} 
+                  className="pack-card-premium"
+                  onMouseEnter={() => preloadTrack({
+                    id: pack.id,
+                    title: pack.title,
+                    artist: pack.editor,
+                    preview_url: pack.preview_url,
+                  })}
+                >
                   <div className="pack-artwork-wrapper">
                     <Link to={`/pack/${pack.id}`}>
                       <img src={pack.artwork} alt={pack.title} className="pack-artwork-img" />

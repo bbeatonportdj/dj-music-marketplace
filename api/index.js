@@ -7,6 +7,28 @@ import Busboy from 'busboy';
 
 let driveClient = null;
 
+// In-memory cache for audio metadata (file URLs, MIME types, sizes)
+const audioCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedAudio(fileId) {
+  const cached = audioCache.get(fileId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  audioCache.delete(fileId);
+  return null;
+}
+
+function setCachedAudio(fileId, data) {
+  // Limit cache size to 1000 entries
+  if (audioCache.size > 1000) {
+    const oldestKey = audioCache.keys().next().value;
+    audioCache.delete(oldestKey);
+  }
+  audioCache.set(fileId, { data, timestamp: Date.now() });
+}
+
 function getDriveClient() {
   if (driveClient) return driveClient;
   const raw = process.env.GOOGLE_DRIVE_CREDENTIALS;
@@ -1110,13 +1132,27 @@ function parseMultipart(req) {
         const drive = getDriveClient();
         if (track.gdrive_file_id && drive) {
           try {
-            const fileMeta = await drive.files.get({
-              fileId: track.gdrive_file_id,
-              fields: 'mimeType',
-            });
-            res.setHeader('Content-Type', fileMeta.data.mimeType || 'audio/mpeg');
+            // Check cache first
+            let cached = getCachedAudio(track.gdrive_file_id);
+            let mimeType = 'audio/mpeg';
+            
+            if (!cached) {
+              const fileMeta = await drive.files.get({
+                fileId: track.gdrive_file_id,
+                fields: 'mimeType, size',
+              });
+              mimeType = fileMeta.data.mimeType || 'audio/mpeg';
+              setCachedAudio(track.gdrive_file_id, { mimeType, size: parseInt(fileMeta.data.size || '0', 10) });
+            } else {
+              mimeType = cached.mimeType;
+            }
+
+            res.setHeader('Content-Type', mimeType);
             res.setHeader('Content-Disposition', 'inline');
-            res.setHeader('Cache-Control', 'private, max-age=300');
+            res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+            res.setHeader('Accept-Ranges', 'bytes');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            
             const response = await drive.files.get(
               { fileId: track.gdrive_file_id, alt: 'media' },
               { responseType: 'stream' }
@@ -1137,12 +1173,23 @@ function parseMultipart(req) {
       const drive = getDriveClient();
       if (track.gdrive_file_id && drive) {
         try {
-          const fileMeta = await drive.files.get({
-            fileId: track.gdrive_file_id,
-            fields: 'mimeType, size',
-          });
-          const mimeType = fileMeta.data.mimeType || 'audio/mpeg';
-          const fileSize = parseInt(fileMeta.data.size || '0', 10);
+          // Check cache first
+          let cached = getCachedAudio(track.gdrive_file_id);
+          let mimeType = 'audio/mpeg';
+          let fileSize = 0;
+          
+          if (!cached) {
+            const fileMeta = await drive.files.get({
+              fileId: track.gdrive_file_id,
+              fields: 'mimeType, size',
+            });
+            mimeType = fileMeta.data.mimeType || 'audio/mpeg';
+            fileSize = parseInt(fileMeta.data.size || '0', 10);
+            setCachedAudio(track.gdrive_file_id, { mimeType, size: fileSize });
+          } else {
+            mimeType = cached.mimeType;
+            fileSize = cached.size;
+          }
 
           // For MP3, 30s ≈ ~480KB at 128kbps; use first 640KB to be safe
           const previewBytes = Math.min(640 * 1024, fileSize);
@@ -1152,7 +1199,8 @@ function parseMultipart(req) {
           res.setHeader('Accept-Ranges', 'bytes');
           res.setHeader('Content-Range', `bytes 0-${previewBytes - 1}/${fileSize}`);
           res.setHeader('Content-Length', String(previewBytes));
-          res.setHeader('Cache-Control', 'private, max-age=300');
+          res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
 
           const response = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },

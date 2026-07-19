@@ -20,7 +20,7 @@ const GENRE_CRATES = [
 
 function Home() {
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, playTrack } = useAudio();
+  const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
   const { user } = useAuth();
   const { showNotification } = useNotifications();
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -174,6 +174,12 @@ function Home() {
                 key={track.id}
                 className={`home-track-row ${currentTrack?.id === track.id ? 'playing' : ''}`}
                 onClick={() => navigate(`/track/${track.id}`)}
+                onMouseEnter={() => preloadTrack({
+                  id: track.id,
+                  title: track.title,
+                  artist: track.artist,
+                  preview_url: track.preview_url,
+                })}
               >
                 <div className="home-track-info">
                   <div
