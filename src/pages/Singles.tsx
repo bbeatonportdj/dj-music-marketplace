@@ -18,32 +18,20 @@ import '../styles/singles.css';
 
 const GENRES = [
   'Afro House',
-  'Baile Funk/Favela Bass',
   'Bass House',
-  'Bounce',
-  'Club House',
-  'Deep House',
+  'Big Room',
   'Drum & Bass',
-  'Dubstep',
-  'Dutch House',
-  'Electro House',
-  'Exclusive',
-  'Free Download',
-  'Future',
+  'EDM',
   'Hard Dance',
-  'Hard Techno',
   'Hip Hop',
   'House',
   'K-Pop',
   'Latin',
-  'Pop',
-  'Progressive House',
-  'Promo',
-  'Remix',
-  'Tech House',
+  'Other',
+  'Psy Trance',
   'Techno',
+  'TikTok Dance',
   'Top 40',
-  'Trance'
 ];
 
 const CAMELOT_KEYS = [

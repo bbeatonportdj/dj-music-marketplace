@@ -31,11 +31,21 @@ interface TrackRecord {
 }
 
 const GENRES = [
-  'Afro House', 'Baile Funk/Favela Bass', 'Bass House', 'Bounce',
-  'Club House', 'Deep House', 'Drum & Bass', 'Dubstep', 'Dutch House', 'Electro House',
-  'Exclusive', 'Free Download', 'Future', 'Hard Dance', 'Hard Techno',
-  'Hip Hop', 'House', 'K-Pop', 'Latin', 'Pop', 'Progressive House', 'Promo',
-  'Remix', 'Tech House', 'Techno', 'Top 40', 'Trance'
+  'Afro House',
+  'Bass House',
+  'Big Room',
+  'Drum & Bass',
+  'EDM',
+  'Hard Dance',
+  'Hip Hop',
+  'House',
+  'K-Pop',
+  'Latin',
+  'Other',
+  'Psy Trance',
+  'Techno',
+  'TikTok Dance',
+  'Top 40',
 ];
 
 const DEFAULT_FORM = {
