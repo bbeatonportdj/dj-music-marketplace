@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphics Templates</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2rem; background: linear-gradient(135deg, #ff006e, #8338ec); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; overflow: hidden; }
+        .card-header { background: #222; padding: 16px; border-bottom: 1px solid #333; }
+        .card-body { padding: 16px; }
+        
+        /* Graphics styles */
+        .graphic { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; position: relative; overflow: hidden; }
+        
+        .graphic-1 { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%); }
+        .graphic-2 { background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%); }
+        .graphic-3 { background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); color: #000; }
+        .graphic-4 { background: linear-gradient(135deg, #ffcc00 0%, #ff6600 100%); color: #000; }
+        
+        .graphic .title { font-size: 2rem; font-weight: bold; margin-bottom: 8px; }
+        .graphic .subtitle { font-size: 1rem; opacity: 0.8; margin-bottom: 16px; }
+        .graphic .url { font-size: 0.9rem; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
+        
+        .graphic .badge { position: absolute; top: 16px; right: 16px; background: #ff006e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .graphic .badge.free { background: #00ff88; color: #000; }
+        
+        .download-btn { display: block; width: 100%; background: linear-gradient(135deg, #ff006e, #8338ec); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 12px; transition: transform 0.2s; }
+        .download-btn:hover { transform: scale(1.02); }
+        
+        .size-info { color: #888; font-size: 0.85rem; margin-top: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Graphics Templates</h1>
+        <p style="text-align:center; color:#888; margin-bottom:30px;">คลิกขวา → Save Image As หรือ Screenshot</p>
+        
+        <div class="grid">
+            <!-- Graphic 1: Profile Picture -->
+            <div class="card">
+                <div class="card-header">
+                    <strong>Profile Picture</strong>
+                    <div style="color:#888; font-size:0.85rem;">สำหรับ Facebook + TikTok</div>
+                </div>
+                <div class="card-body">
+                    <div class="graphic graphic-1" id="g1">
+                        <div class="title">BEAT<br>VAULT</div>
+                        <div class="subtitle">🎵</div>
+                    </div>
+                    <div class="size-info">1080x1080 px (หรือ 400x400 สำหรับ profile)</div>
+                </div>
+            </div>
+            
+            <!-- Graphic 2: Launch Post -->
+            <div class="card">
+                <div class="card-header">
+                    <strong>Launch Post</strong>
+                    <div style="color:#888; font-size:0.85rem;">สำหรับโพสต์เปิดตัว</div>
+                </div>
+                <div class="card-body">
+                    <div class="graphic graphic-2" id="g2">
+                        <div class="badge">NEW</div>
+                        <div class="title">BEAT VAULT</div>
+                        <div class="subtitle">Premium DJ Edits & Music</div>
+                        <div class="url">djmusicmarketplace.fun</div>
+                    </div>
+                    <div class="size-info">1080x1080 px</div>
+                </div>
+            </div>
+            
+            <!-- Graphic 3: Free Track -->
+            <div class="card">
+                <div class="card-header">
+                    <strong>Free Track Post</strong>
+                    <div style="color:#888; font-size:0.85rem;">สำหรับโปรโมท track ฟรี</div>
+                </div>
+                <div class="card-body">
+                    <div class="graphic graphic-3" id="g3">
+                        <div class="badge free">FREE</div>
+                        <div class="title">FREE<br>DOWNLOAD</div>
+                        <div class="subtitle">Sign up & grab it!</div>
+                        <div class="url">djmusicmarketplace.fun</div>
+                    </div>
+                    <div class="size-info">1080x1080 px</div>
+                </div>
+            </div>
+            
+            <!-- Graphic 4: New Release -->
+            <div class="card">
+                <div class="card-header">
+                    <strong>New Release Post</strong>
+                    <div style="color:#888; font-size:0.85rem;">สำหรับประกา release ใหม่</div>
+                </div>
+                <div class="card-body">
+                    <div class="graphic graphic-4" id="g4">
+                        <div class="badge" style="background:#000; color:#ffcc00;">NEW DROP</div>
+                        <div class="title">NEW<br>RELEASE</div>
+                        <div class="subtitle">Out Now</div>
+                        <div class="url">djmusicmarketplace.fun</div>
+                    </div>
+                    <div class="size-info">1080x1080 px</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top:30px; background:#1a1a2e; padding:20px; border-radius:12px;">
+            <h2 style="color:#8338ec; margin-bottom:12px;">💡 วิธีใช้</h2>
+            <ol style="padding-left:20px; line-height:2;">
+                <li><strong>Screenshot</strong> กราฟิกที่ต้องการ</li>
+                <li>หรือ <strong>คลิกขวา → Save Image As</strong></li>
+                <li>อัปโหลดลง Facebook/TikTok</li>
+                <li>คัดลอก text จาก <code>SOCIAL-MEDIA-GUIDE.html</code></li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.graphic').forEach(el => {
+            el.addEventListener('click', () => {
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+        });
+    </script>
+</body>
+</html>

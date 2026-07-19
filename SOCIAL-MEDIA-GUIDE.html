@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Setup Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; line-height: 1.8; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2rem; background: linear-gradient(135deg, #ff006e, #8338ec); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; }
+        .section { background: #1a1a2e; border: 1px solid #333; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .section h2 { color: #8338ec; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .section h3 { color: #ff006e; margin: 16px 0 8px 0; }
+        .copy-box { background: #111; border: 1px solid #444; padding: 16px; border-radius: 8px; margin: 8px 0; position: relative; cursor: pointer; transition: all 0.2s; }
+        .copy-box:hover { border-color: #8338ec; background: #1a1a2e; }
+        .copy-box:active { transform: scale(0.98); }
+        .copy-box::after { content: "📋 คลิกคัดลอก"; position: absolute; right: 12px; top: 12px; font-size: 0.8rem; color: #888; background: #333; padding: 4px 8px; border-radius: 4px; }
+        .copy-box.copied::after { content: "✅ คัดลอกแล้ว!"; color: #00ff88; background: #003311; }
+        .highlight { padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+        .highlight.green { background: #003311; border: 1px solid #00ff88; }
+        .highlight.yellow { background: #333300; border: 1px solid #ffcc00; }
+        .step { display: flex; gap: 16px; margin: 12px 0; align-items: flex-start; }
+        .step-num { background: #8338ec; color: white; min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+        .step-content { flex: 1; }
+        .action-btn { display: inline-block; background: linear-gradient(135deg, #ff006e, #8338ec); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px 4px; transition: transform 0.2s; }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn.blue { background: linear-gradient(135deg, #1877f2, #0064e0); }
+        .action-btn.black { background: linear-gradient(135deg, #000, #333); }
+        code { background: #222; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #ff6b6b; }
+        .preview { background: #fff; color: #000; padding: 16px; border-radius: 8px; margin: 12px 0; font-family: -apple-system, sans-serif; }
+        .preview .name { font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; }
+        .preview .bio { color: #666; line-height: 1.6; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab { background: #1a1a2e; border: 2px solid #333; color: #888; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .tab:hover { border-color: #8338ec; color: #fff; }
+        .tab.active { background: linear-gradient(135deg, #ff006e, #8338ec); border-color: #8338ec; color: white; font-weight: bold; }
+        .content { display: none; }
+        .content.active { display: block; }
+        .post-template { background: #222; border-radius: 8px; padding: 16px; margin: 8px 0; }
+        .post-template .label { color: #888; font-size: 0.85rem; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Social Media Content Pack</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('facebook')">📘 Facebook</div>
+            <div class="tab" onclick="showTab('tiktok')">🎵 TikTok</div>
+            <div class="tab" onclick="showTab('posts')">📝 Post Templates</div>
+        </div>
+
+        <!-- ==================== FACEBOOK ==================== -->
+        <div class="content active" id="facebook">
+            <div class="section">
+                <h2>📘 สร้าง Facebook Page</h2>
+                
+                <div class="highlight yellow">
+                    ⏱️ ใช้เวลาประมาณ 3 นาที
+                </div>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <strong>เปิด Facebook Page Creator</strong>
+                        <a href="https://facebook.com/pages/create" target="_blank" class="action-btn blue">→ สร้าง Page ตอนนี้</a>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <strong>กรอกข้อมูล Page</strong>
+                        <div class="copy-box" onclick="copyText(this)">
+Name: BEAT VAULT
+Category: Music Producer
+Description: Premium DJ Edits & Music Marketplace
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <strong>ใส่ Profile Picture</strong>
+                        <p>ใช้รูป logo จากเว็บ หรือสร้างใหม่ด้วย Canva</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <strong>ใส่ Cover Photo</strong>
+                        <p>ขนาด 820x312 pixels</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">5</div>
+                    <div class="step-content">
+                        <strong>ใส่ Bio</strong>
+                        <div class="copy-box" onclick="copyText(this)">
+🎵 BEAT VAULT - Premium DJ Edits & Music
+
+🎧 Professional DJ edits, remixes & acapellas
+📀 1,800+ tracks across 17 genres
+🔥 BPM, Key & Version info for every track
+💰 Starting at $0.50 | Many tracks FREE
+
+👉 Shop now: djmusicmarketplace.fun
+
+#DJ #MusicProduction #BeatVault #DJEdit
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">6</div>
+                    <div class="step-content">
+                        <strong>ใส่ Website URL</strong>
+                        <div class="copy-box" onclick="copyText(this)">https://djmusicmarketplace.fun</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>✅ ตรวจสอบความสมบูรณ์</h2>
+                <div class="highlight green">
+                    ตรวจสอบว่ามีครบทุกอย่าง:<br>
+                    ✅ ชื่อ Page: BEAT VAULT<br>
+                    ✅ หมวดหมู่: Music Producer<br>
+                    ✅ Profile Picture<br>
+                    ✅ Cover Photo<br>
+                    ✅ Bio<br>
+                    ✅ Website URL
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TIKTOK ==================== -->
+        <div class="content" id="tiktok">
+            <div class="section">
+                <h2>🎵 สร้าง TikTok Account</h2>
+                
+                <div class="highlight yellow">
+                    ⏱️ ใช้เวลาประมาณ 3 นาที
+                </div>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <strong>โหลด TikTok</strong>
+                        <a href="https://www.tiktok.com/download" target="_blank" class="action-btn black">→ ดาวน์โหลด TikTok</a>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <strong>สมัคร account ใหม่</strong>
+                        <p>ใช้เบอร์โทรหรืออีเมลของคุณ</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <strong>ตั้งชื่อ username</strong>
+                        <div class="copy-box" onclick="copyText(this)">@beatvault</div>
+                        <p style="color:#888; font-size:0.9rem;">ถ้าชื่อนี้ถูกใช้แล้ว ลอง: @beatvaultmusic หรือ @beatvaultdj</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <strong>ใส่ Bio</strong>
+                        <div class="copy-box" onclick="copyText(this)">
+🎧 BEAT VAULT | DJ Music Marketplace
+✅ Premium DJ edits & acapellas
+✅ BPM + Key + Version info
+✅ Free tracks available!
+👉 Link in bio
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">5</div>
+                    <div class="step-content">
+                        <strong>ใส่ Profile Picture</strong>
+                        <p>ใช้รูปเดียวกับ Facebook Page</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">6</div>
+                    <div class="step-content">
+                        <strong>ใส่ Website (ถ้ามี)</strong>
+                        <p>TikTok ต้องมี 1,000 followers ถึงจะใส่ link ได้ — โพสต์ไปก่อน สะสม followers</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🎬 วิดีโอแรกที่ควรโพสต์</h2>
+                
+                <div class="post-template">
+                    <div class="label">วิดีโอที่1: แนะนำตัว</div>
+                    <p><strong>Hook:</strong> " DJs ต้องรู้! เว็บนี้มี track ให้โหลด free ด้วย"</p>
+                    <p><strong>Content:</strong> แสดงหน้าเว็บ → แสดง tracks → แสดงวิธี download</p>
+                    <p><strong>CTA:</strong> "เข้าไปลองที่ djmusicmarketplace.fun"</p>
+                    <p><strong>Hashtags:</strong> <code>#DJ #DJEdit #MusicProduction #BeatVault</code></p>
+                </div>
+
+                <div class="post-template">
+                    <div class="label">วิดีโอที่2: BPM Tip</div>
+                    <p><strong>Hook:</strong> "รู้มั้ยว่า track 128 BPM เล่นคู่กับ track 128 BPM ได้สวยสุด?"</p>
+                    <p><strong>Content:</strong> แสดงวิธี filter BPM ในเว็บ</p>
+                    <p><strong>CTA:</strong> "ลอง filter BPM ที่ beatvault.fun"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== POST TEMPLATES ==================== -->
+        <div class="content" id="posts">
+            <div class="section">
+                <h2>📝 Post Templates สำเร็จรูป</h2>
+                
+                <h3>🎉 Post เปิดตัว (โพสต์แรก)</h3>
+                <div class="copy-box" onclick="copyText(this)">
+🔥 BEAT VAULT is LIVE!
+
+🎧 Premium DJ edits & remixes
+📀 1,800+ tracks | 17 genres
+✅ BPM + Key + Version info
+💰 Starting at $0.50 | FREE tracks!
+
+Shop now 👉 djmusicmarketplace.fun
+
+#DJ #MusicProduction #BeatVault #DJEdit #NewMusic
+                </div>
+
+                <h3>🆓 Free Track Friday</h3>
+                <div class="copy-box" onclick="copyText(this)">
+🆓 FREE DOWNLOAD!
+
+Track: [ชื่อ track]
+🎵 BPM: XXX | Key: X-A
+🎧 Genre: [Genre]
+
+Sign up & download FREE 👇
+djmusicmarketplace.fun
+
+#FreeMusic #DJ #BeatVault #DJEdit
+                </div>
+
+                <h3>🔥 New Release</h3>
+                <div class="copy-box" onclick="copyText(this)">
+🔥 NEW DROP: [ชื่อ Pack]
+
+XX tracks of pure [Genre] energy
+✅ BPM: XXX-XXX
+✅ Keys: X-A to XX-B
+✅ Format: MP3/WAV
+
+🎧 Preview now: djmusicmarketplace.fun
+💰 Price: $X.XX
+
+#DJ #[Genre] #BeatVault #DJEdit #NewMusic
+                </div>
+
+                <h3>💡 Pro Tip</h3>
+                <div class="copy-box" onclick="copyText(this)">
+💡 DJ TIP: ใช้ Camelot Key ช่วย mix ให้ smooth
+
+Tracks ใน Key เดียวกัน → mix ได้สวยสุด!
+เช่น 8A ↔ 8A หรือ 8A ↔ 9A
+
+หา tracks ด้วย Key ได้ที่ 👉 djmusicmarketplace.fun
+
+#DJTips #HarmonicMixing #CamelotKey
+                </div>
+
+                <h3>🗳️ Poll Post</h3>
+                <div class="copy-box" onclick="copyText(this)">
+🗳️ GENRE POLL: เพลงแนวไหนที่ชอบ mix มากที่สุด?
+
+🔥 Techno
+🎹 House
+🥁 Drum & Bass
+🎤 Hip Hop
+⚡ Hard Dance
+
+Comment below! 👇
+
+#DJ #MusicPoll #BeatVault
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function copyText(el) {
+            const text = el.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                el.classList.add('copied');
+                setTimeout(() => el.classList.remove('copied'), 2000);
+            });
+        }
+    </script>
+</body>
+</html>
