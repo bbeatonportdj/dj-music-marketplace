@@ -6,8 +6,6 @@ import type { Pack } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
 import { useCart } from '../context/CartContext';
 
-import '../styles/browse.css';
-
 const Browse = () => {
   const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
   const { addToCart, isInCart } = useCart();
@@ -73,74 +71,79 @@ const Browse = () => {
   };
 
   return (
-    <div className="browse-layout animate-fade-in">
-      <main className="browse-main">
-        <section className="browse-hero-premium">
-          <div className="hero-overlay"></div>
-          <div className="hero-content">
-            <span className="hero-badge">NEW COLLECTION</span>
-            <h1>THE EDIT VAULT</h1>
-            <p>Premium curated packs for the modern DJ. Exclusive transitions, acapellas, and high-energy club edits.</p>
-            <div className="hero-actions">
-              <button className="hero-btn-primary" onClick={() => document.getElementById('packs-grid')?.scrollIntoView({ behavior: 'smooth' })}>
-                Explore Catalog
-              </button>
-            </div>
-          </div>
-        </section>
+    <div className="min-h-screen animate-fade-in">
+      {/* Hero Section */}
+      <section className="relative h-[400px] flex items-center overflow-hidden bg-surface-gray">
+        <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/80 to-transparent z-10" />
+        <div className="relative z-20 px-4 lg:px-16 max-w-4xl">
+          <span className="font-mono text-xs font-bold tracking-widest uppercase text-electric-red mb-4 block">NEW COLLECTION</span>
+          <h1 className="font-display text-5xl lg:text-7xl font-extrabold uppercase text-on-surface mb-4">THE EDIT VAULT</h1>
+          <p className="text-muted-text text-lg mb-8 max-w-2xl">
+            Premium curated packs for the modern DJ. Exclusive transitions, acapellas, and high-energy club edits.
+          </p>
+          <button 
+            className="bg-electric-red text-white px-8 py-4 rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-95 transition-all"
+            onClick={() => document.getElementById('packs-grid')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Explore Catalog
+          </button>
+        </div>
+      </section>
 
-
-        <header className="browse-header">
-          <div className="header-left">
-            <h2 className="browse-subtitle">Featured Packs</h2>
-          </div>
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-12">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-8">
+          <h2 className="font-display text-3xl font-bold uppercase text-on-surface">Featured Packs</h2>
           
-          <div className="header-right">
-            <div className="sort-dropdown-container" ref={sortDropdownRef}>
-              <button 
-                className="sort-dropdown-toggle"
-                onClick={() => setShowSortDropdown(!showSortDropdown)}
-              >
-                <span>Sort by: <strong>{getSortLabel(sortBy)}</strong></span>
-                <ChevronDown size={16} />
-              </button>
-              
-              {showSortDropdown && (
-                <div className="sort-dropdown-menu">
-                  {['newest', 'popular', 'price-low', 'price-high'].map((option) => (
-                    <button
-                      key={option}
-                      className={`sort-option ${sortBy === option ? 'active' : ''}`}
-                      onClick={() => {
-                        setSortBy(option);
-                        setShowSortDropdown(false);
-                      }}
-                    >
-                      {getSortLabel(option)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="relative" ref={sortDropdownRef}>
+            <button 
+              className="flex items-center gap-2 px-4 py-2 bg-surface-gray border border-border-gray rounded text-sm text-muted-text hover:text-on-surface transition-colors"
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+            >
+              <span>Sort by: <strong className="text-on-surface">{getSortLabel(sortBy)}</strong></span>
+              <ChevronDown size={16} />
+            </button>
+            
+            {showSortDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-surface-container border border-border-gray rounded-lg shadow-xl overflow-hidden z-50">
+                {['newest', 'popular', 'price-low', 'price-high'].map((option) => (
+                  <button
+                    key={option}
+                    className={`block w-full text-left px-4 py-3 text-sm transition-colors ${
+                      sortBy === option 
+                        ? 'bg-electric-red/10 text-electric-red font-bold' 
+                        : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                    onClick={() => {
+                      setSortBy(option);
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    {getSortLabel(option)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
+        {/* Content */}
         {loading ? (
-          <div className="loading-state">
-            <Loader2 size={40} className="animate-spin" />
-            <p>Accessing the vault...</p>
+          <div className="flex flex-col items-center justify-center py-32 gap-4 text-muted-text">
+            <Loader2 size={40} className="animate-spin text-electric-red" />
+            <p className="font-mono text-sm uppercase tracking-wider">Accessing the vault...</p>
           </div>
         ) : (
-          <div className="packs-grid" id="packs-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="packs-grid">
             {sortedPacks.length === 0 ? (
-              <div className="empty-state">
+              <div className="col-span-full text-center py-32 text-muted-text">
                 <p>No packs found.</p>
               </div>
             ) : (
               sortedPacks.map((pack) => (
                 <div 
                   key={pack.id} 
-                  className="pack-card-premium"
+                  className="bg-surface-gray border border-border-gray rounded-lg p-4 hover:border-electric-red transition-all group"
                   onMouseEnter={() => preloadTrack({
                     id: pack.id,
                     title: pack.title,
@@ -148,14 +151,23 @@ const Browse = () => {
                     preview_url: pack.preview_url,
                   })}
                 >
-                  <div className="pack-artwork-wrapper">
+                  {/* Artwork */}
+                  <div className="relative aspect-square mb-4 rounded overflow-hidden">
                     <Link to={`/pack/${pack.id}`}>
-                      <img src={pack.artwork} alt={pack.title} className="pack-artwork-img" />
+                      <img 
+                        src={pack.artwork} 
+                        alt={pack.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
                     </Link>
-                    {pack.is_free && <div className="pack-free-tag">FREE</div>}
-                    <div className="pack-artwork-overlay">
+                    {pack.is_free && (
+                      <div className="absolute top-2 right-2 bg-success-green text-black px-2 py-1 rounded text-xs font-bold">
+                        FREE
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <button 
-                        className="pack-play-btn" 
+                        className="w-16 h-16 bg-electric-red rounded-full flex items-center justify-center text-white red-glow transform translate-y-4 group-hover:translate-y-0 transition-transform"
                         onClick={(e) => handlePlay(e, pack)}
                       >
                         {currentTrack?.id === pack.id && isPlaying ? 
@@ -166,22 +178,27 @@ const Browse = () => {
                     </div>
                   </div>
                   
-                  <div className="pack-details-premium">
-                    <div className="pack-meta-top">
-                      <span className="pack-genre-badge">{pack.genre}</span>
-                      <span className="pack-count">{pack.tracks_count} Tracks</span>
+                  {/* Details */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-mono text-xs text-electric-red uppercase tracking-wider">{pack.genre}</span>
+                      <span className="font-mono text-xs text-muted-text">{pack.tracks_count} Tracks</span>
                     </div>
                     <Link to={`/pack/${pack.id}`}>
-                      <h3 className="pack-title-text">{pack.title}</h3>
+                      <h3 className="font-bold text-on-surface truncate hover:text-electric-red transition-colors">{pack.title}</h3>
                     </Link>
-                    <p className="pack-editor-text">{pack.editor}</p>
+                    <p className="text-sm text-muted-text mb-4">{pack.editor}</p>
                     
-                    <div className="pack-footer-premium">
-                      <div className="pack-price">
+                    <div className="flex justify-between items-center">
+                      <span className={`font-mono text-lg font-bold ${pack.price === 0 ? 'text-success-green' : 'text-on-surface'}`}>
                         {pack.price === 0 ? "FREE" : `$${pack.price.toFixed(2)}`}
-                      </div>
+                      </span>
                       <button 
-                        className={`pack-add-btn ${isInCart(pack.id) ? 'added' : ''}`}
+                        className={`w-10 h-10 rounded flex items-center justify-center transition-all ${
+                          isInCart(pack.id) 
+                            ? 'bg-success-green text-white' 
+                            : 'bg-surface-container-high text-muted-text hover:bg-electric-red hover:text-white'
+                        }`}
                         onClick={() => addToCart(pack as unknown as Parameters<typeof addToCart>[0])}
                         disabled={isInCart(pack.id)}
                       >
@@ -194,7 +211,7 @@ const Browse = () => {
             )}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };
