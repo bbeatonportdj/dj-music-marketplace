@@ -245,7 +245,7 @@ const PackDetail = () => {
               <div className="font-mono text-xs text-muted-text uppercase tracking-wider w-16 text-right"><Clock size={14} /></div>
             </div>
 
-            {tracks.map((track, index) => (
+            {tracks.map((track) => (
               <div 
                 key={track.id} 
                 className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-3 border-b border-border-gray last:border-b-0 hover:bg-surface-container-high transition-colors ${currentTrack?.id === track.id ? 'bg-surface-container' : ''}`}

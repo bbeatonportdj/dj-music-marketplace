@@ -3,7 +3,7 @@ import { Track } from '../models/index.js';
 import https from 'https';
 import http from 'http';
 
-const PREVIEW_DURATION = 30;
+const PREVIEW_DURATION = 90;
 
 export const streamPreview = async (req: Request, res: Response) => {
   try {

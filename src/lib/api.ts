@@ -239,7 +239,8 @@ export const fetchTracks = async (): Promise<Track[]> => {
     const { data, error } = await supabase
       .from('tracks')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100000);
 
     if (!error && data && data.length > 0) {
       return data.map(trackFromSupabase);

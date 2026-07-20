@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   Play, Pause, Check, Search, SlidersHorizontal, 
   ChevronDown, Heart, Download, Loader2, Flame, 
-  TrendingUp, Zap
+  TrendingUp
 } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
 import { directDownload } from '../lib/download';

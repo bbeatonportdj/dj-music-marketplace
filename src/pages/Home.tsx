@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Music, Zap, TrendingUp, Award, Clock, ChevronRight, Download } from 'lucide-react';
+import { Play, Pause, Music, Zap, TrendingUp, Award, Clock, ChevronRight, Download, Loader2 } from 'lucide-react';
 import { fetchTracks } from '../lib/api';
 import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
@@ -233,7 +233,9 @@ function Home() {
                   }
                 }}
               >
-                {track.price === 0 ? <Download size={16} /> : (
+                {track.price === 0 ? (
+                  downloadingId === track.id ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />
+                ) : (
                   currentTrack?.id === track.id && isPlaying ? <Pause size={16} /> : <Play size={16} />
                 )}
               </button>

@@ -4,7 +4,7 @@ import {
   User, Mail, Shield, Save, Loader2, 
   LogOut, ChevronRight, UserCircle, BarChart3,
   ShoppingBag, Download, CheckCircle, Clock,
-  Music, HardDrive, CreditCard, Search, ArrowDown, Play
+  Music, HardDrive, CreditCard, Search, ArrowDown
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';

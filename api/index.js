@@ -1078,7 +1078,8 @@ function parseMultipart(req) {
       const { data, error } = await supabase
         .from('tracks')
         .select('id, title, artist, version, version_type, duration, bpm, key, genre, price, audio_url, artwork_url, created_at, is_new, is_hot')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100000);
       if (error) {
         return json(res, 500, { error: 'Failed to load catalog' });
       }
@@ -1090,7 +1091,7 @@ function parseMultipart(req) {
       // handled below
     }
 
-    // ─── Preview (requires auth, streams 30s clip for audio playback) ────
+    // ─── Preview (requires auth, streams 90s clip for audio playback) ────
     if (path.startsWith('/api/preview/') && req.method === 'GET') {
       const user = await getAuthUser(req, supabase);
       if (!user) return json(res, 401, { error: 'Please sign in to preview' });
@@ -1169,7 +1170,8 @@ function parseMultipart(req) {
         return json(res, 404, { error: 'No audio source found' });
       }
 
-      // Paid tracks — serve 30-second preview clip via Google Drive range request
+      // Paid tracks — serve 90-second preview clip via Google Drive range request
+      const PREVIEW_DURATION_SECONDS = 90;
       const drive = getDriveClient();
       if (track.gdrive_file_id && drive) {
         try {
@@ -1191,13 +1193,11 @@ function parseMultipart(req) {
             fileSize = cached.size;
           }
 
-          // For MP3, 30s ≈ ~480KB at 128kbps; use first 640KB to be safe
-          const previewBytes = Math.min(640 * 1024, fileSize);
+          // For MP3, 90s ≈ ~1.4MB at 128kbps; use first 1.5MB to be safe
+          const previewBytes = Math.min(Math.ceil(128 * 1024 / 8 * PREVIEW_DURATION_SECONDS), fileSize);
 
           res.setHeader('Content-Type', mimeType);
           res.setHeader('Content-Disposition', 'inline');
-          res.setHeader('Accept-Ranges', 'bytes');
-          res.setHeader('Content-Range', `bytes 0-${previewBytes - 1}/${fileSize}`);
           res.setHeader('Content-Length', String(previewBytes));
           res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
           res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1213,7 +1213,7 @@ function parseMultipart(req) {
             if (bytesSent <= previewBytes) {
               res.write(chunk);
             } else {
-              // Truncate — only send the portion needed for 30s preview
+              // Truncate — only send the portion needed for 90s preview
               const remaining = previewBytes - (bytesSent - chunk.length);
               if (remaining > 0) {
                 res.write(chunk.slice(0, remaining));
