@@ -52,10 +52,10 @@ const Footer = () => {
         {/* Support */}
         <div className="flex flex-col gap-4">
           <h4 className="font-mono text-xs font-bold text-on-surface uppercase tracking-widest">Support</h4>
-          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Support</a>
-          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">FAQ</a>
-          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Terms</a>
-          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Privacy</a>
+          <a href="/faq" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">FAQ</a>
+          <a href="/contact" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Contact</a>
+          <a href="/terms" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Terms</a>
+          <a href="/privacy" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Privacy</a>
         </div>
 
         {/* Contact */}

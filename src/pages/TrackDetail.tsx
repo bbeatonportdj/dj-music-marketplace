@@ -15,6 +15,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import Waveform from '../components/Waveform';
 import TrackRecommendations from '../components/TrackRecommendations';
+import SEO from '../components/SEO';
 
 const TrackDetail = () => {
   const { id } = useParams();
@@ -115,6 +116,12 @@ const TrackDetail = () => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-8">
+      <SEO
+        title={`${track.title} by ${track.artist}`}
+        description={`${track.title} - ${track.genre} track at ${track.bpm} BPM in ${track.key}. Preview and download on DJ Music Marketplace.`}
+        image={artworkUrl || track.artwork}
+        type="music.song"
+      />
       {/* Top Navigation */}
       <div className="flex justify-between items-center mb-8">
         <button 

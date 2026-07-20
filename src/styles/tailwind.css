@@ -120,3 +120,32 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 2s infinite;
 }
+
+/* Light Mode */
+html.light {
+  --color-surface: #ffffff;
+  --color-surface-gray: #f5f5f5;
+  --color-surface-bright: #e0e0e0;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f8f8;
+  --color-surface-container: #f0f0f0;
+  --color-surface-container-high: #e8e8e8;
+  --color-surface-container-highest: #d0d0d0;
+  --color-border-gray: #e0e0e0;
+  --color-on-surface: #1a1a1a;
+  --color-muted-text: #666666;
+}
+
+html.light body {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+html.light .red-glow {
+  box-shadow: 0 0 30px rgba(255, 59, 48, 0.2);
+}
+
+html.light .glass {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}

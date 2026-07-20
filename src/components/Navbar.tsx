@@ -2,18 +2,20 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search, ShoppingCart, ShoppingBag, Disc, Heart,
-  User, LogOut, LayoutDashboard, Upload, BarChart3, ChevronDown, Menu, X
+  User, LogOut, LayoutDashboard, Upload, BarChart3, ChevronDown, Menu, X, Sun, Moon
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = () => {
   const { cart } = useCart();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { favorites } = useFavorites();
   const { user, isAdmin, isProducer, loading, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,6 +54,9 @@ const Navbar = () => {
               <Link to="/browse" className="text-muted-text hover:text-on-surface transition-colors font-body text-sm font-medium">
                 {t('nav.browse')}
               </Link>
+              <Link to="/search" className="text-muted-text hover:text-on-surface transition-colors font-body text-sm font-medium">
+                Search
+              </Link>
               <Link to="/new-releases" className="text-muted-text hover:text-on-surface transition-colors font-body text-sm font-medium">
                 New Releases
               </Link>
@@ -75,6 +80,23 @@ const Navbar = () => {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-4">
+            {/* Language Toggle */}
+            <button
+              className="hidden lg:flex px-2 py-1 text-xs font-bold rounded border border-border-gray text-muted-text hover:text-on-surface hover:border-on-surface transition-colors"
+              onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+            >
+              {language === 'en' ? 'TH' : 'EN'}
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              className="hidden lg:flex p-2 text-muted-text hover:text-on-surface transition-colors"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
             {/* Favorites */}
             <Link to="/favorites" className="hidden lg:flex relative p-2 text-muted-text hover:text-electric-red transition-colors">
               <Heart size={22} fill={favorites.length > 0 ? '#FF3B30' : 'none'} color={favorites.length > 0 ? '#FF3B30' : 'currentColor'} />
@@ -204,6 +226,12 @@ const Navbar = () => {
             </div>
             
             <nav className="p-4">
+              <button
+                className="block py-3 text-muted-text hover:text-on-surface transition-colors border-b border-border-gray text-left w-full"
+                onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+              >
+                {language === 'en' ? '🌐 ไทย' : '🌐 English'}
+              </button>
               <Link to="/browse" className="block py-3 text-muted-text hover:text-on-surface transition-colors border-b border-border-gray" onClick={() => setMobileMenuOpen(false)}>
                 {t('nav.browse')}
               </Link>

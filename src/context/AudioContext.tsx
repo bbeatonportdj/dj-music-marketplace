@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import { toStreamUrl } from '../lib/gdrive';
 
 interface Track {
   id: string | number;
@@ -40,19 +41,18 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     
+    const streamUrl = toStreamUrl(track.preview_url);
     setCurrentTrack(track);
     setIsPlaying(true);
     setCurrentTime(0);
     setDuration(0);
     
     if (audioRef.current) {
-      // Check if already preloaded
-      if (preloadedUrls.has(track.preview_url)) {
-        // Use preloaded audio - should be instant
-        audioRef.current.src = track.preview_url;
+      if (preloadedUrls.has(streamUrl)) {
+        audioRef.current.src = streamUrl;
         audioRef.current.load();
       } else {
-        audioRef.current.src = track.preview_url;
+        audioRef.current.src = streamUrl;
       }
       audioRef.current.play().catch(err => {
         console.error("Playback failed:", err);
@@ -62,19 +62,18 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [currentTrack]);
 
   const preloadTrack = useCallback((track: Track) => {
-    if (!track.preview_url || preloadedUrls.has(track.preview_url)) return;
+    const streamUrl = toStreamUrl(track.preview_url);
+    if (!streamUrl || preloadedUrls.has(streamUrl)) return;
     
-    // Create hidden audio element for preloading
     if (!preloadAudioRef.current) {
       preloadAudioRef.current = new Audio();
       preloadAudioRef.current.preload = 'auto';
     }
     
-    preloadAudioRef.current.src = track.preview_url;
+    preloadAudioRef.current.src = streamUrl;
     preloadAudioRef.current.load();
-    preloadedUrls.add(track.preview_url);
+    preloadedUrls.add(streamUrl);
     
-    // Limit cache size
     if (preloadedUrls.size > 20) {
       const firstUrl = preloadedUrls.values().next().value;
       if (firstUrl) preloadedUrls.delete(firstUrl);

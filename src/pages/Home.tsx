@@ -7,6 +7,7 @@ import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import SEO from '../components/SEO';
 
 const GENRE_CRATES = [
   { name: 'Techno', icon: '🎛️', color: '#ff453a' },
@@ -91,6 +92,11 @@ function Home() {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Premium DJ Edit Packs & Music"
+        description="High-performance audio gear for the global underground. Browse, preview, and download premium DJ edits, remixes, and original productions."
+        image="https://djmusicmarketplace.fun/og-image.png"
+      />
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-8">
         {/* Hero Section */}
         <section className="mb-16">

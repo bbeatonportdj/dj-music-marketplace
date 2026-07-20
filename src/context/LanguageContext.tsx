@@ -1,9 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
+type Lang = 'en' | 'th';
+
 interface LanguageContextType {
-  language: 'en';
-  setLanguage: (lang: 'en') => void;
+  language: Lang;
+  setLanguage: (lang: Lang) => void;
   t: (key: string) => string;
 }
 
@@ -55,20 +57,71 @@ const translations = {
     'pack.add_to_cart': 'Add to Cart',
     'player.select': 'Select a track',
     'player.various': 'Various Artists',
+  },
+  th: {
+    'nav.browse': 'เลือกซื้อ',
+    'nav.singles': 'เพลงเดี่ยว',
+    'nav.search': 'ค้นหาบีท แนวเพลง ผู้ตัดต่อ...',
+    'singles.title': 'เพลงเดี่ยว',
+    'singles.filters': 'ตัวกรอง',
+    'singles.hide_sidebar': 'ซ่อนแถบด้านข้าง',
+    'singles.show_sidebar': 'ตัวกรอง',
+    'singles.search_placeholder': 'ค้นหาเพลง...',
+    'singles.bpm_range': 'ช่วง BPM',
+    'singles.key': 'คีย์',
+    'singles.genres': 'แนวเพลง',
+    'singles.sort_by': 'เรียงตาม:',
+    'singles.newest': 'ใหม่สุด',
+    'table.track': 'เพลง',
+    'table.bpm': 'BPM',
+    'table.key': 'คีย์',
+    'table.genre': 'แนวเพลง',
+    'table.stats': 'สถิติ',
+    'table.action': 'การดำเนินการ',
+    'genre.all': 'ทุกแนวเพลง',
+    'auth.login': 'เข้าสู่ระบบ',
+    'auth.signup': 'สมัครสมาชิก',
+    'cart.title': 'ตะกร้าสินค้า',
+    'cart.empty': 'ตะกร้าว่างเปล่า',
+    'cart.empty_msg': 'ยังไม่มีสินค้าในตะกร้า',
+    'cart.browse_btn': 'เลือกซื้อบีท',
+    'cart.summary': 'สรุปคำสั่งซื้อ',
+    'cart.subtotal': 'ราคารวม',
+    'cart.total': 'ยอดรวม',
+    'cart.checkout': 'ดำเนินการชำระเงิน',
+    'cart.clear': 'ล้างตะกร้า',
+    'auth.welcome': 'ยินดีต้อนรับ',
+    'auth.create': 'สร้างบัญชี',
+    'auth.login_msg': 'เข้าสู่ระบบบัญชี DJ ของคุณ',
+    'auth.signup_msg': 'สมัครสมาชิกเพื่อดาวน์โหลดบีท',
+    'auth.email': 'อีเมล',
+    'auth.password': 'รหัสผ่าน',
+    'auth.processing': 'กำลังดำเนินการ...',
+    'auth.have_account': 'มีบัญชีอยู่แล้ว?',
+    'auth.no_account': 'ยังไม่มีบัญชี?',
+    'pack.back': 'กลับไปหน้าเลือกซื้อ',
+    'pack.tracklist': 'รายชื่อเพลง',
+    'pack.tracks': 'เพลง',
+    'pack.add_to_cart': 'เพิ่มลงตะกร้า',
+    'player.select': 'เลือกเพลง',
+    'player.various': 'Various Artists',
   }
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language] = useState<'en'>('en');
+  const [language, setLanguage] = useState<Lang>(() => {
+    return (localStorage.getItem('lang') as Lang) || 'en';
+  });
 
-  const handleSetLanguage = () => {
-    // No-op, we only support English now
+  const handleSetLanguage = (lang: Lang) => {
+    localStorage.setItem('lang', lang);
+    setLanguage(lang);
   };
 
   const t = (key: string): string => {
-    return translations.en[key as keyof typeof translations['en']] || key;
+    return translations[language][key as keyof typeof translations['en']] || key;
   };
 
   return (
