@@ -25,6 +25,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider } from './context/AuthContext';
+import './styles/tailwind.css';
 import './styles/global.css';
 
 function App() {

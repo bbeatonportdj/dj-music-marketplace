@@ -1,6 +1,12 @@
-import { Disc, Mail, Facebook } from 'lucide-react';
+import { Disc, Mail } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import '../styles/footer.css';
+
+const FacebookIcon = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
 
 const TikTokIcon = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,7 +30,7 @@ const Footer = () => {
           </p>
           <div className="social-links">
             <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" rel="noopener noreferrer" className="social-link">
-              <Facebook size={20} />
+              <FacebookIcon size={20} />
               <span>Facebook</span>
             </a>
             <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" rel="noopener noreferrer" className="social-link">
