@@ -2,6 +2,26 @@ import { apiUrl } from './apiBase';
 import { getSupabaseClient } from './supabase';
 import { getDriveStreamUrl } from './gdrive';
 
+const artworkCache = new Map<string, string>();
+
+export async function fetchArtwork(trackId: string): Promise<string> {
+  if (artworkCache.has(trackId)) return artworkCache.get(trackId)!;
+  try {
+    const res = await fetch(apiUrl(`/api/artwork/${trackId}`), { credentials: 'include' });
+    if (!res.ok) return '';
+    const data = await res.json();
+    const url = data.artwork_url || '';
+    artworkCache.set(trackId, url);
+    return url;
+  } catch { return ''; }
+}
+
+export function prefetchArtwork(trackIds: string[]): void {
+  for (const id of trackIds) {
+    if (!artworkCache.has(id)) fetchArtwork(id);
+  }
+}
+
 export interface Track {
   id: string;
   title: string;

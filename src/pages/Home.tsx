@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Music, Zap, TrendingUp, Award, Clock, ChevronRight, Download, Loader2 } from 'lucide-react';
-import { fetchTracks } from '../lib/api';
+import { fetchTracks, fetchArtwork, prefetchArtwork } from '../lib/api';
 import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
@@ -26,6 +26,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'latest' | 'popular'>('latest');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [artworkMap, setArtworkMap] = useState<Record<string, string>>({});
 
   const handleFreeDownload = async (track: Track) => {
     if (!user) {
@@ -49,6 +50,11 @@ function Home() {
     fetchTracks().then(data => {
       setTracks(data);
       setLoading(false);
+      prefetchArtwork(data.map(t => t.id));
+      data.slice(0, 16).forEach(async track => {
+        const url = await fetchArtwork(track.id);
+        if (url) setArtworkMap(prev => ({ ...prev, [track.id]: url }));
+      });
     });
   }, []);
 
@@ -199,7 +205,7 @@ function Home() {
               <div className="flex items-center gap-3">
                 <div 
                   className="w-12 h-12 rounded bg-surface-container-high bg-cover bg-center flex-shrink-0 flex items-center justify-center"
-                  style={{ backgroundImage: `url(${track.artwork})` }}
+                  style={{ backgroundImage: `url(${artworkMap[track.id] || track.artwork || ''})` }}
                 >
                   {currentTrack?.id === track.id && isPlaying ? (
                     <div className="flex gap-0.5">

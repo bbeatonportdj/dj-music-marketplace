@@ -5,7 +5,7 @@ import {
   ChevronDown, Heart, Download, Loader2, Flame, 
   TrendingUp
 } from 'lucide-react';
-import { fetchTracks } from '../lib/api';
+import { fetchTracks, fetchArtwork, prefetchArtwork } from '../lib/api';
 import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
@@ -67,6 +67,7 @@ const Singles = () => {
   const [selectedVersionType, setSelectedVersionType] = useState<string | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const [artworkMap, setArtworkMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadTracks = async () => {
@@ -74,6 +75,11 @@ const Singles = () => {
       const data = await fetchTracks();
       setTracks(data);
       setLoading(false);
+      prefetchArtwork(data.map(t => t.id));
+      for (const track of data.slice(0, 50)) {
+        const url = await fetchArtwork(track.id);
+        if (url) setArtworkMap(prev => ({ ...prev, [track.id]: url }));
+      }
     };
     loadTracks();
   }, []);
@@ -215,7 +221,7 @@ const Singles = () => {
                       >
                         <td className="py-3 px-4">
                           <div className="relative">
-                            <img src={track.artwork} alt="" className="w-10 h-10 rounded object-cover" />
+                            <img src={artworkMap[track.id] || track.artwork || ''} alt="" className="w-10 h-10 rounded object-cover" />
                             <button 
                               className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 hover:opacity-100 transition-opacity"
                               onClick={() => handlePlay(track)}

@@ -5,7 +5,7 @@ import {
   Share2, Link as LinkIcon, Download, Disc, Clock,
   Calendar, Music2, BarChart3, Loader2, AlertCircle
 } from 'lucide-react';
-import { fetchTrackById, type Track } from '../lib/api';
+import { fetchTrackById, fetchArtwork, type Track } from '../lib/api';
 import { directDownload } from '../lib/download';
 import { useLanguage } from '../context/LanguageContext';
 import { useAudio } from '../context/AudioContext';
@@ -29,6 +29,7 @@ const TrackDetail = () => {
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [artworkUrl, setArtworkUrl] = useState<string>('');
 
   useEffect(() => {
     const loadTrack = async () => {
@@ -37,6 +38,10 @@ const TrackDetail = () => {
       const data = await fetchTrackById(id);
       setTrack(data);
       setLoading(false);
+      if (data) {
+        const url = await fetchArtwork(data.id);
+        if (url) setArtworkUrl(url);
+      }
     };
     loadTrack();
   }, [id]);
@@ -158,7 +163,7 @@ const TrackDetail = () => {
       <div className="flex flex-col lg:flex-row gap-8 mb-12">
         {/* Artwork */}
         <div className="relative w-full lg:w-[400px] aspect-square rounded-xl overflow-hidden bg-surface-gray flex-shrink-0">
-          <img src={track.artwork} alt={track.title} className="w-full h-full object-cover" />
+          <img src={artworkUrl || track.artwork || ''} alt={track.title} className="w-full h-full object-cover" />
           <button 
             className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity"
             onClick={handlePlay}
