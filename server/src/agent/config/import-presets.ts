@@ -130,6 +130,17 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
     extractArtwork: true,
     recursive: true,
   },
+  'edm': {
+    name: 'EDM',
+    folderId: '1ySzKRyobcezCCFRGv1xoWimMmvpy4rqk',
+    genre: 'EDM',
+    price: 0.00,
+    wavPrice: 0.90,
+    mp3Price: 0.00,
+    parseStrategy: 'standard',
+    extractArtwork: true,
+    recursive: false,
+  },
   'big-room': {
     name: 'Big Room',
     folderId: '1_RN3K9fb21Cypoy_ZRo8eGK-Jm5P0gZB',
