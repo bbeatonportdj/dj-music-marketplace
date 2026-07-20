@@ -5,21 +5,7 @@ import QRCode from 'qrcode';
 import Stripe from 'stripe';
 import Busboy from 'busboy';
 
-// Rate limiting
-const rateLimitMap = new Map();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 100; // requests per window
-
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now - record.start > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(ip, { start: now, count: 1 });
-    return true;
-  }
-  record.count++;
-  return record.count <= RATE_LIMIT_MAX;
-}
+// Rate limiting (see checkRateLimit at line ~140)
 
 // Input validation helpers
 function sanitizeString(str, maxLen = 500) {
@@ -201,11 +187,6 @@ function json(res, status, data) {
 
 function getClientIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-}
-
-// SECURITY: UUID validation helper
-function isValidUUID(str) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
 async function getAuthUser(req, supabase) {
