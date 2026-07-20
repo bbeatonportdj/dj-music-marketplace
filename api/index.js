@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import Stripe from 'stripe';
 import Busboy from 'busboy';
 
-// Rate limiting (see checkRateLimit at line ~140)
+// Rate limiting
 
 // Input validation helpers
 function sanitizeString(str, maxLen = 500) {
