@@ -1,5 +1,6 @@
 import { apiUrl } from './apiBase';
 import { getSupabaseClient } from './supabase';
+import { getDriveStreamUrl } from './gdrive';
 
 export interface Track {
   id: string;
@@ -220,7 +221,11 @@ const trackFromSupabase = (t: Record<string, unknown>): Track => {
     genre: String(t.genre ?? 'Unknown'),
     price,
     artwork: String(t.artwork_url ?? ''),
-    preview_url: t.audio_url ? String(t.audio_url).replace(/\?download=$/, '').replace(/ /g, '%20') + '?v=2' : `/api/preview/${id}`,
+    preview_url: t.audio_url
+      ? String(t.audio_url).replace(/\?download=$/, '').replace(/ /g, '%20') + '?v=2'
+      : t.gdrive_file_id
+        ? getDriveStreamUrl(String(t.gdrive_file_id))
+        : `/api/preview/${id}`,
     full_audio_url: String(t.audio_url ?? ''),
     created_at,
     date: new Date(created_at).toLocaleDateString(),
