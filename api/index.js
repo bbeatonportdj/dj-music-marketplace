@@ -1077,13 +1077,27 @@ function parseMultipart(req) {
     if (path === '/api/music' && req.method === 'GET') {
       const { data, error } = await supabase
         .from('tracks')
-        .select('id, title, artist, version, version_type, duration, bpm, key, genre, price, audio_url, artwork_url, created_at, is_new, is_hot')
+        .select('id, title, artist, version, version_type, duration, bpm, key, genre, price, audio_url, created_at, is_new, is_hot')
         .order('created_at', { ascending: false })
         .limit(100000);
       if (error) {
         return json(res, 500, { error: 'Failed to load catalog' });
       }
       return json(res, 200, data);
+    }
+
+    // ─── Artwork for a single track ───────────────────────────────────
+    if (path.startsWith('/api/artwork/') && req.method === 'GET') {
+      const id = path.replace('/api/artwork/', '');
+      const { data: track } = await supabase
+        .from('tracks')
+        .select('artwork_url')
+        .eq('id', id)
+        .single();
+      if (track?.artwork_url) {
+        return json(res, 200, { artwork_url: track.artwork_url });
+      }
+      return json(res, 404, { artwork_url: '' });
     }
 
     // ─── Single Track ─────────────────────────────────────────────────
