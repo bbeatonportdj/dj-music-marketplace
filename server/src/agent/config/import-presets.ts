@@ -130,6 +130,15 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
     extractArtwork: true,
     recursive: true,
   },
+  'big-room': {
+    name: 'Big Room',
+    folderId: '1_RN3K9fb21Cypoy_ZRo8eGK-Jm5P0gZB',
+    genre: 'Big Room',
+    price: 0.00,
+    parseStrategy: 'standard',
+    extractArtwork: true,
+    recursive: false,
+  },
 };
 
 export function getPreset(name: string): ImportPreset | undefined {
