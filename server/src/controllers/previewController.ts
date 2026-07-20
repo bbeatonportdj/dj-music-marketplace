@@ -3,8 +3,6 @@ import { Track } from '../models/index.js';
 import https from 'https';
 import http from 'http';
 
-const PREVIEW_DURATION = 90;
-
 export const streamPreview = async (req: Request, res: Response) => {
   try {
     const { trackId } = req.params;
@@ -29,7 +27,7 @@ export const streamPreview = async (req: Request, res: Response) => {
         const location = String(audioRes.headers.location);
         const redirectClient = location.startsWith('https') ? https : http;
         const redirectReq = redirectClient.get(location, (redirectRes) => {
-          streamWithLimit(redirectRes, res);
+          passthrough(redirectRes, res);
         });
         redirectReq.on('error', (err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
@@ -39,19 +37,11 @@ export const streamPreview = async (req: Request, res: Response) => {
         return;
       }
 
-      const contentLength = audioRes.headers['content-length'];
-      if (contentLength) {
-        const totalBytes = parseInt(contentLength, 10);
-        const trackDuration = getDurationFromMetadata(audioRes) || PREVIEW_DURATION;
-        const bytesPerSecond = totalBytes / trackDuration;
-        const previewBytes = Math.floor(bytesPerSecond * PREVIEW_DURATION);
-
-        if (previewBytes > 0 && previewBytes < totalBytes) {
-          res.setHeader('Content-Length', previewBytes.toString());
-        }
+      if (audioRes.headers['content-length']) {
+        res.setHeader('Content-Length', String(audioRes.headers['content-length']));
       }
 
-      streamWithLimit(audioRes, res);
+      passthrough(audioRes, res);
     });
 
     reqStream.on('error', (err: unknown) => {
@@ -67,53 +57,11 @@ export const streamPreview = async (req: Request, res: Response) => {
   }
 };
 
-function streamWithLimit(source: http.IncomingMessage, dest: Response) {
-  let bytesRead = 0;
-  const maxBytes = 5 * 1024 * 1024;
-  let aborted = false;
-
-  source.on('data', (chunk: Buffer) => {
-    if (aborted) return;
-    bytesRead += chunk.length;
-
-    if (bytesRead > maxBytes) {
-      const remaining = maxBytes - (bytesRead - chunk.length);
-      if (remaining > 0) {
-        dest.write(chunk.subarray(0, remaining));
-      }
-      dest.end();
-      source.destroy();
-      aborted = true;
-      return;
-    }
-
-    dest.write(chunk);
-  });
-
-  source.on('end', () => {
-    if (!aborted) {
-      dest.end();
-    }
-  });
-
+function passthrough(source: http.IncomingMessage, dest: Response) {
+  source.pipe(dest);
   source.on('error', (err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error('Stream error:', message);
-    if (!aborted) {
-      dest.end();
-    }
+    dest.end();
   });
-}
-
-function getDurationFromMetadata(res: http.IncomingMessage): number | null {
-  const contentType = res.headers['content-type'] || '';
-  const contentLength = res.headers['content-length'];
-
-  if (!contentLength) return null;
-
-  const estimatedBitrate = contentType.includes('audio/mpeg') ? 128 : 64;
-  const totalBytes = parseInt(contentLength, 10);
-  const estimatedDuration = totalBytes / (estimatedBitrate * 1000 / 8);
-
-  return estimatedDuration;
 }
