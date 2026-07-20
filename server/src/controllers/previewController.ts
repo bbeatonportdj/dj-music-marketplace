@@ -18,10 +18,10 @@ export const streamPreview = async (req: Request, res: Response) => {
     const url = new URL(audioUrl);
     const client = url.protocol === 'https:' ? https : http;
 
-    const filename = `${track.title.replace(/["\\]/g, '').trim() || 'track'}_Preview.mp3`;
+    const filename = `${track.title.replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim()}_Preview.mp3`;
 
     res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('Accept-Ranges', 'bytes');
 
     const reqStream = client.get(audioUrl, (audioRes) => {

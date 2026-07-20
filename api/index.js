@@ -1326,11 +1326,11 @@ function parseMultipart(req) {
           });
           const mimeType = fileMeta.data.mimeType || 'audio/mpeg';
           const fileName = track.title
-            ? `${track.title.replace(/["\\]/g, '').trim() || 'track'}.mp3`
+            ? `${track.title.replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
             : `${track.id}.mp3`;
 
           res.setHeader('Content-Type', mimeType);
-          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
           res.setHeader('Cache-Control', 'private, no-store');
           res.setHeader('X-Content-Type-Options', 'nosniff');
 
@@ -1356,9 +1356,9 @@ function parseMultipart(req) {
           const ext = track.audio_url.split('?')[0].split('.').pop()?.toLowerCase() || 'mp3';
           const mimeMap = { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac', aac: 'audio/aac', m4a: 'audio/mp4', webm: 'audio/webm' };
           const ct = mimeMap[ext] || 'audio/mpeg';
-          const fileName = `${(track.title || 'track').replace(/["\\]/g, '').trim() || 'track'}.mp3`;
+          const fileName = `${(track.title || 'track').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`;
           res.setHeader('Content-Type', ct);
-          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
           res.setHeader('Cache-Control', 'private, no-store');
           res.setHeader('X-Content-Type-Options', 'nosniff');
           // Stream the response instead of buffering in memory

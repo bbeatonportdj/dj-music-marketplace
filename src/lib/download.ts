@@ -12,7 +12,12 @@ export async function directDownload(trackId: string, trackTitle: string): Promi
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `${trackTitle.replace(/["\\]/g, '').trim() || 'track'}.mp3`);
+  const safeName = trackTitle
+    .replace(/[^\w\s\-().&',]/g, ' ')
+    .replace(/_+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'track';
+  link.setAttribute('download', `${safeName}.mp3`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
