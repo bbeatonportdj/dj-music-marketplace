@@ -10,7 +10,7 @@ import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../lib/apiBase';
 import { useNotifications } from '../context/NotificationContext';
-import '../styles/admin-dashboard.css';
+
 
 type Tab = 'overview' | 'upload' | 'manage' | 'orders' | 'analytics';
 

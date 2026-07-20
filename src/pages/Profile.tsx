@@ -9,7 +9,6 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { apiUrl } from '../lib/apiBase';
-import '../styles/profile.css';
 
 interface OrderItem {
   id: string;
@@ -50,9 +49,7 @@ const Profile = () => {
   const email = user?.email || '';
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-    }
+    if (!user) navigate('/auth');
   }, [user, navigate]);
 
   useEffect(() => {
@@ -114,154 +111,134 @@ const Profile = () => {
 
   if (!user) return null;
 
+  const tabs = [
+    { id: 'dashboard' as const, icon: BarChart3, label: 'Dashboard' },
+    { id: 'downloads' as const, icon: Download, label: 'My Downloads' },
+    { id: 'info' as const, icon: User, label: 'Personal Info' },
+    { id: 'orders' as const, icon: ShoppingBag, label: 'Order History' },
+  ];
+
   return (
-    <div className="profile-container animate-fade-in">
-      <div className="profile-header">
-        <div className="profile-avatar">
-          <UserCircle size={80} />
+    <div className="max-w-[1200px] mx-auto px-4 lg:px-16 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-20 h-20 rounded-full bg-surface-gray border border-border-gray flex items-center justify-center">
+          <UserCircle size={48} className="text-muted-text" />
         </div>
-        <div className="profile-header-info">
-          <h1>{user.display_name || 'User'}</h1>
-          <p>{email}</p>
-          {isAdmin && <span className="admin-badge" style={{ background: 'rgba(234,179,8,0.15)', color: '#eab308', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>ADMIN</span>}
-          {isProducer && <span className="admin-badge" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>PRODUCER</span>}
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-on-surface">{user.display_name || 'User'}</h1>
+          <p className="text-muted-text text-sm">{email}</p>
+          <div className="flex gap-2 mt-2">
+            {isAdmin && <span className="px-2 py-0.5 bg-yellow-500/15 text-yellow-500 text-[11px] font-mono font-bold rounded-full uppercase tracking-wider">Admin</span>}
+            {isProducer && <span className="px-2 py-0.5 bg-blue-500/15 text-blue-500 text-[11px] font-mono font-bold rounded-full uppercase tracking-wider">Producer</span>}
+          </div>
         </div>
       </div>
 
-      <div className="profile-grid">
-        <aside className="profile-nav">
-          <button 
-            className={`profile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <BarChart3 size={18} />
-            <span>Dashboard</span>
-          </button>
-
-          <button 
-            className={`profile-nav-item ${activeTab === 'downloads' ? 'active' : ''}`}
-            onClick={() => setActiveTab('downloads')}
-          >
-            <Download size={18} />
-            <span>My Downloads</span>
-          </button>
-
-          <button 
-            className={`profile-nav-item ${activeTab === 'info' ? 'active' : ''}`}
-            onClick={() => setActiveTab('info')}
-          >
-            <User size={18} />
-            <span>Personal Info</span>
-          </button>
-          
-          <button 
-            className={`profile-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setActiveTab('orders')}
-          >
-            <ShoppingBag size={18} />
-            <span>Order History</span>
-          </button>
-          
-          {isProducer && (
-            <button className="profile-nav-item" onClick={() => navigate('/producer')}>
-              <BarChart3 size={18} />
-              <span>Producer Studio</span>
-              <ChevronRight size={14} className="nav-arrow" />
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Sidebar Nav */}
+        <aside className="w-full lg:w-[240px] flex-shrink-0">
+          <nav className="space-y-1">
+            {tabs.map(tab => (
+              <button 
+                key={tab.id}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
+                  activeTab === tab.id 
+                    ? 'bg-electric-red text-white' 
+                    : 'text-muted-text hover:text-on-surface hover:bg-surface-gray'
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <tab.icon size={18} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+            {isProducer && (
+              <button 
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-text hover:text-on-surface hover:bg-surface-gray transition-colors"
+                onClick={() => navigate('/producer')}
+              >
+                <BarChart3 size={18} />
+                <span>Producer Studio</span>
+                <ChevronRight size={14} className="ml-auto" />
+              </button>
+            )}
+            {isAdmin && (
+              <button 
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-text hover:text-on-surface hover:bg-surface-gray transition-colors"
+                onClick={() => navigate('/admin')}
+              >
+                <Shield size={18} />
+                <span>Admin Dashboard</span>
+                <ChevronRight size={14} className="ml-auto" />
+              </button>
+            )}
+            <div className="border-t border-border-gray my-2" />
+            <button 
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-text hover:text-electric-red hover:bg-electric-red/10 transition-colors"
+              onClick={handleSignOut}
+            >
+              <LogOut size={18} />
+              <span>Sign Out</span>
             </button>
-          )}
-          {isAdmin && (
-            <button className="profile-nav-item" onClick={() => navigate('/admin')}>
-              <Shield size={18} />
-              <span>Admin Dashboard</span>
-              <ChevronRight size={14} className="nav-arrow" />
-            </button>
-          )}
-          
-          <div className="nav-divider" />
-          
-          <button className="profile-nav-item logout-item" onClick={handleSignOut}>
-            <LogOut size={18} />
-            <span>Sign Out</span>
-          </button>
+          </nav>
         </aside>
 
-        <main className="profile-content">
-          {/* ============ DASHBOARD TAB ============ */}
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
+          {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
-            <section className="profile-section">
-              <div className="dashboard-stats">
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon-tracks">
-                    <Music size={24} />
+            <section>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {[
+                  { icon: Music, label: 'Purchased Tracks', value: totalDownloads, color: 'text-electric-red' },
+                  { icon: Download, label: 'Available Downloads', value: totalDownloads, color: 'text-success-green' },
+                  { icon: CreditCard, label: 'Total Spent', value: `$${totalSpent.toFixed(2)}`, color: 'text-blue-500' },
+                  { icon: HardDrive, label: 'Account Type', value: isAdmin ? 'Admin' : isProducer ? 'Producer' : 'Member', color: 'text-yellow-500' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-surface-gray border border-border-gray rounded-xl p-4">
+                    <stat.icon size={24} className={`${stat.color} mb-3`} />
+                    <div className="font-mono text-xl font-bold text-on-surface">{stat.value}</div>
+                    <div className="font-mono text-xs text-muted-text uppercase tracking-wider mt-1">{stat.label}</div>
                   </div>
-                  <div className="stat-info">
-                    <span className="stat-value">{totalDownloads}</span>
-                    <span className="stat-label">Purchased Tracks</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon-downloads">
-                    <Download size={24} />
-                  </div>
-                  <div className="stat-info">
-                    <span className="stat-value">{totalDownloads}</span>
-                    <span className="stat-label">Available Downloads</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon-spent">
-                    <CreditCard size={24} />
-                  </div>
-                  <div className="stat-info">
-                    <span className="stat-value">${totalSpent.toFixed(2)}</span>
-                    <span className="stat-label">Total Spent</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon stat-icon-account">
-                    <HardDrive size={24} />
-                  </div>
-                  <div className="stat-info">
-                    <span className="stat-value">
-                      {isAdmin ? 'Admin' : isProducer ? 'Producer' : 'Member'}
-                    </span>
-                    <span className="stat-label">Account Type</span>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <h2>My Downloads</h2>
+              <h2 className="font-display text-xl font-bold text-on-surface mb-4">My Downloads</h2>
               {purchasedLoading ? (
-                <div className="profile-loading-spinner" style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                  <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-color)' }} />
+                <div className="flex justify-center py-8">
+                  <Loader2 className="animate-spin text-electric-red" size={32} />
                 </div>
               ) : purchasedTracks.length === 0 ? (
-                <div className="dashboard-empty">
-                  <Music size={40} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                <div className="py-12 text-center text-muted-text">
+                  <Music size={40} className="mx-auto mb-4 opacity-30" />
                   <p>No purchased tracks yet.</p>
-                  <button onClick={() => navigate('/browse')} className="save-btn" style={{ width: 'auto', display: 'inline-flex', marginTop: '0.5rem' }}>
+                  <button 
+                    onClick={() => navigate('/browse')} 
+                    className="mt-4 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold"
+                  >
                     Browse Catalog
                   </button>
                 </div>
               ) : (
-                <div className="dashboard-tracks">
+                <div className="space-y-2">
                   {purchasedTracks.map((track: any) => (
-                    <div key={track.id} className="dashboard-track-item">
+                    <div key={track.id} className="flex items-center gap-4 p-3 bg-surface-gray border border-border-gray rounded-xl">
                       <img
                         src={track.artwork_url || track.artwork || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}
                         alt={track.title}
-                        className="dashboard-track-art"
+                        className="w-12 h-12 rounded-lg object-cover"
                       />
-                      <div className="dashboard-track-info">
-                        <div className="dashboard-track-title">{track.title}</div>
-                        <div className="dashboard-track-artist">{track.artist}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-on-surface truncate">{track.title}</div>
+                        <div className="text-sm text-muted-text">{track.artist}</div>
                       </div>
-                      <div className="dashboard-track-meta">
-                        <span className="dashboard-track-bpm">{track.bpm} BPM</span>
-                        <span className="dashboard-track-key">{track.key}</span>
+                      <div className="hidden sm:flex items-center gap-2">
+                        <span className="font-mono text-xs text-muted-text">{track.bpm} BPM</span>
+                        <span className="font-mono text-xs text-muted-text">{track.key}</span>
                       </div>
                       <button
-                        className="dashboard-dl-btn"
+                        className="p-2 bg-electric-red text-white rounded-lg red-glow"
                         onClick={async () => {
                           try {
                             const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
@@ -286,67 +263,73 @@ const Profile = () => {
               )}
             </section>
           )}
-          {/* ============ MY DOWNLOADS TAB ============ */}
+
+          {/* Downloads Tab */}
           {activeTab === 'downloads' && (
-            <section className="profile-section downloads-section">
-              <div className="downloads-header">
+            <section>
+              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2>User <span style={{ color: 'var(--accent-color)' }}>Downloads</span> Manager</h2>
-                  <p className="downloads-subtitle">Manage and access your purchased high-fidelity masters.</p>
+                  <h2 className="font-display text-xl font-bold text-on-surface">User <span className="text-electric-red">Downloads</span> Manager</h2>
+                  <p className="text-sm text-muted-text mt-1">Manage and access your purchased high-fidelity masters.</p>
                 </div>
-                <button className="bulk-dl-btn" onClick={() => {
-                  purchasedTracks.forEach(async (track: any) => {
-                    try {
-                      const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
-                      if (!res.ok) return;
-                      const blob = await res.blob();
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `${track.title}.mp3`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    } catch {}
-                  });
-                }}>
-                  <ArrowDown size={16} />
-                  Bulk Download
+                <button 
+                  className="flex items-center gap-2 px-4 py-2 bg-surface-gray border border-border-gray rounded-lg text-sm text-muted-text hover:text-on-surface transition-colors"
+                  onClick={() => {
+                    purchasedTracks.forEach(async (track: any) => {
+                      try {
+                        const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
+                        if (!res.ok) return;
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${track.title}.mp3`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {}
+                    });
+                  }}
+                >
+                  <ArrowDown size={16} /> Bulk Download
                 </button>
               </div>
 
-              <div className="downloads-search">
-                <Search size={18} className="search-icon" />
+              <div className="relative mb-6">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
                 <input
                   type="text"
-                  className="downloads-search-input"
                   placeholder="Filter my collection..."
                   value={downloadSearch}
                   onChange={(e) => setDownloadSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-surface-gray border border-border-gray rounded-lg text-sm text-on-surface placeholder:text-border-gray focus:outline-none focus:border-electric-red transition-colors"
                 />
               </div>
 
               {purchasedLoading ? (
-                <div className="profile-loading-spinner" style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-                  <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-color)' }} />
+                <div className="flex justify-center py-12">
+                  <Loader2 className="animate-spin text-electric-red" size={32} />
                 </div>
               ) : purchasedTracks.length === 0 ? (
-                <div className="dashboard-empty">
-                  <Music size={48} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                <div className="py-12 text-center text-muted-text">
+                  <Music size={48} className="mx-auto mb-4 opacity-30" />
                   <p>No purchased tracks yet.</p>
-                  <button onClick={() => navigate('/browse')} className="save-btn" style={{ width: 'auto', display: 'inline-flex', marginTop: '0.5rem' }}>
+                  <button 
+                    onClick={() => navigate('/browse')} 
+                    className="mt-4 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold"
+                  >
                     Browse Catalog
                   </button>
                 </div>
               ) : (
-                <div className="downloads-table-wrap">
-                  <table className="downloads-table">
+                <div className="bg-surface-gray border border-border-gray rounded-xl overflow-hidden">
+                  <table className="w-full">
                     <thead>
-                      <tr>
-                        <th>Track Name</th>
-                        <th>Artist</th>
-                        <th>BPM</th>
-                        <th>Key</th>
-                        <th className="col-action">Action</th>
+                      <tr className="border-b border-border-gray">
+                        <th className="text-left py-3 px-4 font-mono text-xs text-muted-text uppercase tracking-wider">Track Name</th>
+                        <th className="text-left py-3 px-4 font-mono text-xs text-muted-text uppercase tracking-wider hidden md:table-cell">Artist</th>
+                        <th className="text-left py-3 px-4 font-mono text-xs text-muted-text uppercase tracking-wider hidden md:table-cell">BPM</th>
+                        <th className="text-left py-3 px-4 font-mono text-xs text-muted-text uppercase tracking-wider hidden md:table-cell">Key</th>
+                        <th className="text-right py-3 px-4 font-mono text-xs text-muted-text uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -354,32 +337,26 @@ const Profile = () => {
                         .filter((track: any) => {
                           if (!downloadSearch) return true;
                           const q = downloadSearch.toLowerCase();
-                          return track.title?.toLowerCase().includes(q) ||
-                                 track.artist?.toLowerCase().includes(q);
+                          return track.title?.toLowerCase().includes(q) || track.artist?.toLowerCase().includes(q);
                         })
                         .map((track: any) => (
-                        <tr key={track.id} className="downloads-track-row">
-                          <td>
-                            <div className="downloads-track-cell">
-                              <div className="downloads-track-art-wrap">
-                                <img
-                                  src={track.artwork_url || track.artwork || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}
-                                  alt={track.title}
-                                  className="downloads-track-art"
-                                />
-                                <div className="downloads-track-play">
-                                  <Play size={16} />
-                                </div>
-                              </div>
-                              <span className="downloads-track-title">{track.title}</span>
+                        <tr key={track.id} className="border-b border-border-gray last:border-b-0 hover:bg-surface-container-high transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={track.artwork_url || track.artwork || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'}
+                                alt={track.title}
+                                className="w-10 h-10 rounded-lg object-cover"
+                              />
+                              <span className="font-bold text-on-surface">{track.title}</span>
                             </div>
                           </td>
-                          <td className="downloads-artist">{track.artist}</td>
-                          <td><span className="downloads-bpm">{track.bpm}</span></td>
-                          <td><span className="downloads-key">{track.key}</span></td>
-                          <td className="col-action">
+                          <td className="py-3 px-4 hidden md:table-cell text-muted-text">{track.artist}</td>
+                          <td className="py-3 px-4 hidden md:table-cell"><span className="font-mono text-sm text-on-surface">{track.bpm}</span></td>
+                          <td className="py-3 px-4 hidden md:table-cell"><span className="font-mono text-sm text-on-surface">{track.key}</span></td>
+                          <td className="py-3 px-4 text-right">
                             <button
-                              className="downloads-dl-btn"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-electric-red text-white rounded-lg text-xs font-bold red-glow"
                               onClick={async () => {
                                 try {
                                   const res = await fetch(apiUrl(`/api/downloads/${track.id}`));
@@ -396,8 +373,7 @@ const Profile = () => {
                                 }
                               }}
                             >
-                              <Download size={14} />
-                              Download
+                              <Download size={14} /> Download
                             </button>
                           </td>
                         </tr>
@@ -407,73 +383,73 @@ const Profile = () => {
                 </div>
               )}
 
-              <div className="downloads-stats">
-                <div className="downloads-stat-card">
-                  <div className="dstat-label">Total Downloaded</div>
-                  <div className="dstat-value">{purchasedTracks.length}</div>
-                </div>
-                <div className="downloads-stat-card">
-                  <div className="dstat-label">Storage Used</div>
-                  <div className="dstat-value">{(purchasedTracks.length * 8.5).toFixed(1)} <span className="dstat-unit">MB</span></div>
-                </div>
-                <div className="downloads-stat-card">
-                  <div className="dstat-label">License Tier</div>
-                  <div className="dstat-value">PRO</div>
-                </div>
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                {[
+                  { label: 'Total Downloaded', value: purchasedTracks.length },
+                  { label: 'Storage Used', value: `${(purchasedTracks.length * 8.5).toFixed(1)} MB` },
+                  { label: 'License Tier', value: 'PRO' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-surface-gray border border-border-gray rounded-xl p-4 text-center">
+                    <div className="font-mono text-xs text-muted-text uppercase tracking-wider mb-2">{stat.label}</div>
+                    <div className="font-mono text-lg font-bold text-on-surface">{stat.value}</div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
 
-          {/* ============ PERSONAL INFO TAB ============ */}
+          {/* Personal Info Tab */}
           {activeTab === 'info' && (
-            <section className="profile-section">
-              <h2>Update Profile</h2>
-              <form onSubmit={handleUpdateProfile} className="profile-form">
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <div className="input-wrapper">
-                    <User size={16} />
+            <section>
+              <h2 className="font-display text-xl font-bold text-on-surface mb-6">Update Profile</h2>
+              <form onSubmit={handleUpdateProfile} className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-xs font-mono text-muted-text uppercase tracking-wider mb-2">Full Name</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
                     <input 
                       type="text" 
                       value={displayName} 
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="John Doe"
+                      className="w-full pl-10 pr-3 py-3 bg-surface-gray border border-border-gray rounded-lg text-on-surface placeholder:text-border-gray focus:outline-none focus:border-electric-red transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <div className="input-wrapper disabled">
-                    <Mail size={16} />
+                <div>
+                  <label className="block text-xs font-mono text-muted-text uppercase tracking-wider mb-2">Email Address</label>
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
                     <input 
                       type="email" 
                       value={email} 
                       readOnly
                       disabled
+                      className="w-full pl-10 pr-3 py-3 bg-surface-container border border-border-gray rounded-lg text-muted-text cursor-not-allowed"
                     />
                   </div>
-                  <p className="input-hint">Email cannot be changed directly.</p>
+                  <p className="text-xs text-border-gray mt-1">Email cannot be changed directly.</p>
                 </div>
 
-                <button type="submit" className="save-btn" disabled={loading}>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-3 bg-electric-red text-white rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+                >
                   {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                   <span>Save Changes</span>
                 </button>
               </form>
 
-              <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color, #333)', paddingTop: '1.5rem' }}>
-                <h2>Account Role</h2>
-                <div style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '1rem', background: 'var(--card-bg, #1e1e1e)', borderRadius: '8px',
-                  marginTop: '1rem', flexWrap: 'wrap', gap: '1rem'
-                }}>
+              <div className="mt-8 pt-6 border-t border-border-gray">
+                <h2 className="font-display text-xl font-bold text-on-surface mb-4">Account Role</h2>
+                <div className="flex items-center justify-between p-4 bg-surface-gray border border-border-gray rounded-xl">
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+                    <div className="font-bold text-on-surface">
                       {isAdmin ? 'Administrator' : isProducer ? 'Producer / Label' : 'Member'}
                     </div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                    <div className="text-sm text-muted-text mt-1">
                       {isAdmin
                         ? 'Full access to all features, user management, and site configuration.'
                         : isProducer
@@ -482,12 +458,10 @@ const Profile = () => {
                     </div>
                   </div>
                   {!isProducer && !isAdmin && (
-                    <Link to="/auth?signup=producer" style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '6px',
-                      padding: '8px 16px', background: '#3b82f6', color: 'white',
-                      borderRadius: '8px', fontWeight: 'bold', fontSize: '13px',
-                      textDecoration: 'none', whiteSpace: 'nowrap'
-                    }}>
+                    <Link 
+                      to="/auth?signup=producer" 
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-bold whitespace-nowrap"
+                    >
                       <BarChart3 size={16} /> Upgrade to Producer
                     </Link>
                   )}
@@ -496,130 +470,72 @@ const Profile = () => {
             </section>
           )}
 
-          {/* ============ ORDER HISTORY TAB ============ */}
+          {/* Order History Tab */}
           {activeTab === 'orders' && (
-            <section className="profile-section">
-              <h2>My Order History</h2>
+            <section>
+              <h2 className="font-display text-xl font-bold text-on-surface mb-6">My Order History</h2>
               
               {ordersLoading ? (
-                <div className="profile-loading-spinner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
-                  <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-color)', marginBottom: '0.5rem' }} />
-                  <span>Loading purchase history...</span>
+                <div className="flex flex-col items-center py-12 gap-2">
+                  <Loader2 className="animate-spin text-electric-red" size={32} />
+                  <span className="text-sm text-muted-text">Loading purchase history...</span>
                 </div>
               ) : orders.length === 0 ? (
-                <div className="profile-empty-orders" style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                  <ShoppingBag size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                <div className="py-12 text-center text-muted-text">
+                  <ShoppingBag size={48} className="mx-auto mb-4 opacity-50" />
                   <p>You haven't placed any orders yet.</p>
                   <button 
                     onClick={() => navigate('/browse')}
-                    className="save-btn"
-                    style={{ marginTop: '1rem', width: 'auto', display: 'inline-flex' }}
+                    className="mt-4 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold"
                   >
                     Browse Music Catalog
                   </button>
                 </div>
               ) : (
-                <div className="orders-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="space-y-6">
                   {orders.map((order) => (
-                    <div 
-                      key={order.id} 
-                      className="order-card"
-                      style={{ 
-                        border: '1px solid var(--border-color, #333)', 
-                        borderRadius: '8px', 
-                        padding: '1.25rem',
-                        background: 'var(--card-bg, #1e1e1e)' 
-                      }}
-                    >
-                      <div 
-                        className="order-card-header"
-                        style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center', 
-                          borderBottom: '1px solid var(--border-color, #333)',
-                          paddingBottom: '0.75rem',
-                          marginBottom: '0.75rem',
-                          flexWrap: 'wrap',
-                          gap: '0.5rem'
-                        }}
-                      >
+                    <div key={order.id} className="bg-surface-gray border border-border-gray rounded-xl overflow-hidden">
+                      <div className="flex justify-between items-center px-4 py-3 border-b border-border-gray">
                         <div>
-                          <strong style={{ fontSize: '15px' }}>Order #{order.id.substring(0, 8).toUpperCase()}</strong>
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </div>
+                          <strong className="text-on-surface">Order #{order.id.substring(0, 8).toUpperCase()}</strong>
+                          <div className="text-xs text-muted-text mt-1">{new Date(order.created_at).toLocaleDateString()}</div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontWeight: 'bold' }}>${Number(order.total_amount).toFixed(2)}</span>
-                          <span 
-                            className={`status-badge ${order.status}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '2px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              textTransform: 'uppercase',
-                              backgroundColor: order.status === 'paid' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(251, 191, 36, 0.1)',
-                              color: order.status === 'paid' ? '#4ade80' : '#fbbf24'
-                            }}
-                          >
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-on-surface">${Number(order.total_amount).toFixed(2)}</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${
+                            order.status === 'paid' 
+                              ? 'bg-success-green/10 text-success-green' 
+                              : 'bg-yellow-500/10 text-yellow-500'
+                          }`}>
                             {order.status === 'paid' ? <CheckCircle size={12} /> : <Clock size={12} />}
                             {order.status}
                           </span>
                         </div>
                       </div>
 
-                      <div className="order-items-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div className="divide-y divide-border-gray">
                         {order.items.map((item) => (
-                          <div 
-                            key={item.id} 
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center' 
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div key={item.id} className="flex items-center justify-between px-4 py-3">
+                            <div className="flex items-center gap-3">
                               <img 
                                 src={item.track?.artwork_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=80&h=80&fit=crop'} 
                                 alt={item.track?.title || 'Track'} 
-                                style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }}
+                                className="w-10 h-10 rounded-lg object-cover"
                               />
                               <div>
-                                <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                                  {item.track?.title || 'Unknown Track'}
-                                </div>
-                                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                <div className="font-medium text-on-surface text-sm">{item.track?.title || 'Unknown Track'}</div>
+                                <div className="text-xs text-muted-text">
                                   {item.track?.artist || 'Unknown Artist'} {item.track?.version && `(${item.track.version})`}
                                 </div>
                               </div>
                             </div>
                             
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                                ${Number(item.price_at_purchase).toFixed(2)}
-                              </span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-text">${Number(item.price_at_purchase).toFixed(2)}</span>
                               {order.status === 'paid' && item.track?.audio_url && (
-                                <a 
-                                  href={`/api/downloads/${item.track.id}`}
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'var(--accent-color)',
-                                    color: 'white',
-                                    transition: 'all 0.2s'
-                                  }}
-                                  title="Download MP3"
-                                  onClick={(e) => {
-                                    e.preventDefault();
+                                <button 
+                                  className="w-8 h-8 flex items-center justify-center rounded-full bg-electric-red text-white red-glow"
+                                  onClick={() => {
                                     fetch(apiUrl(`/api/downloads/${item.track!.id}`)).then(res => {
                                       if (!res.ok) throw new Error('Download failed');
                                       return res.blob();
@@ -630,13 +546,11 @@ const Profile = () => {
                                       a.download = `${item.track!.title}.mp3`;
                                       a.click();
                                       URL.revokeObjectURL(url);
-                                    }).catch(err => {
-                                      console.error('Download error:', err);
-                                    });
+                                    }).catch(err => console.error('Download error:', err));
                                   }}
                                 >
                                   <Download size={15} />
-                                </a>
+                                </button>
                               )}
                             </div>
                           </div>

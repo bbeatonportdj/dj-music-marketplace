@@ -15,13 +15,12 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import Waveform from '../components/Waveform';
 import TrackRecommendations from '../components/TrackRecommendations';
-import '../styles/track-detail.css';
 
 const TrackDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { currentTrack, isPlaying, playTrack, togglePlay, currentTime, duration } = useAudio();
+  const { currentTrack, isPlaying, playTrack, togglePlay, currentTime, duration, seek } = useAudio();
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { showNotification } = useNotifications();
@@ -42,7 +41,6 @@ const TrackDetail = () => {
     loadTrack();
   }, [id]);
 
-  // Calculate real progress for the Waveform
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const handleFreeDownload = async () => {
@@ -81,29 +79,29 @@ const TrackDetail = () => {
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    showNotification(
-      'Link copied to clipboard!', 
-      'success'
-    );
+    showNotification('Link copied to clipboard!', 'success');
     setShowShare(false);
   };
 
   if (loading) {
     return (
-      <div className="track-detail-loading">
-        <Loader2 className="animate-spin" size={48} />
-        <p>Loading track details...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-text">
+        <Loader2 className="animate-spin text-electric-red" size={48} />
+        <p className="font-mono text-sm uppercase tracking-wider">Loading track details...</p>
       </div>
     );
   }
 
   if (!track) {
     return (
-      <div className="track-detail-error">
-        <AlertCircle size={64} />
-        <h2>Track Not Found</h2>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-text">
+        <AlertCircle size={64} className="text-electric-red" />
+        <h2 className="font-display text-2xl font-bold text-on-surface">Track Not Found</h2>
         <p>Sorry, we couldn't find the track you're looking for.</p>
-        <button className="back-btn" onClick={() => navigate('/singles')}>
+        <button 
+          className="flex items-center gap-2 px-6 py-3 bg-surface-gray border border-border-gray rounded-lg text-muted-text hover:text-on-surface hover:border-electric-red transition-all"
+          onClick={() => navigate('/singles')}
+        >
           <ArrowLeft size={20} /> {t('pack.back')}
         </button>
       </div>
@@ -111,62 +109,100 @@ const TrackDetail = () => {
   }
 
   return (
-    <div className="track-detail-container">
-      <div className="detail-top-nav">
-        <button className="back-btn" onClick={() => navigate(-1)}>
+    <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-8">
+      {/* Top Navigation */}
+      <div className="flex justify-between items-center mb-8">
+        <button 
+          className="flex items-center gap-2 text-muted-text hover:text-on-surface transition-colors"
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft size={20} /> {t('pack.back')}
         </button>
-        <div className="share-wrapper">
-          <button className="share-main-btn" onClick={() => setShowShare(!showShare)}>
-            <Share2 size={20} /> Share
+        
+        <div className="relative">
+          <button 
+            className="flex items-center gap-2 px-4 py-2 bg-surface-gray border border-border-gray rounded-lg text-muted-text hover:text-on-surface transition-colors"
+            onClick={() => setShowShare(!showShare)}
+          >
+            <Share2 size={18} /> Share
           </button>
+          
           {showShare && (
-            <div className="share-dropdown">
-              <button onClick={() => window.open('https://www.facebook.com/profile.php?id=61592144669937')}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> Facebook</button>
-              <button onClick={() => window.open('https://www.tiktok.com/@djmusicmarketplace')}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg> TikTok</button>
-              <button onClick={copyLink}><LinkIcon size={18} /> Copy Link</button>
+            <div className="absolute right-0 top-full mt-2 w-48 bg-surface-container border border-border-gray rounded-lg shadow-xl overflow-hidden z-50">
+              <button 
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-muted-text hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                onClick={() => window.open('https://www.facebook.com/profile.php?id=61592144669937')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                Facebook
+              </button>
+              <button 
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-muted-text hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                onClick={() => window.open('https://www.tiktok.com/@djmusicmarketplace')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
+                TikTok
+              </button>
+              <button 
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-muted-text hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                onClick={copyLink}
+              >
+                <LinkIcon size={18} /> Copy Link
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      <div className="track-hero">
-        <div className="track-hero-artwork">
-          <img src={track.artwork} alt={track.title} />
-          <button className="play-overlay-btn" onClick={handlePlay}>
-            {currentTrack?.id === track.id && isPlaying ? <Pause size={48} fill="white" /> : <Play size={48} fill="white" />}
+      {/* Hero Section */}
+      <div className="flex flex-col lg:flex-row gap-8 mb-12">
+        {/* Artwork */}
+        <div className="relative w-full lg:w-[400px] aspect-square rounded-xl overflow-hidden bg-surface-gray flex-shrink-0">
+          <img src={track.artwork} alt={track.title} className="w-full h-full object-cover" />
+          <button 
+            className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity"
+            onClick={handlePlay}
+          >
+            <div className="w-20 h-20 bg-electric-red rounded-full flex items-center justify-center text-white red-glow">
+              {currentTrack?.id === track.id && isPlaying ? <Pause size={40} fill="white" /> : <Play size={40} fill="white" />}
+            </div>
           </button>
         </div>
         
-        <div className="track-hero-info">
-          <div className="track-meta-top">
-            <span className="genre-tag">{track.genre}</span>
-            <span className="dot">•</span>
-            <span className="version-label">{track.version}</span>
+        {/* Info */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="font-mono text-xs font-bold text-electric-red uppercase tracking-wider">{track.genre}</span>
+            <span className="text-border-gray">•</span>
+            <span className="font-mono text-xs text-muted-text uppercase tracking-wider">{track.version}</span>
           </div>
           
-          <h1>{track.title}</h1>
-          <p className="artist-name">By {track.artist}</p>
+          <h1 className="font-display text-4xl lg:text-5xl font-extrabold text-on-surface mb-2">{track.title}</h1>
+          <p className="text-xl text-muted-text mb-6">By {track.artist}</p>
           
-          <div className="track-stats-row">
-            <div className="stat-item">
+          <div className="flex items-center gap-6 mb-6">
+            <div className="flex items-center gap-2 text-muted-text">
               <BarChart3 size={18} />
-              <span>{(track.plays || 0).toLocaleString()} plays</span>
+              <span className="font-mono text-sm">{(track.plays || 0).toLocaleString()} plays</span>
             </div>
-            <div className="stat-item">
+            <div className="flex items-center gap-2 text-muted-text">
               <Calendar size={18} />
-              <span>Released {track.date}</span>
+              <span className="font-mono text-sm">Released {track.date}</span>
             </div>
           </div>
 
-          <div className="waveform-hero-container">
-            <Waveform isPlaying={currentTrack?.id === track.id && isPlaying} progress={currentTrack?.id === track.id ? progress : 0} />
+          <div className="mb-8">
+            <Waveform 
+              isPlaying={currentTrack?.id === track.id && isPlaying} 
+              progress={currentTrack?.id === track.id ? progress : 0} 
+              onSeek={(percent) => seek(percent * duration)}
+            />
           </div>
 
-          <div className="track-actions-primary">
+          <div className="flex items-center gap-4">
             {track.price === 0 ? (
               <button 
-                className="buy-now-btn"
+                className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-8 py-4 bg-electric-red text-white rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
                 onClick={handleFreeDownload}
                 disabled={downloading}
               >
@@ -175,7 +211,11 @@ const TrackDetail = () => {
               </button>
             ) : (
               <button 
-                className={`buy-now-btn ${isInCart(track.id) ? 'added' : ''}`}
+                className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-bold uppercase tracking-wider transition-all ${
+                  isInCart(track.id) 
+                    ? 'bg-success-green text-white' 
+                    : 'bg-electric-red text-white red-glow hover:brightness-110 active:scale-[0.98]'
+                }`}
                 onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
                 disabled={isInCart(track.id)}
               >
@@ -184,7 +224,11 @@ const TrackDetail = () => {
               </button>
             )}
             <button 
-              className={`favorite-btn ${isFavorite(track.id) ? 'active' : ''}`}
+              className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+                isFavorite(track.id) 
+                  ? 'border-electric-red bg-electric-red/10 text-electric-red' 
+                  : 'border-border-gray text-muted-text hover:border-electric-red hover:text-electric-red'
+              }`}
               onClick={() => toggleFavorite({
                 id: track.id,
                 title: track.title,
@@ -192,59 +236,70 @@ const TrackDetail = () => {
                 artwork: track.artwork
               })}
             >
-              <Heart size={24} fill={isFavorite(track.id) ? "var(--accent-color)" : "none"} />
+              <Heart size={24} fill={isFavorite(track.id) ? "#FF3B30" : "none"} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="track-details-grid">
-        <div className="details-card">
-          <h3>Technical Details</h3>
-          <div className="specs-list">
-            <div className="spec-item">
-              <div className="spec-label">
+      {/* Details Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Technical Details */}
+        <div className="bg-surface-gray border border-border-gray rounded-xl p-6">
+          <h3 className="font-display text-lg font-bold text-on-surface mb-4">Technical Details</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-2 border-b border-border-gray">
+              <div className="flex items-center gap-2 text-muted-text">
                 <Music2 size={16} />
-                <span>BPM</span>
+                <span className="font-mono text-sm">BPM</span>
               </div>
-              <div className="spec-value">{track.bpm}</div>
+              <span className="font-mono text-sm font-bold text-on-surface">{track.bpm}</span>
             </div>
-            <div className="spec-item">
-              <div className="spec-label">
+            <div className="flex justify-between items-center py-2 border-b border-border-gray">
+              <div className="flex items-center gap-2 text-muted-text">
                 <Disc size={16} />
-                <span>Key</span>
+                <span className="font-mono text-sm">Key</span>
               </div>
-              <div className="spec-value">{track.key}</div>
+              <span className="font-mono text-sm font-bold text-on-surface">{track.key}</span>
             </div>
-            <div className="spec-item">
-              <div className="spec-label">
+            <div className="flex justify-between items-center py-2 border-b border-border-gray">
+              <div className="flex items-center gap-2 text-muted-text">
                 <Clock size={16} />
-                <span>Duration</span>
+                <span className="font-mono text-sm">Duration</span>
               </div>
-              <div className="spec-value">{track.duration}</div>
+              <span className="font-mono text-sm font-bold text-on-surface">{track.duration}</span>
             </div>
-            <div className="spec-item">
-              <div className="spec-label">
-                <div className={`version-dot version-${track.versionType}`} />
-                <span>Version</span>
+            <div className="flex justify-between items-center py-2">
+              <div className="flex items-center gap-2 text-muted-text">
+                <div className={`w-3 h-3 rounded-full ${
+                  track.versionType === 'original' ? 'bg-electric-red' : 
+                  track.versionType === 'extended' ? 'bg-success-green' : 
+                  'bg-surface-bright'
+                }`} />
+                <span className="font-mono text-sm">Version</span>
               </div>
-              <div className="spec-value">{track.version}</div>
+              <span className="font-mono text-sm font-bold text-on-surface">{track.version}</span>
             </div>
           </div>
         </div>
 
-        <div className="details-card about-card">
-          <h3>About this Track</h3>
-          <p>
+        {/* About */}
+        <div className="bg-surface-gray border border-border-gray rounded-xl p-6">
+          <h3 className="font-display text-lg font-bold text-on-surface mb-4">About this Track</h3>
+          <p className="text-muted-text text-sm mb-6">
             This track is a high-quality 320kbps MP3 file, 
             professionally edited for seamless DJ transitions. 
             Perfect for club sets and radio shows.
           </p>
-          <Link to="/singles" className="view-pack-btn">
-            View All Singles
+          <Link 
+            to="/singles" 
+            className="inline-flex items-center gap-2 text-electric-red font-mono text-sm font-bold uppercase tracking-wider hover:brightness-125 transition-all"
+          >
+            View All Singles →
           </Link>
         </div>
 
+        {/* Recommendations */}
         {track && (
           <TrackRecommendations
             currentId={track.id}

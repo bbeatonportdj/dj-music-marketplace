@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { apiUrl } from '../lib/apiBase';
-import '../styles/payment-success.css';
 
 const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +27,6 @@ const PaymentSuccess: React.FC = () => {
         } else if (res.ok) {
           setStatus('loading');
           setMessage('Payment is being processed...');
-          // Retry after 2s
           setTimeout(checkSession, 2000);
         } else {
           setStatus('error');
@@ -44,36 +42,56 @@ const PaymentSuccess: React.FC = () => {
   }, [sessionId]);
 
   return (
-    <div className="payment-success-wrapper">
-      <div className="payment-success-card">
+    <div className="flex items-center justify-center min-h-[70vh]">
+      <div className="w-full max-w-md mx-4 bg-surface-gray border border-border-gray rounded-xl p-8 text-center">
         {status === 'loading' && (
           <>
-            <Loader size={48} className="spinner" style={{ margin: '0 auto 1rem', color: 'var(--accent-color)' }} />
-            <h2>Verifying Payment</h2>
-            <p>{message}</p>
+            <Loader size={48} className="animate-spin text-electric-red mx-auto mb-4" />
+            <h2 className="font-display text-2xl font-bold text-on-surface mb-2">Verifying Payment</h2>
+            <p className="text-muted-text">{message}</p>
           </>
         )}
 
         {status === 'success' && (
           <>
-            <CheckCircle size={64} color="#4ade80" style={{ margin: '0 auto 1rem' }} />
-            <h2>Payment Successful!</h2>
-            <p>{message}</p>
-            <div className="payment-actions">
-              <Link to="/orders" className="btn-primary">My Orders</Link>
-              <Link to="/browse" className="btn-secondary">Browse More</Link>
+            <CheckCircle size={64} className="text-success-green mx-auto mb-4" />
+            <h2 className="font-display text-2xl font-bold text-on-surface mb-2">Payment Successful!</h2>
+            <p className="text-muted-text mb-6">{message}</p>
+            <div className="flex gap-3">
+              <Link 
+                to="/orders" 
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-electric-red text-white rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-[0.98] transition-all"
+              >
+                My Orders
+              </Link>
+              <Link 
+                to="/browse" 
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-surface-gray border border-border-gray rounded-lg text-muted-text hover:text-on-surface hover:border-electric-red transition-all"
+              >
+                Browse More
+              </Link>
             </div>
           </>
         )}
 
         {status === 'error' && (
           <>
-            <AlertCircle size={48} color="#f87171" style={{ margin: '0 auto 1rem' }} />
-            <h2>Payment Verification Failed</h2>
-            <p>{message}</p>
-            <div className="payment-actions">
-              <Link to="/orders" className="btn-primary">Check Orders</Link>
-              <Link to="/cart" className="btn-secondary">Back to Cart</Link>
+            <AlertCircle size={64} className="text-electric-red mx-auto mb-4" />
+            <h2 className="font-display text-2xl font-bold text-on-surface mb-2">Payment Verification Failed</h2>
+            <p className="text-muted-text mb-6">{message}</p>
+            <div className="flex gap-3">
+              <Link 
+                to="/orders" 
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-electric-red text-white rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-[0.98] transition-all"
+              >
+                Check Orders
+              </Link>
+              <Link 
+                to="/cart" 
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-surface-gray border border-border-gray rounded-lg text-muted-text hover:text-on-surface hover:border-electric-red transition-all"
+              >
+                Back to Cart
+              </Link>
             </div>
           </>
         )}

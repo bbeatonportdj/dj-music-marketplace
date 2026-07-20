@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Download, Loader2, Music } from 'lucide-react';
-import '../styles/orders.css';
 import { apiUrl } from '../lib/apiBase';
 
 interface Track {
@@ -33,7 +32,6 @@ const Downloads = () => {
     const fetchDownloads = async () => {
       try {
         const res = await fetch(apiUrl('/api/downloads'));
-
         if (!res.ok) throw new Error('Failed to fetch downloads');
         const data = await res.json();
         setTracks(data as Track[]);
@@ -53,12 +51,10 @@ const Downloads = () => {
     setDownloading(trackId);
     try {
       const res = await fetch(apiUrl(`/api/downloads/${trackId}`));
-
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Download failed');
       }
-
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -80,50 +76,45 @@ const Downloads = () => {
 
   if (authLoading) {
     return (
-      <div className="orders-page">
-        <div className="orders-loading">
-          <Loader2 size={36} className="animate-spin" />
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 size={36} className="animate-spin text-electric-red" />
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
+  if (!user) return <Navigate to="/auth" />;
 
   return (
-    <div className="orders-page">
-      <h1 className="orders-title">
-        <Download size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        My Downloads
+    <div className="max-w-[1200px] mx-auto px-4 lg:px-16 py-8">
+      <h1 className="font-display text-3xl font-extrabold text-on-surface mb-8 flex items-center gap-3">
+        <Download size={24} className="text-electric-red" /> My Downloads
       </h1>
 
       {loading ? (
-        <div className="orders-loading">
-          <Loader2 size={36} className="animate-spin" />
-          <p>Loading your purchased tracks...</p>
+        <div className="flex flex-col items-center py-20 gap-4 text-muted-text">
+          <Loader2 size={36} className="animate-spin text-electric-red" />
+          <p className="font-mono text-sm uppercase tracking-wider">Loading your purchased tracks...</p>
         </div>
       ) : tracks.length === 0 ? (
-        <div className="orders-empty">
-          <Music size={48} style={{ color: 'var(--text-muted)' }} />
-          <h2>No purchased tracks yet</h2>
+        <div className="flex flex-col items-center py-20 gap-4 text-muted-text">
+          <Music size={48} className="opacity-30" />
+          <h2 className="font-display text-xl font-bold text-on-surface">No purchased tracks yet</h2>
           <p>When you purchase tracks, they will appear here for download.</p>
         </div>
       ) : (
-        <div className="tracks-grid" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tracks.map((track) => (
-            <div key={track.id} className="order-card" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div key={track.id} className="bg-surface-gray border border-border-gray rounded-xl p-4">
+              <div className="flex gap-4 mb-4">
                 <img
                   src={track.artwork_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&h=100&fit=crop'}
                   alt={track.title}
-                  style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover' }}
+                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '600', fontSize: '15px' }}>{track.title}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{track.artist} {track.version && `(${track.version})`}</div>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                <div className="min-w-0">
+                  <div className="font-bold text-on-surface truncate">{track.title}</div>
+                  <div className="text-sm text-muted-text truncate">{track.artist} {track.version && `(${track.version})`}</div>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-text">
                     <span>{track.bpm} BPM</span>
                     <span>{track.key}</span>
                     <span>{track.genre}</span>
@@ -131,13 +122,10 @@ const Downloads = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--border-color, #333)', paddingTop: '0.75rem' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Downloaded {track.download_count} times
-                </span>
+              <div className="flex justify-between items-center pt-3 border-t border-border-gray">
+                <span className="text-xs text-muted-text">Downloaded {track.download_count} times</span>
                 <button
-                  className="pay-btn"
-                  style={{ padding: '8px 16px', fontSize: '13px', width: 'auto', display: 'inline-flex', gap: '6px' }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold red-glow hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
                   onClick={() => handleDownload(track.id, track.title)}
                   disabled={downloading === track.id}
                 >

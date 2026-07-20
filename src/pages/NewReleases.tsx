@@ -12,7 +12,6 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
-import '../styles/new-releases.css';
 
 const BPM_RANGES = [
   { label: 'All BPM', min: 0, max: 999 },
@@ -23,24 +22,14 @@ const BPM_RANGES = [
 ];
 
 const GENRES = [
-  'Afro House',
-  'Baile Funk/Favela Bass',
-  'Bass House',
-  'Big Room',
-  'Bounce',
-  'Drum & Bass',
-  'EDM',
-  'Hard Dance',
-  'Hip Hop',
-  'House',
-  'K-Pop',
-  'Latin',
-  'Other',
-  'Psy Trance',
-  'Tech House',
-  'Techno',
-  'TikTok Dance',
-  'Top 40',
+  'Afro House', 'Baile Funk/Favela Bass', 'Bass House', 'Big Room', 'Bounce',
+  'Drum & Bass', 'EDM', 'Hard Dance', 'Hip Hop', 'House', 'K-Pop', 'Latin',
+  'Other', 'Psy Trance', 'Tech House', 'Techno', 'TikTok Dance', 'Top 40',
+];
+
+const CAMELOT_KEYS = [
+  '1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A',
+  '1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B'
 ];
 
 const NewReleases = () => {
@@ -114,11 +103,6 @@ const NewReleases = () => {
     }
   };
 
-  const CAMELOT_KEYS = [
-    '1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A',
-    '1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B'
-  ];
-
   const filteredTracks = tracks.filter(track => {
     const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           track.artist.toLowerCase().includes(searchQuery.toLowerCase());
@@ -167,57 +151,74 @@ const NewReleases = () => {
   }, [filteredTracks, sortBy]);
 
   return (
-    <div className="nr-layout animate-fade-in">
-      <main className="nr-main">
-        <header className="nr-header">
-          <div className="nr-header-left">
-            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)} aria-label={showSidebar ? 'Hide filters' : 'Show filters'}>
-              <SlidersHorizontal size={20} />
-              <span>{showSidebar ? 'Hide Filters' : 'Filters'}</span>
-              {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
-            </button>
-            <h1>LATEST RELEASES</h1>
-          </div>
-          <div className="nr-header-right">
-            <div className="sort-dropdown" onClick={() => setShowSortMenu(!showSortMenu)}>
-              <span>Sort: <strong>{sortBy === 'newest' ? 'Newest' : sortBy === 'bpm' ? 'BPM' : sortBy === 'title' ? 'Title' : 'Rank'}</strong></span>
-              <ChevronDown size={14} />
-              {showSortMenu && (
-                <div className="sort-menu">
-                  {(['newest', 'bpm', 'title', 'rank'] as const).map(opt => (
-                    <button key={opt} className={`sort-option ${sortBy === opt ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSortBy(opt); setShowSortMenu(false); }}>
-                      {opt === 'newest' ? 'Newest' : opt === 'bpm' ? 'BPM' : opt === 'title' ? 'Title' : 'Rank'}
-                    </button>
-                  ))}
-                </div>
+    <div className="flex min-h-[80vh]">
+      {/* Main Content */}
+      <main className="flex-1 p-4 lg:px-16">
+        <header className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <button 
+              className="lg:hidden flex items-center gap-2 px-3 py-2 bg-surface-gray border border-border-gray rounded-lg text-muted-text"
+              onClick={() => setShowSidebar(!showSidebar)}
+            >
+              <SlidersHorizontal size={18} />
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 bg-electric-red text-white text-xs font-bold rounded-full flex items-center justify-center">{activeFilterCount}</span>
               )}
-            </div>
+            </button>
+            <h1 className="font-display text-2xl lg:text-3xl font-extrabold text-on-surface">LATEST RELEASES</h1>
+          </div>
+          <div className="relative">
+            <button 
+              className="flex items-center gap-2 px-3 py-2 bg-surface-gray border border-border-gray rounded-lg text-muted-text"
+              onClick={() => setShowSortMenu(!showSortMenu)}
+            >
+              <span className="text-sm">Sort: <strong className="text-on-surface">{sortBy === 'newest' ? 'Newest' : sortBy === 'bpm' ? 'BPM' : sortBy === 'title' ? 'Title' : 'Rank'}</strong></span>
+              <ChevronDown size={14} />
+            </button>
+            {showSortMenu && (
+              <div className="absolute right-0 top-full mt-2 w-32 bg-surface-container border border-border-gray rounded-lg shadow-xl overflow-hidden z-50">
+                {(['newest', 'bpm', 'title', 'rank'] as const).map(opt => (
+                  <button 
+                    key={opt} 
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
+                    onClick={(e) => { e.stopPropagation(); setSortBy(opt); setShowSortMenu(false); }}
+                  >
+                    {opt === 'newest' ? 'Newest' : opt === 'bpm' ? 'BPM' : opt === 'title' ? 'Title' : 'Rank'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
         {loading ? (
-          <div className="loading-state">
-            <Loader2 size={40} className="animate-spin" />
-            <p>Loading tracks...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
+            <Loader2 size={40} className="animate-spin text-electric-red" />
+            <p className="font-mono text-sm uppercase tracking-wider">Loading tracks...</p>
           </div>
         ) : error ? (
-          <div className="error-state">
-            <AlertTriangle size={40} style={{ opacity: 0.4, marginBottom: '12px' }} />
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
+            <AlertTriangle size={40} className="text-electric-red opacity-40" />
             <p>{error}</p>
-            <button className="nr-clear-filters" onClick={loadTracks} style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="flex items-center gap-2 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold"
+              onClick={loadTracks}
+            >
               <RotateCcw size={14} /> Retry
             </button>
           </div>
         ) : Object.keys(groupedTracks).length === 0 ? (
-          <div className="empty-state">
-            <Music size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
+            <Music size={48} className="opacity-20" />
             <p>No tracks matching your filters.</p>
           </div>
         ) : (
           Object.entries(groupedTracks).map(([genre, genreTracks]) => (
-            <div key={genre} className="nr-genre-section">
-              <h2 className="nr-genre-title">{genre.toUpperCase()} <span className="nr-genre-count">{genreTracks.length}</span></h2>
-              <div className="nr-track-list">
+            <div key={genre} className="mb-8">
+              <h2 className="font-display text-lg font-bold text-on-surface mb-4 uppercase tracking-wider">
+                {genre} <span className="text-muted-text font-mono text-sm ml-2">{genreTracks.length}</span>
+              </h2>
+              <div className="space-y-1">
                 {genreTracks.map((track, idx) => {
                   const isCurrentPlaying = currentTrack?.id === track.id && isPlaying;
                   const is_free = track.price === 0;
@@ -227,7 +228,7 @@ const NewReleases = () => {
                   return (
                     <div 
                       key={track.id} 
-                      className={`nr-track-row ${isCurrentPlaying ? 'playing' : ''}`}
+                      className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${isCurrentPlaying ? 'bg-surface-container' : 'hover:bg-surface-container-high'}`}
                       onMouseEnter={() => preloadTrack({
                         id: track.id,
                         title: track.title,
@@ -235,43 +236,59 @@ const NewReleases = () => {
                         preview_url: track.preview_url,
                       })}
                     >
-                      <div className="nr-row-left">
-                        <span className="nr-row-num">{num}</span>
-                        <button className="nr-row-play" onClick={() => handlePlay(track)}>
-                          {isCurrentPlaying ? <Pause size={14} fill="white" /> : <Play size={14} fill="white" />}
-                        </button>
-                        <div className="nr-row-info" onClick={() => handlePlay(track)}>
-                          <div className="nr-row-title">
-                            <span className="nr-row-artist">{track.artist}</span> - <span className="nr-row-track">{track.title}</span>
-                          </div>
-                          <div className="nr-row-meta">
-                            <span>{track.genre}</span>
-                            {track.bpm > 0 && <><span className="nr-meta-dot">·</span><span>{track.bpm} bpm</span></>}
-                            {track.key && <><span className="nr-meta-dot">·</span><span>{track.key}</span></>}
-                          </div>
+                      <span className="font-mono text-xs text-border-gray w-6">{num}</span>
+                      <button 
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-gray text-muted-text hover:text-electric-red transition-colors"
+                        onClick={() => handlePlay(track)}
+                      >
+                        {isCurrentPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                      </button>
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handlePlay(track)}>
+                        <div className="font-bold text-on-surface truncate">
+                          <span className="text-muted-text">{track.artist}</span> - <span>{track.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-text">
+                          <span>{track.genre}</span>
+                          {track.bpm > 0 && <><span className="text-border-gray">·</span><span>{track.bpm} bpm</span></>}
+                          {track.key && <><span className="text-border-gray">·</span><span>{track.key}</span></>}
                         </div>
                       </div>
-                      <div className="nr-row-right">
-                        <div className="nr-row-tags">
-                          {track.version && <span className={`nr-v-tag nr-v-${track.versionType}`}>{track.version}</span>}
-                        </div>
-                        <div className="nr-row-actions">
-                          {is_free ? (
-                            <button className="nr-dl-btn" onClick={() => handleFreeDownload(track)} disabled={downloadingId === track.id}>
-                              {downloadingId === track.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-                            </button>
-                          ) : (
-                            <button 
-                              className={`nr-dl-btn nr-paid ${isInCart(track.id) ? 'added' : ''}`}
-                              onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
-                            >
-                              {isInCart(track.id) ? <span>✓</span> : <span>${track.price}</span>}
-                            </button>
-                          )}
-                          <button className="nr-row-expand" onClick={() => setExpandedTrack(isExpanded ? null : track.id)}>
-                            <ChevronRight size={16} className={isExpanded ? 'expanded' : ''} />
+                      <div className="flex items-center gap-2">
+                        {track.version && (
+                          <span className={`px-2 py-0.5 text-[10px] font-mono rounded ${
+                            track.versionType === 'original' ? 'bg-electric-red/20 text-electric-red' :
+                            track.versionType === 'extended' ? 'bg-success-green/20 text-success-green' :
+                            'bg-surface-bright/20 text-muted-text'
+                          }`}>
+                            {track.version}
+                          </span>
+                        )}
+                        {is_free ? (
+                          <button 
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-electric-red text-white red-glow"
+                            onClick={() => handleFreeDownload(track)} 
+                            disabled={downloadingId === track.id}
+                          >
+                            {downloadingId === track.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                           </button>
-                        </div>
+                        ) : (
+                          <button 
+                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                              isInCart(track.id) 
+                                ? 'bg-success-green text-white' 
+                                : 'bg-surface-gray border border-border-gray text-on-surface hover:border-electric-red'
+                            }`}
+                            onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
+                          >
+                            {isInCart(track.id) ? '✓' : `$${track.price}`}
+                          </button>
+                        )}
+                        <button 
+                          className="p-1 text-muted-text hover:text-on-surface transition-colors"
+                          onClick={() => setExpandedTrack(isExpanded ? null : track.id)}
+                        >
+                          <ChevronRight size={16} className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -282,63 +299,59 @@ const NewReleases = () => {
         )}
       </main>
 
-      <div className={`nr-sidebar-overlay ${showSidebar ? 'active' : ''}`} onClick={() => setShowSidebar(false)} />
-
-      <aside className={`nr-sidebar ${showSidebar ? 'active' : ''}`}>
-        <div className="nr-sidebar-header">
-          <h3>FILTERS</h3>
-          <button className="nr-sidebar-close" onClick={() => setShowSidebar(false)}>
+      {/* Sidebar */}
+      <aside className={`w-[280px] bg-surface-gray border-l border-border-gray p-4 hidden lg:block ${showSidebar ? '' : 'hidden'}`}>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-display font-bold text-on-surface">FILTERS</h3>
+          <button 
+            className="p-1 text-muted-text hover:text-on-surface transition-colors"
+            onClick={() => setShowSidebar(false)}
+          >
             <X size={18} />
           </button>
         </div>
         
-        <div className="nr-filter-section">
-          <div className="nr-search-box">
-            <Search size={16} />
+        <div className="mb-6">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
             <input 
               type="text" 
               placeholder="Search tracks..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search tracks by title or artist"
+              className="w-full pl-9 pr-3 py-2 bg-surface-container border border-border-gray rounded-lg text-sm text-on-surface placeholder:text-border-gray focus:outline-none focus:border-electric-red transition-colors"
             />
           </div>
         </div>
 
-        <div className="nr-filter-section">
-          <h4>Genre</h4>
-          <ul className="nr-filter-list">
-            <li 
-              className={`nr-filter-item ${selectedGenre === 'All Genres' ? 'active' : ''}`}
+        <div className="mb-6">
+          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Genre</h4>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            <button 
+              className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === 'All Genres' ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
               onClick={() => setSelectedGenre('All Genres')}
             >
-              <div className="nr-filter-checkbox">
-                {selectedGenre === 'All Genres' && <span />}
-              </div>
               All Genres
-            </li>
+            </button>
             {GENRES.map(genre => (
-              <li 
-                key={genre} 
-                className={`nr-filter-item ${selectedGenre === genre ? 'active' : ''}`}
+              <button 
+                key={genre}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === genre ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
                 onClick={() => setSelectedGenre(genre)}
               >
-                <div className="nr-filter-checkbox">
-                  {selectedGenre === genre && <span />}
-                </div>
                 {genre}
-              </li>
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
 
-        <div className="nr-filter-section">
-          <h4>BPM Range</h4>
-          <div className="bpm-presets">
+        <div className="mb-6">
+          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">BPM Range</h4>
+          <div className="space-y-1">
             {BPM_RANGES.map(range => (
               <button
                 key={range.label}
-                className={`bpm-preset-btn ${selectedBpm === range.label ? 'active' : ''}`}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedBpm === range.label ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
                 onClick={() => setSelectedBpm(range.label)}
               >
                 {range.label}
@@ -347,13 +360,13 @@ const NewReleases = () => {
           </div>
         </div>
 
-        <div className="nr-filter-section">
-          <h4>Version Type</h4>
-          <div className="nr-version-grid">
+        <div className="mb-6">
+          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Version Type</h4>
+          <div className="flex flex-wrap gap-1">
             {['All Versions', 'clean', 'dirty', 'intro', 'acapella', 'instrumental', 'extended', 'radio', 'club', 'deep'].map(v => (
               <button
                 key={v}
-                className={`nr-vt-chip ${selectedVersion === v ? 'active' : ''}`}
+                className={`px-2 py-1 text-xs font-mono rounded transition-colors ${selectedVersion === v ? 'bg-electric-red text-white' : 'bg-surface-container text-muted-text hover:text-on-surface'}`}
                 onClick={() => setSelectedVersion(v)}
               >
                 {v}
@@ -362,13 +375,13 @@ const NewReleases = () => {
           </div>
         </div>
 
-        <div className="nr-filter-section">
-          <h4>Camelot Key</h4>
-          <div className="nr-key-grid">
+        <div className="mb-6">
+          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Camelot Key</h4>
+          <div className="grid grid-cols-6 gap-1">
             {CAMELOT_KEYS.map(key => (
               <button
                 key={key}
-                className={`nr-key-chip ${selectedKeys.includes(key) ? 'active' : ''}`}
+                className={`px-1 py-1 text-xs font-mono rounded transition-colors ${selectedKeys.includes(key) ? 'bg-electric-red text-white' : 'bg-surface-container text-muted-text hover:text-on-surface'}`}
                 onClick={() => {
                   setSelectedKeys(prev =>
                     prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
@@ -382,13 +395,16 @@ const NewReleases = () => {
         </div>
 
         {(selectedGenre !== 'All Genres' || selectedBpm !== 'All BPM' || selectedVersion !== 'All Versions' || selectedKeys.length > 0 || searchQuery) && (
-          <button className="nr-clear-filters" onClick={() => {
-            setSelectedGenre('All Genres');
-            setSelectedBpm('All BPM');
-            setSelectedVersion('All Versions');
-            setSelectedKeys([]);
-            setSearchQuery('');
-          }}>
+          <button 
+            className="w-full py-2 text-sm text-electric-red hover:underline"
+            onClick={() => {
+              setSelectedGenre('All Genres');
+              setSelectedBpm('All BPM');
+              setSelectedVersion('All Versions');
+              setSelectedKeys([]);
+              setSearchQuery('');
+            }}
+          >
             Clear All Filters
           </button>
         )}

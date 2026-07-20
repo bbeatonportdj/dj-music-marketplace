@@ -32,10 +32,7 @@ const AudioPlayer = () => {
           className="current-track-img" 
         />
         <div className="current-track-info">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="current-track-title">{currentTrack.title || t('player.select')}</div>
-            <span className="preview-badge">90s Preview</span>
-          </div>
+          <div className="current-track-title">{currentTrack.title || t('player.select')}</div>
           <div className="current-track-editor">{currentTrack.artist || t('player.various')}</div>
         </div>
       </div>
