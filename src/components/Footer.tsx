@@ -1,6 +1,5 @@
 import { Disc, Mail } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import '../styles/footer.css';
 
 const FacebookIcon = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -18,67 +17,74 @@ const Footer = () => {
   const { t } = useLanguage();
 
   return (
-    <footer className="main-footer">
-      <div className="footer-content">
-        <div className="footer-section brand-section">
-          <div className="footer-logo">
-            <Disc size={28} className="logo-icon" />
-            <span>BEAT VAULT</span>
+    <footer className="bg-surface border-t border-border-gray py-24 mt-20">
+      <div className="max-w-[1440px] mx-auto px-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Brand */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <Disc size={28} className="text-electric-red" />
+            <span className="font-display text-xl font-extrabold tracking-tighter text-on-surface uppercase">BEAT VAULT</span>
           </div>
-          <p className="brand-desc">
+          <p className="text-muted-text text-sm">
             High-performance audio gear for the global underground. Engineered for precision, built for impact.
           </p>
-          <div className="social-links">
-            <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" rel="noopener noreferrer" className="social-link">
+          <div className="flex gap-6">
+            <a href="https://www.facebook.com/profile.php?id=61592144669937" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-muted-text hover:text-electric-red transition-colors">
               <FacebookIcon size={20} />
-              <span>Facebook</span>
+              <span className="text-xs">Facebook</span>
             </a>
-            <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" rel="noopener noreferrer" className="social-link">
+            <a href="https://www.tiktok.com/@djmusicmarketplace" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 text-muted-text hover:text-electric-red transition-colors">
               <TikTokIcon size={20} />
-              <span>TikTok</span>
+              <span className="text-xs">TikTok</span>
             </a>
           </div>
         </div>
 
-        <div className="footer-section links-section">
-          <h3>Explore</h3>
-          <ul>
-            <li><a href="/browse">{t('nav.browse')}</a></li>
-            <li><a href="/singles">{t('nav.singles')}</a></li>
-            <li><a href="/favorites">Favorites</a></li>
-            <li><a href="/auth">{t('auth.login')}</a></li>
-          </ul>
+        {/* Explore */}
+        <div className="flex flex-col gap-4">
+          <h4 className="font-mono text-xs font-bold text-on-surface uppercase tracking-widest">Explore</h4>
+          <a href="/browse" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">{t('nav.browse')}</a>
+          <a href="/singles" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">{t('nav.singles')}</a>
+          <a href="/favorites" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Favorites</a>
+          <a href="/auth" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">{t('auth.login')}</a>
         </div>
 
-        <div className="footer-section links-section">
-          <h3>Support</h3>
-          <ul>
-            <li><a href="#">Support</a></li>
-            <li><a href="#">FAQ</a></li>
-            <li><a href="#">Terms</a></li>
-            <li><a href="#">Privacy</a></li>
-          </ul>
+        {/* Support */}
+        <div className="flex flex-col gap-4">
+          <h4 className="font-mono text-xs font-bold text-on-surface uppercase tracking-widest">Support</h4>
+          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Support</a>
+          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">FAQ</a>
+          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Terms</a>
+          <a href="#" className="text-muted-text hover:text-electric-red transition-colors font-mono text-sm">Privacy</a>
         </div>
 
-        <div className="footer-section contact-section">
-          <h3>Contact</h3>
-          <div className="contact-item">
+        {/* Contact */}
+        <div className="flex flex-col gap-6">
+          <h4 className="font-mono text-xs font-bold text-on-surface uppercase tracking-widest">Contact</h4>
+          <div className="flex items-center gap-2 text-muted-text hover:text-on-surface cursor-pointer">
             <Mail size={16} />
-            <span>support@djmusicmarketplace.com</span>
+            <span className="text-sm">support@djmusicmarketplace.com</span>
           </div>
-          <p className="newsletter-text">
-            Subscribe to get free tracks every week.
-          </p>
-          <div className="newsletter-form">
-            <input type="email" placeholder="Email Address" />
-            <button className="sub-btn">Join</button>
+          <div className="flex gap-2">
+            <input 
+              type="email" 
+              placeholder="Email Address" 
+              className="bg-surface-container-lowest border border-border-gray px-4 py-2 rounded text-sm w-full outline-none focus:border-electric-red text-on-surface"
+            />
+            <button className="bg-electric-red text-white px-4 py-2 rounded font-mono text-xs font-bold uppercase hover:brightness-110 transition-all">
+              Join
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="footer-bottom">
-        <span>&copy; 2026 BEAT VAULT. HIGH-PERFORMANCE AUDIO GEAR.</span>
-        <span className="made-with">MADE WITH INTENSITY BY DJ COMMUNITY</span>
+      <div className="max-w-[1440px] mx-auto px-16 mt-24 pt-8 border-t border-border-gray flex justify-between items-center">
+        <span className="text-muted-text font-mono text-[10px] uppercase tracking-widest">
+          &copy; 2026 BEAT VAULT. HIGH-PERFORMANCE AUDIO GEAR.
+        </span>
+        <span className="text-muted-text font-mono text-[10px] uppercase tracking-widest">
+          MADE WITH INTENSITY BY DJ COMMUNITY
+        </span>
       </div>
     </footer>
   );
