@@ -168,6 +168,15 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
     extractArtwork: true,
     recursive: false,
   },
+  'psy-trance': {
+    name: 'Psy Trance',
+    folderId: '12JuIR-ny2SbIS4_mPx6UVBmgiPj2h0kM',
+    genre: 'Psy Trance',
+    price: 0.80,
+    parseStrategy: 'standard',
+    extractArtwork: true,
+    recursive: false,
+  },
 };
 
 export function getPreset(name: string): ImportPreset | undefined {
