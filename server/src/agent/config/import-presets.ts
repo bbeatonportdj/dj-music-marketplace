@@ -14,7 +14,7 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
   'tech-house': {
     name: 'Tech House',
     folderId: '1SBehpqKYivopTQqj6INAno2-xr-l9qtx',
-    genre: 'House',
+    genre: 'Tech House',
     price: 0.60,
     parseStrategy: 'standard',
     extractArtwork: true,
