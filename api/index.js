@@ -1342,18 +1342,20 @@ function parseMultipart(req) {
             ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
             : `${track.id}.mp3`;
 
-          const response = await drive.files.get(
+          const fileRes = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },
-            { responseType: 'stream' }
+            { responseType: 'arraybuffer' }
           );
+          const buffer = Buffer.from(fileRes.data);
 
           res.writeHead(200, {
             'Content-Type': mimeType,
-            'Content-Disposition': `attachment; filename="${fileName}"`,
+            'Content-Disposition': `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+            'Content-Length': String(buffer.length),
             'Cache-Control': 'private, no-store',
             'X-Content-Type-Options': 'nosniff',
           });
-          response.data.pipe(res);
+          res.end(buffer);
           return;
         } catch (driveErr) {
           return json(res, 500, { error: 'Failed to stream audio. File may not be accessible.' });
@@ -1371,27 +1373,16 @@ function parseMultipart(req) {
           const ext = track.audio_url.split('?')[0].split('.').pop()?.toLowerCase() || 'mp3';
           const mimeMap = { mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac', aac: 'audio/aac', m4a: 'audio/mp4', webm: 'audio/webm' };
           const ct = mimeMap[ext] || 'audio/mpeg';
-          const fileName = `${(track.title || 'track').replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`;
-          res.setHeader('Content-Type', ct);
-          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-          res.setHeader('Cache-Control', 'private, no-store');
-          res.setHeader('X-Content-Type-Options', 'nosniff');
-          // Stream the response instead of buffering in memory
-          const reader = audioRes.body?.getReader();
-          if (reader) {
-            const pump = async () => {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                res.write(value);
-              }
-              res.end();
-            };
-            pump().catch(() => { if (!res.writableEnded) res.end(); });
-          } else {
-            const buffer = Buffer.from(await audioRes.arrayBuffer());
-            return res.end(buffer);
-          }
+          const fileName = `${(track.title || 'track').replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.${ext}`;
+          const buffer = Buffer.from(await audioRes.arrayBuffer());
+          res.writeHead(200, {
+            'Content-Type': ct,
+            'Content-Disposition': `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+            'Content-Length': String(buffer.length),
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(buffer);
           return;
         } catch (fetchErr) {
           return json(res, 500, { error: 'Failed to fetch audio file' });
