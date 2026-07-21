@@ -1176,17 +1176,19 @@ function parseMultipart(req) {
             const fileName = track.title
               ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
               : `${track.id}.mp3`;
-
-            res.setHeader('Content-Type', mimeType);
-            res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
-            res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
-            res.setHeader('Accept-Ranges', 'bytes');
-            res.setHeader('X-Content-Type-Options', 'nosniff');
             
             const response = await drive.files.get(
               { fileId: track.gdrive_file_id, alt: 'media' },
               { responseType: 'stream' }
             );
+
+            res.writeHead(200, {
+              'Content-Type': mimeType,
+              'Content-Disposition': `inline; filename="${fileName}"`,
+              'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+              'Accept-Ranges': 'bytes',
+              'X-Content-Type-Options': 'nosniff',
+            });
             response.data.pipe(res);
             return;
           } catch (driveErr) {
@@ -1229,44 +1231,22 @@ function parseMultipart(req) {
             ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
             : `${track.id}.mp3`;
 
-          res.setHeader('Content-Type', mimeType);
-          res.setHeader('Content-Disposition', `inline; filename="${previewFileName}"`);
-          res.setHeader('Content-Length', String(previewBytes));
-          res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
-          res.setHeader('X-Content-Type-Options', 'nosniff');
-
           const response = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },
             { responseType: 'stream' }
           );
 
-          let bytesSent = 0;
-          response.data.on('data', (chunk) => {
-            bytesSent += chunk.length;
-            if (bytesSent <= previewBytes) {
-              res.write(chunk);
-            } else {
-              // Truncate — only send the portion needed for 90s preview
-              const remaining = previewBytes - (bytesSent - chunk.length);
-              if (remaining > 0) {
-                res.write(chunk.slice(0, remaining));
-              }
-              response.data.destroy();
-              res.end();
-            }
+          res.writeHead(200, {
+            'Content-Type': mimeType,
+            'Content-Disposition': `inline; filename="${previewFileName}"`,
+            'Content-Length': String(previewBytes),
+            'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+            'X-Content-Type-Options': 'nosniff',
           });
-
-          response.data.on('end', () => {
-            if (!res.writableEnded) res.end();
-          });
-
-          response.data.on('error', () => {
-            if (!res.writableEnded) res.end();
-          });
-
+          response.data.pipe(res);
           return;
         } catch (driveErr) {
-          return json(res, 404, { error: 'Audio preview not available.' });
+          return json(res, 404, { error: 'Audio file not accessible.' });
         }
       }
 
@@ -1362,15 +1342,17 @@ function parseMultipart(req) {
             ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
             : `${track.id}.mp3`;
 
-          res.setHeader('Content-Type', mimeType);
-          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-          res.setHeader('Cache-Control', 'private, no-store');
-          res.setHeader('X-Content-Type-Options', 'nosniff');
-
           const response = await drive.files.get(
             { fileId: track.gdrive_file_id, alt: 'media' },
             { responseType: 'stream' }
           );
+
+          res.writeHead(200, {
+            'Content-Type': mimeType,
+            'Content-Disposition': `attachment; filename="${fileName}"`,
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
           response.data.pipe(res);
           return;
         } catch (driveErr) {
