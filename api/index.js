@@ -1173,8 +1173,12 @@ function parseMultipart(req) {
               mimeType = cached.mimeType;
             }
 
+            const fileName = track.title
+              ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
+              : `${track.id}.mp3`;
+
             res.setHeader('Content-Type', mimeType);
-            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
             res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
             res.setHeader('Accept-Ranges', 'bytes');
             res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1221,8 +1225,12 @@ function parseMultipart(req) {
           // For MP3, 90s ≈ ~1.4MB at 128kbps; use first 1.5MB to be safe
           const previewBytes = Math.min(Math.ceil(128 * 1024 / 8 * PREVIEW_DURATION_SECONDS), fileSize);
 
+          const previewFileName = track.title
+            ? `${track.title.replace(/_/g, ' ').replace(/[^\w\s\-().&',]/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`
+            : `${track.id}.mp3`;
+
           res.setHeader('Content-Type', mimeType);
-          res.setHeader('Content-Disposition', 'inline');
+          res.setHeader('Content-Disposition', `inline; filename="${previewFileName}"`);
           res.setHeader('Content-Length', String(previewBytes));
           res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
           res.setHeader('X-Content-Type-Options', 'nosniff');
