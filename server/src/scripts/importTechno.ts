@@ -105,9 +105,11 @@ async function main() {
   console.log('📂 Scanning Drive folder...');
   const allFiles = await getAllFiles(FOLDER_ID);
 
-  // WAV/AIF only
-  const audioFiles = allFiles.filter(f => /\.(wav|aif|aiff)$/i.test(f.name));
-  console.log(`Total files: ${allFiles.length} | Audio: ${allFiles.filter(f=>f.mimeType?.includes('audio')).length} | WAV/AIF: ${audioFiles.length}`);
+  // All audio (WAV/AIF + MP3)
+  const audioFiles = allFiles.filter(f => /\.(wav|aif|aiff|mp3)$/i.test(f.name));
+  const wavFiles = audioFiles.filter(f => /\.(wav|aif|aiff)$/i.test(f.name));
+  const mp3Files = audioFiles.filter(f => /\.mp3$/i.test(f.name));
+  console.log(`Total files: ${allFiles.length} | WAV/AIF: ${wavFiles.length} | MP3: ${mp3Files.length} | Audio: ${audioFiles.length}`);
 
   let imported = 0;
   let skippedDup = 0;
@@ -127,6 +129,9 @@ async function main() {
     try {
       const artwork = await extractArtwork(f.id);
 
+      const isWav = /\.(wav|aif|aiff)$/i.test(f.name);
+      const price = isWav ? PRICE : 0;
+
       const { error } = await supabase.from('tracks').insert({
         title: parsed.title,
         artist: parsed.artist,
@@ -136,7 +141,7 @@ async function main() {
         bpm: parsed.bpm,
         key: parsed.key,
         genre: GENRE,
-        price: PRICE,
+        price: price,
         gdrive_file_id: f.id,
         artwork_url: artwork || '',
         is_new: true,
@@ -149,7 +154,7 @@ async function main() {
         imported++;
         existingPairs.add(pairKey);
         const ext = f.name.split('.').pop()?.toUpperCase();
-        console.log(`  ✅ [${imported}] ${parsed.artist} - ${parsed.title} | ${ext} $${PRICE} | ${parsed.bpm||'?'}BPM ${parsed.key||'?'}`);
+        console.log(`  ✅ [${imported}] ${parsed.artist} - ${parsed.title} | ${ext} $${price} | ${parsed.bpm||'?'}BPM ${parsed.key||'?'}`);
       }
     } catch (err: any) {
       console.error(`  ❌ ${f.name}: ${err.message}`);
@@ -158,7 +163,7 @@ async function main() {
 
   console.log(`\n📊 Summary:`);
   console.log(`  Genre: ${GENRE}`);
-  console.log(`  WAV/AIF files: ${audioFiles.length}`);
+  console.log(`  WAV/AIF: ${wavFiles.length} | MP3: ${mp3Files.length}`);
   console.log(`  Imported: ${imported}`);
   console.log(`  Skipped (Drive dup): ${skippedDup}`);
   console.log(`  Skipped (title dup): ${skippedTitle}`);
