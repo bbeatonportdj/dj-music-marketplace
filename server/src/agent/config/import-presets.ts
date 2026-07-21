@@ -159,6 +159,15 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
     extractArtwork: true,
     recursive: false,
   },
+  'techno': {
+    name: 'Techno',
+    folderId: '12K2bUd8jykh_FE4pj-gEM2IBiv0vw6EG',
+    genre: 'Techno',
+    price: 0.80,
+    parseStrategy: 'standard',
+    extractArtwork: true,
+    recursive: false,
+  },
 };
 
 export function getPreset(name: string): ImportPreset | undefined {
