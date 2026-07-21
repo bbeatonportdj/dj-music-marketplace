@@ -59,7 +59,7 @@ const Downloads = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${trackTitle.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`);
+      link.setAttribute('download', `${trackTitle.replace(/_/g, ' ').replace(/\s+/g, ' ').trim() || 'track'}.mp3`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
