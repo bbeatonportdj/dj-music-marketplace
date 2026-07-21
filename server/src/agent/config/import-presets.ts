@@ -130,6 +130,15 @@ export const IMPORT_PRESETS: Record<string, ImportPreset> = {
     extractArtwork: true,
     recursive: true,
   },
+  'latin': {
+    name: 'Latin',
+    folderId: '1Z55VrfGreKoHr7grzbMUn7Yrn0ojGFSa',
+    genre: 'Latin',
+    price: 0.00,
+    parseStrategy: 'standard',
+    extractArtwork: true,
+    recursive: false,
+  },
   'edm': {
     name: 'EDM',
     folderId: '1ySzKRyobcezCCFRGv1xoWimMmvpy4rqk',
