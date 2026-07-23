@@ -130,22 +130,45 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface p-4">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-electric-red/10 rounded-full blur-[128px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-electric-red/5 rounded-full blur-[128px]" />
+    <div className="min-h-screen flex bg-surface">
+      {/* Left Panel — Brand Visual */}
+      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden flex-col items-center justify-center p-16">
+        <div className="absolute inset-0 bg-gradient-to-br from-surface-container-lowest via-surface to-[#0a0a0a]" />
+        <div className="absolute inset-0" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=1920&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08 }} />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-electric-red/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-electric-red/5 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,59,48,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,59,48,0.04) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="relative z-10 text-center">
+          <div className="w-20 h-20 bg-electric-red/10 border border-electric-red/20 rounded-2xl flex items-center justify-center mx-auto mb-8">
+            <Disc size={42} className="text-electric-red" />
+          </div>
+          <h2 className="font-display text-5xl font-extrabold uppercase text-on-surface leading-[0.95] tracking-tight mb-4">BEAT<br /><span className="gradient-text">VAULT</span></h2>
+          <p className="text-muted-text text-sm max-w-xs mx-auto leading-relaxed">The underground's premier source for high-performance DJ edits, remixes &amp; exclusive music packs.</p>
+          <div className="grid grid-cols-2 gap-3 mt-10 text-left">
+            {[{ label: 'Tracks', value: '500+' }, { label: 'Artists', value: '120+' }, { label: 'Genres', value: '18+' }, { label: 'New Weekly', value: '25+' }].map(s => (
+              <div key={s.label} className="bg-surface-container/50 border border-border-gray rounded-xl p-4">
+                <p className="font-mono font-bold text-xl text-on-surface">{s.value}</p>
+                <p className="text-[10px] font-mono text-muted-text uppercase tracking-wider">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Disc size={36} className="text-electric-red" />
-          <span className="font-display text-xl font-extrabold tracking-tighter text-on-surface uppercase">BEAT VAULT</span>
+      {/* Right Panel — Auth Form */}
+      <div className="flex-1 flex items-center justify-center p-6 relative">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-electric-red/5 rounded-full blur-[100px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-sm">
+        {/* Mobile Logo */}
+        <div className="flex items-center gap-3 mb-8 lg:hidden">
+          <Disc size={32} className="text-electric-red" />
+          <span className="font-display text-xl font-extrabold tracking-tighter text-on-surface uppercase">Beat Vault</span>
         </div>
 
         {/* Card */}
-        <div className="bg-surface-container border border-border-gray rounded-xl p-8">
+        <div className="bg-surface-container border border-border-gray rounded-2xl p-8 shadow-2xl">
           {forgotSent ? (
             /* Success State */
             <div className="text-center">
@@ -318,30 +341,30 @@ const Auth = () => {
 
               <form onSubmit={handleLogin}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-on-surface mb-2">{t('auth.email')}</label>
+                  <label className="block text-xs font-bold text-muted-text uppercase tracking-wider mb-2">{t('auth.email')}</label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
+                    <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="dj@example.com"
-                      className="w-full bg-surface-container-lowest border border-border-gray pl-10 pr-4 py-3 rounded-lg text-on-surface placeholder-muted-text focus:border-electric-red outline-none transition-all"
+                      className="w-full bg-surface-container-lowest border border-border-gray pl-9 pr-4 py-3 rounded-xl text-sm text-on-surface placeholder:text-muted-text focus:border-electric-red outline-none transition-all"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-on-surface mb-2">{t('auth.password')}</label>
+                <div className="mb-3">
+                  <label className="block text-xs font-bold text-muted-text uppercase tracking-wider mb-2">{t('auth.password')}</label>
                   <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
+                    <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-surface-container-lowest border border-border-gray pl-10 pr-12 py-3 rounded-lg text-on-surface placeholder-muted-text focus:border-electric-red outline-none transition-all"
+                      className="w-full bg-surface-container-lowest border border-border-gray pl-9 pr-10 py-3 rounded-xl text-sm text-on-surface placeholder:text-muted-text focus:border-electric-red outline-none transition-all"
                       required
                     />
                     <button
@@ -349,7 +372,7 @@ const Auth = () => {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text hover:text-on-surface transition-colors"
                       onClick={() => setShowPassword(prev => !prev)}
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
@@ -364,16 +387,12 @@ const Auth = () => {
                   </button>
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="w-full bg-electric-red text-white py-3 rounded-lg font-bold uppercase tracking-wider red-glow hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? (
-                    <><Loader2 size={18} className="animate-spin" /> {t('auth.processing')}</>
-                  ) : (
-                    <>{t('auth.login')} <ArrowRight size={18} /></>
-                  )}
+                  {loading ? <><Loader2 size={16} className="animate-spin" /> {t('auth.processing')}</> : <>{t('auth.login')} <ArrowRight size={16} /></>}
                 </button>
               </form>
 
@@ -386,10 +405,10 @@ const Auth = () => {
             </>
           )}
         </div>
-
-        <p className="text-center text-muted-text text-sm mt-6">
-          By signing in, you agree to our Terms of Service and Privacy Policy.
+        <p className="text-center text-muted-text text-xs mt-4">
+          By signing in, you agree to our Terms &amp; Privacy Policy.
         </p>
+        </div>
       </div>
     </div>
   );
