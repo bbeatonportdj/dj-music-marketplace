@@ -22,23 +22,23 @@ const InstagramIcon = ({ size = 18 }: { size?: number }) => (
 
 const Footer = () => {
   return (
-    <footer className="bg-[#111111] text-white">
+    <footer className="bg-gray-50 border-t border-gray-100">
       <div className="max-w-[1200px] mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-[15px] font-extrabold tracking-tight uppercase">DJ MARKETPLACE</span>
+            <span className="text-[15px] font-extrabold tracking-tight uppercase text-black">DJ MARKETPLACE</span>
           </Link>
 
           {/* Links */}
           <div className="flex items-center gap-6">
-            <Link to="/about" className="text-[13px] text-[#888] hover:text-white transition-colors">
+            <Link to="/about" className="text-[13px] text-gray-500 hover:text-black transition-colors">
               About
             </Link>
-            <Link to="/faq" className="text-[13px] text-[#888] hover:text-white transition-colors">
+            <Link to="/faq" className="text-[13px] text-gray-500 hover:text-black transition-colors">
               Support
             </Link>
-            <Link to="/contact" className="text-[13px] text-[#888] hover:text-white transition-colors">
+            <Link to="/contact" className="text-[13px] text-gray-500 hover:text-black transition-colors">
               Contact
             </Link>
           </div>
@@ -49,7 +49,7 @@ const Footer = () => {
               href="https://www.facebook.com/profile.php?id=61592144669937" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-[#888] hover:text-white transition-colors"
+              className="text-gray-400 hover:text-black transition-colors"
             >
               <FacebookIcon size={18} />
             </a>
@@ -57,7 +57,7 @@ const Footer = () => {
               href="https://twitter.com/djmusicmarketplace" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-[#888] hover:text-white transition-colors"
+              className="text-gray-400 hover:text-black transition-colors"
             >
               <TwitterIcon size={18} />
             </a>
@@ -65,7 +65,7 @@ const Footer = () => {
               href="https://www.instagram.com/djmusicmarketplace" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-[#888] hover:text-white transition-colors"
+              className="text-gray-400 hover:text-black transition-colors"
             >
               <InstagramIcon size={18} />
             </a>

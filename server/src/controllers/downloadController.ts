@@ -108,13 +108,6 @@ export const downloadTrack = async (req: AuthRequest, res: Response) => {
   }
 };
 
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('Download error:', message);
-    return res.status(500).json({ error: message || 'Download failed' });
-  }
-};
-
 export const getDownloadInfo = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {

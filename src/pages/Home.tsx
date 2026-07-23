@@ -83,8 +83,8 @@ function Home() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-8 h-8 border-2 border-[#e5e5e5] border-t-[#111] rounded-full animate-spin" />
-        <p className="text-[12px] text-[#999] font-mono uppercase tracking-widest">Loading...</p>
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+        <p className="text-[12px] text-gray-400 font-mono uppercase tracking-widest">Loading...</p>
       </div>
     );
   }
@@ -98,25 +98,25 @@ function Home() {
       />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-[#f5f5f5] to-white overflow-hidden">
+      <section className="relative bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-6 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-8">
           {/* Text */}
-          <div className="flex-1 z-10">
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#111] mb-4 tracking-tight leading-[1.1] uppercase">
-              Elevate Your Set With Premium Edits & Music.
+          <div className="flex-1 z-10 text-white">
+            <h1 className="text-4xl lg:text-5xl font-extrabold mb-4 tracking-tight leading-[1.1]">
+              Discover the Latest Beats
             </h1>
-            <p className="text-[#666] text-base lg:text-lg max-w-md leading-relaxed mb-6">
-              Explore the latest {selectedGenre === 'All' ? 'genres' : selectedGenre} crate.
+            <p className="text-blue-100 text-base lg:text-lg max-w-md leading-relaxed mb-6">
+              Shop Trending Tracks
             </p>
             <div className="flex gap-2">
               <button 
-                className="px-5 py-2.5 bg-[#111] text-white text-[13px] font-semibold rounded-md hover:bg-[#333] transition-colors"
+                className="px-5 py-2.5 bg-white text-blue-600 text-[13px] font-semibold rounded-md hover:bg-blue-50 transition-colors"
                 onClick={() => navigate('/browse')}
               >
                 Browse All
               </button>
               <button 
-                className="px-5 py-2.5 border border-[#e5e5e5] text-[#111] text-[13px] font-semibold rounded-md hover:bg-[#f5f5f5] transition-colors"
+                className="px-5 py-2.5 border border-white/30 text-white text-[13px] font-semibold rounded-md hover:bg-white/10 transition-colors"
                 onClick={() => navigate('/new-releases')}
               >
                 New Releases
@@ -130,9 +130,9 @@ function Home() {
               <img 
                 src="https://images.unsplash.com/photo-1571327073757-71d13c24de30?w=800&q=80" 
                 alt="DJ Turntable" 
-                className="w-full h-full object-cover rounded-lg shadow-lg"
+                className="w-full h-full object-cover rounded-lg opacity-80"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-800/40 to-transparent rounded-lg" />
             </div>
           </div>
         </div>
@@ -142,15 +142,15 @@ function Home() {
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h2 className="text-xl font-extrabold text-[#111] uppercase tracking-tight">Trending Tracks</h2>
+          <h2 className="text-xl font-extrabold text-black uppercase tracking-tight">Trending Tracks</h2>
           
           {/* Tabs */}
-          <div className="flex gap-1 bg-[#f5f5f5] p-1 rounded-md">
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
             <button
               className={`px-4 py-1.5 rounded text-[12px] font-semibold uppercase tracking-wide transition-all ${
                 activeTab === 'latest'
-                  ? 'bg-white text-[#111] shadow-sm'
-                  : 'text-[#666] hover:text-[#111]'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-500 hover:text-black'
               }`}
               onClick={() => setActiveTab('latest')}
             >
@@ -159,8 +159,8 @@ function Home() {
             <button
               className={`px-4 py-1.5 rounded text-[12px] font-semibold uppercase tracking-wide transition-all ${
                 activeTab === 'popular'
-                  ? 'bg-white text-[#111] shadow-sm'
-                  : 'text-[#666] hover:text-[#111]'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-500 hover:text-black'
               }`}
               onClick={() => setActiveTab('popular')}
             >
@@ -173,13 +173,13 @@ function Home() {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           {/* Search */}
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search tracks, artists..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-md pl-9 pr-4 py-2 text-[13px] text-[#111] placeholder-[#999] focus:outline-none focus:border-[#ccc] transition-colors"
+              className="w-full bg-gray-50 border border-gray-200 rounded-md pl-9 pr-4 py-2 text-[13px] text-black placeholder-gray-400 focus:outline-none focus:border-blue-300 transition-colors"
             />
           </div>
 
@@ -190,8 +190,8 @@ function Home() {
                 key={genre.name}
                 className={`px-3 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-all ${
                   selectedGenre === genre.name
-                    ? 'bg-[#111] text-white'
-                    : 'bg-[#f5f5f5] text-[#666] hover:bg-[#eee] hover:text-[#111]'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black'
                 }`}
                 onClick={() => setSelectedGenre(genre.name)}
               >
@@ -202,23 +202,23 @@ function Home() {
         </div>
 
         {/* Track Table */}
-        <div className="bg-white rounded-lg overflow-hidden border border-[#e5e5e5]">
+        <div className="bg-white rounded-lg overflow-hidden border border-gray-100">
           {/* Table Header */}
-          <div className="hidden lg:grid grid-cols-[2fr_1.5fr_80px_80px_100px] gap-4 px-4 py-3 border-b border-[#e5e5e5] bg-[#fafafa]">
-            <span className="text-[11px] font-semibold text-[#999] uppercase tracking-wider">Track Title</span>
-            <span className="text-[11px] font-semibold text-[#999] uppercase tracking-wider">Artist</span>
-            <span className="text-[11px] font-semibold text-[#999] uppercase tracking-wider text-right">BPM</span>
-            <span className="text-[11px] font-semibold text-[#999] uppercase tracking-wider text-right">Key</span>
-            <span className="text-[11px] font-semibold text-[#999] uppercase tracking-wider text-right">Price</span>
+          <div className="hidden lg:grid grid-cols-[2fr_1.5fr_80px_80px_100px] gap-4 px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Track Title</span>
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Artist</span>
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">BPM</span>
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Key</span>
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Price</span>
           </div>
 
           {/* Track Rows */}
           {displayTracks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Search size={32} className="text-[#ccc]" />
-              <p className="text-[14px] text-[#666]">No tracks found</p>
+              <Search size={32} className="text-gray-200" />
+              <p className="text-[14px] text-gray-500">No tracks found</p>
               <button 
-                className="text-[13px] text-[#111] font-semibold hover:underline"
+                className="text-[13px] text-blue-600 font-semibold hover:underline"
                 onClick={() => { setSearchQuery(''); setSelectedGenre('All'); }}
               >
                 Clear filters
@@ -228,8 +228,8 @@ function Home() {
             displayTracks.map((track) => (
               <div
                 key={track.id}
-                className={`grid grid-cols-[1fr] lg:grid-cols-[2fr_1.5fr_80px_80px_100px] gap-2 lg:gap-4 items-center px-4 py-3 border-b border-[#f0f0f0] last:border-b-0 cursor-pointer transition-all hover:bg-[#f8f8f8] ${
-                  currentTrack?.id === track.id ? 'bg-[#f5f5f5]' : ''
+                className={`grid grid-cols-[1fr] lg:grid-cols-[2fr_1.5fr_80px_80px_100px] gap-2 lg:gap-4 items-center px-4 py-3 border-b border-gray-50 last:border-b-0 cursor-pointer transition-all hover:bg-gray-50 ${
+                  currentTrack?.id === track.id ? 'bg-blue-50' : ''
                 }`}
                 onClick={() => navigate(`/track/${track.id}`)}
                 onMouseEnter={() => preloadTrack({
@@ -243,7 +243,7 @@ function Home() {
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Play Button */}
                   <button
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-[#f5f5f5] text-[#111] hover:bg-[#111] hover:text-white transition-all flex-shrink-0"
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-black text-white hover:bg-blue-600 transition-all flex-shrink-0"
                     onClick={e => {
                       e.stopPropagation();
                       if (track.price === 0) {
@@ -254,7 +254,7 @@ function Home() {
                     }}
                   >
                     {downloadingId === track.id ? (
-                      <div className="w-3 h-3 border-2 border-[#111] border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : currentTrack?.id === track.id && isPlaying ? (
                       <Pause size={12} fill="currentColor" />
                     ) : (
@@ -264,26 +264,28 @@ function Home() {
                   
                   {/* Track Title */}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[13px] text-[#111] truncate">{track.title}</p>
-                    <p className="text-[12px] text-[#666] truncate lg:hidden">{track.artist}</p>
+                    <p className="font-semibold text-[13px] text-black truncate">{track.title}</p>
+                    <p className="text-[12px] text-gray-500 truncate lg:hidden">{track.artist}</p>
                   </div>
                 </div>
 
                 {/* Artist (Desktop) */}
-                <span className="hidden lg:block text-[13px] text-[#666] truncate">{track.artist}</span>
+                <span className="hidden lg:block text-[13px] text-gray-500 truncate">{track.artist}</span>
 
                 {/* BPM (Desktop) */}
-                <span className="hidden lg:block text-[13px] text-[#111] text-right font-mono">{track.bpm}</span>
+                <span className="hidden lg:block text-[13px] text-black text-right font-mono">{track.bpm}</span>
 
                 {/* Key (Desktop) */}
-                <span className="hidden lg:block text-[13px] text-[#666] text-right font-mono">{track.key}</span>
+                <span className="hidden lg:block text-[13px] text-gray-500 text-right font-mono">{track.key}</span>
 
                 {/* Price */}
                 <div className="flex justify-end">
                   {track.price === 0 ? (
-                    <span className="px-2 py-0.5 bg-[#f0fdf4] text-[#16a34a] text-[11px] font-semibold rounded">FREE</span>
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] font-semibold rounded">FREE</span>
                   ) : (
-                    <span className="text-[13px] font-semibold text-[#111]">${track.price.toFixed(2)}</span>
+                    <button className="px-3 py-1 border border-gray-200 text-black text-[12px] font-semibold rounded hover:bg-black hover:text-white transition-all">
+                      ${track.price.toFixed(2)}
+                    </button>
                   )}
                 </div>
               </div>
@@ -295,7 +297,7 @@ function Home() {
         {displayTracks.length >= 20 && (
           <div className="flex justify-center mt-8">
             <button
-              className="px-6 py-2.5 border border-[#e5e5e5] text-[#111] text-[13px] font-semibold rounded-md hover:bg-[#f5f5f5] transition-colors"
+              className="px-6 py-2.5 border border-gray-200 text-black text-[13px] font-semibold rounded-md hover:bg-gray-50 transition-colors"
               onClick={() => navigate('/new-releases')}
             >
               View All Tracks

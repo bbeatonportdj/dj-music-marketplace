@@ -4,8 +4,8 @@
   left: 0;
   width: 100%;
   height: var(--player-height);
-  background-color: #111111;
-  border-top: 1px solid #222222;
+  background-color: #ffffff;
+  border-top: 1px solid #e9ecef;
   display: flex;
   align-items: center;
   padding: 0 20px;
@@ -33,12 +33,12 @@
 .current-track-title {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: #000000;
 }
 
 .current-track-editor {
   font-size: 12px;
-  color: #888888;
+  color: #6c757d;
 }
 
 .player-center {
@@ -56,16 +56,16 @@
 }
 
 .control-btn {
-  color: #888888;
+  color: #6c757d;
   transition: color 0.2s;
 }
 
 .control-btn:hover {
-  color: #ffffff;
+  color: #000000;
 }
 
 .play-pause-btn {
-  background-color: #ffffff;
+  background-color: #000000;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -73,10 +73,12 @@
   justify-content: center;
   align-items: center;
   transition: transform 0.1s;
+  color: #ffffff;
 }
 
 .play-pause-btn:hover {
   transform: scale(1.05);
+  background-color: #2563EB;
 }
 
 .progress-container {
@@ -89,7 +91,7 @@
 
 .time {
   font-size: 11px;
-  color: #888888;
+  color: #6c757d;
   width: 40px;
   text-align: center;
   font-family: 'JetBrains Mono', monospace;
@@ -108,13 +110,13 @@
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
-  color: #888888;
+  color: #6c757d;
 }
 
 .volume-bar {
   width: 100px;
   height: 4px;
-  background-color: #333333;
+  background-color: #e9ecef;
   border-radius: 2px;
   position: relative;
 }
@@ -124,7 +126,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #ffffff;
+  background-color: #2563EB;
   border-radius: 2px;
 }
 
@@ -223,7 +225,7 @@
 
 .preview-badge {
   font-size: 9px;
-  background: #111111;
+  background: #2563EB;
   color: white;
   padding: 2px 6px;
   border-radius: 2px;
