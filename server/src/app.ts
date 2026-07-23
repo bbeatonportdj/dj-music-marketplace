@@ -15,6 +15,7 @@ import downloadRoutes from './routes/download.js';
 import previewRoutes from './routes/preview.js';
 import prepareRoutes from './routes/prepare.js';
 import adminRoutes from './routes/admin.js';
+import marketingRoutes from './routes/marketing.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,6 +68,7 @@ app.use('/api/downloads', downloadRoutes);
 app.use('/api/preview', previewRoutes);
 app.use('/api/prepare', prepareRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/marketing', marketingRoutes);
 
 app.get('/', (_req, res) => {
   res.json({ name: 'DJ Marketplace API', version: '1.0.0', status: 'running' });

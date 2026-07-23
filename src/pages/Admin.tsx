@@ -4,15 +4,16 @@ import {
   Upload, Music, Image as ImageIcon, Loader2, Edit2, Trash2,
   LayoutDashboard, RefreshCw, Save, X, ShieldOff, ChevronRight,
   AlertTriangle, CheckCircle, Play, Database, ShoppingBag, DollarSign,
-  TrendingUp, BarChart3, Wallet, Search, UserPlus, Download
+  TrendingUp, BarChart3, Wallet, Search, UserPlus, Download, Sparkles
 } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../lib/apiBase';
 import { useNotifications } from '../context/NotificationContext';
+import { AiMarketingTab } from '../components/AiMarketingTab';
 
 
-type Tab = 'overview' | 'upload' | 'manage' | 'orders' | 'analytics';
+type Tab = 'overview' | 'upload' | 'manage' | 'orders' | 'analytics' | 'marketing';
 
 interface Track {
   id: string;
@@ -383,6 +384,10 @@ const Admin = () => {
             <TrendingUp size={18} />
             Analytics
           </button>
+          <button className={`admin-nav-item ${activeTab === 'marketing' ? 'active' : ''}`} onClick={() => setActiveTab('marketing')}>
+            <Sparkles size={18} style={{ color: '#ef4444' }} />
+            AI Marketing
+          </button>
         </nav>
       </aside>
 
@@ -552,6 +557,10 @@ const Admin = () => {
             <div className="admin-quick-actions">
               <h2>Quick Actions</h2>
               <div className="quick-actions-grid">
+                <button className="quick-action-card" onClick={() => setActiveTab('marketing')}>
+                  <Sparkles size={24} style={{ color: '#ef4444' }} />
+                  <span>AI Marketing</span>
+                </button>
                 <button className="quick-action-card" onClick={() => setActiveTab('upload')}>
                   <Upload size={24} />
                   <span>Upload New Track</span>
@@ -566,6 +575,13 @@ const Admin = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* =========== AI MARKETING TAB =========== */}
+        {activeTab === 'marketing' && (
+          <div className="admin-content">
+            <AiMarketingTab />
           </div>
         )}
 
