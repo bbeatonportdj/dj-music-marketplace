@@ -1,241 +1,351 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Play, Pause, ShoppingCart, Check, ChevronDown, Loader2, Sparkles } from 'lucide-react';
-import { fetchPacks } from '../lib/api';
-import type { Pack } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Play, Pause, X, SlidersHorizontal } from 'lucide-react';
+import { fetchTracks } from '../lib/api';
 import { useAudio } from '../context/AudioContext';
-import { useCart } from '../context/CartContext';
+import type { Track } from '../lib/api';
+
+const SUB_GENRES: Record<string, string[]> = {
+  'House': ['Deep House', 'Tech House', 'Progressive House', 'Future House', 'Bass House', 'Afro House'],
+  'Techno': ['Minimal', 'Acid', 'Melodic', 'Industrial', 'Drumcoatic', 'Peak Time', 'Other'],
+  'Trance': ['Uplifting', 'Psy Trance', 'Progressive Trance', 'Tech Trance', 'Vocal Trance'],
+  'Drum & Bass': ['Liquid', 'Neurofunk', 'Jump Up', 'Minimal', 'Techstep'],
+  'Hip Hop': ['Trap', 'Boom Bap', 'Drill', 'Lo-Fi', 'Old School'],
+  'Latin': ['Reggaeton', 'Moombahton', 'Bachata', 'Salsa', 'Cumbia'],
+};
+
+const LABELS = [
+  'Drumcode', 'Afterlife', 'Moon Harbour', 'Terminal M', 'Stil vor Talent',
+  'KNTXT', 'Truesoul', 'Drumcode', 'Codex', 'Reinier Zonneveld'
+];
+
+const CAMELOT_KEYS = [
+  '1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A', '9A', '10A', '11A', '12A',
+  '1B', '2B', '3B', '4B', '5B', '6B', '7B', '8B', '9B', '10B', '11B', '12B',
+];
 
 const Browse = () => {
+  const [searchParams] = useSearchParams();
   const { currentTrack, isPlaying, playTrack, preloadTrack } = useAudio();
-  const { addToCart, isInCart } = useCart();
-  const [packs, setPacks] = useState<Pack[]>([]);
+  
+  const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('newest');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [selectedGenre, setSelectedGenre] = useState('Techno');
+  const [bpmMin, setBpmMin] = useState(110);
+  const [bpmMax, setBpmMax] = useState(145);
+  const [selectedKey, setSelectedKey] = useState('');
+  const [selectedKeySystem, setSelectedKeySystem] = useState<'Camelot' | 'Musical'>('Camelot');
+  const [selectedLabel, setSelectedLabel] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
-    const loadPacks = async () => {
-      setLoading(true);
-      const data = await fetchPacks();
-      setPacks(data);
+    fetchTracks().then(data => {
+      setTracks(data);
       setLoading(false);
-    };
-    loadPacks();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-        setShowSortDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handlePlay = (e: React.MouseEvent, pack: Pack) => {
-    e.preventDefault();
-    playTrack({
-      id: pack.id,
-      title: pack.title,
-      artist: pack.editor,
-      preview_url: pack.preview_url,
-      artwork: pack.artwork
     });
-  };
+  }, []);
 
-  const sortedPacks = [...packs].sort((a, b) => {
-    switch (sortBy) {
-      case 'popular':   return (b.plays || 0) - (a.plays || 0);
-      case 'price-low': return a.price - b.price;
-      case 'price-high':return b.price - a.price;
-      case 'newest':
-      default:          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-    }
-  });
+  const filteredTracks = useMemo(() => {
+    return tracks.filter(track => {
+      const matchesSearch = !searchQuery || 
+        track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        track.artist?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesGenre = !selectedGenre || track.genre?.toLowerCase() === selectedGenre.toLowerCase();
+      const matchesBpm = track.bpm >= bpmMin && track.bpm <= bpmMax;
+      const matchesKey = !selectedKey || track.key === selectedKey;
+      return matchesSearch && matchesGenre && matchesBpm && matchesKey;
+    });
+  }, [tracks, searchQuery, selectedGenre, bpmMin, bpmMax, selectedKey]);
 
-  const getSortLabel = (value: string) => {
-    switch (value) {
-      case 'popular':    return 'Most Popular';
-      case 'price-low':  return 'Price: Low to High';
-      case 'price-high': return 'Price: High to Low';
-      case 'newest': default: return 'Newest First';
-    }
-  };
-
-  return (
-    <div className="min-h-screen animate-fade-in">
-
-      {/* ── HERO ────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ minHeight: 380 }}>
-        {/* Background image with overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=2070&auto=format&fit=crop')" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/85 to-surface/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
-
-        {/* Red glow accent */}
-        <div className="absolute -top-20 left-0 w-[500px] h-[400px] bg-electric-red/10 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-[1440px] mx-auto px-4 lg:px-16 flex items-center" style={{ minHeight: 380 }}>
-          <div className="max-w-2xl py-16">
-            <span className="section-label mb-4 block">New Collection</span>
-            <h1 className="font-display font-extrabold uppercase text-on-surface mb-5 leading-[0.95]"
-                style={{ fontSize: 'clamp(48px, 7vw, 88px)', letterSpacing: '-0.04em' }}>
-              The Edit<br />
-              <span className="gradient-text">Vault</span>
-            </h1>
-            <p className="text-muted-text text-base mb-8 max-w-lg leading-relaxed">
-              Premium curated packs for the modern DJ. Exclusive transitions, acapellas, and high-energy club edits.
-            </p>
-            <div className="flex gap-3">
+  const Sidebar = () => (
+    <aside className="w-[280px] flex-shrink-0">
+      <div className="sticky top-24 space-y-6">
+        {/* Sub-genres */}
+        <div>
+          <h3 className="text-[14px] font-bold text-black mb-3">Sub-genres</h3>
+          <div className="space-y-1">
+            {(SUB_GENRES[selectedGenre as keyof typeof SUB_GENRES] || SUB_GENRES['Techno']).map(sub => (
               <button
-                className="btn-primary"
-                onClick={() => document.getElementById('packs-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                key={sub}
+                className={`block w-full text-left px-3 py-1.5 text-[13px] rounded transition-colors ${
+                  searchQuery.toLowerCase().includes(sub.toLowerCase())
+                    ? 'bg-blue-50 text-blue-600 font-medium'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-50'
+                }`}
+                onClick={() => setSearchQuery(sub)}
               >
-                <Sparkles size={16} /> Explore Catalog
+                {sub}
               </button>
+            ))}
+          </div>
+        </div>
+
+        {/* BPM Range */}
+        <div>
+          <h3 className="text-[14px] font-bold text-black mb-3">BPM Range</h3>
+          <p className="text-[13px] text-gray-500 mb-3">{bpmMin}-{bpmMax} BPM</p>
+          <div className="space-y-3">
+            <div>
+              <label className="text-[11px] text-gray-400 uppercase">Min</label>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                value={bpmMin}
+                onChange={(e) => setBpmMin(Number(e.target.value))}
+                className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <span className="text-[12px] font-mono text-black">{bpmMin}</span>
+            </div>
+            <div>
+              <label className="text-[11px] text-gray-400 uppercase">Max</label>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                value={bpmMax}
+                onChange={(e) => setBpmMax(Number(e.target.value))}
+                className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <span className="text-[12px] font-mono text-black">{bpmMax}</span>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* ── PACKS GRID ─────────────────────────── */}
-      <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-10">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <span className="section-label mb-2 block">All Packs</span>
-            <h2 className="font-display text-2xl font-bold uppercase text-on-surface">
-              Featured Packs
-              <span className="ml-3 text-sm font-mono text-muted-text font-normal">
-                ({sortedPacks.length})
-              </span>
-            </h2>
-          </div>
-
-          {/* Sort Dropdown */}
-          <div className="relative" ref={sortDropdownRef}>
+        {/* Key */}
+        <div>
+          <h3 className="text-[14px] font-bold text-black mb-3">Key</h3>
+          <div className="flex gap-2 mb-3">
             <button
-              className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest border border-border-gray rounded-lg text-sm text-muted-text hover:border-electric-red/40 hover:text-on-surface transition-all"
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className={`px-3 py-1 text-[12px] rounded border ${
+                selectedKeySystem === 'Camelot' 
+                  ? 'bg-black text-white border-black' 
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setSelectedKeySystem('Camelot')}
             >
-              <span>Sort: <strong className="text-on-surface">{getSortLabel(sortBy)}</strong></span>
-              <ChevronDown size={14} className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+              Camelot
             </button>
+            <button
+              className={`px-3 py-1 text-[12px] rounded border ${
+                selectedKeySystem === 'Musical' 
+                  ? 'bg-black text-white border-black' 
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setSelectedKeySystem('Musical')}
+            >
+              Musical
+            </button>
+          </div>
+          <select
+            value={selectedKey}
+            onChange={(e) => setSelectedKey(e.target.value)}
+            className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-[13px] text-black focus:outline-none focus:border-blue-300"
+          >
+            <option value="">All Keys</option>
+            {CAMELOT_KEYS.map(key => (
+              <option key={key} value={key}>{key}</option>
+            ))}
+          </select>
+        </div>
 
-            {showSortDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-surface-container border border-border-gray rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-                {['newest', 'popular', 'price-low', 'price-high'].map((option) => (
-                  <button
-                    key={option}
-                    className={`block w-full text-left px-4 py-3 text-sm transition-colors ${
-                      sortBy === option
-                        ? 'bg-electric-red/10 text-electric-red font-bold'
-                        : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'
-                    }`}
-                    onClick={() => { setSortBy(option); setShowSortDropdown(false); }}
-                  >
-                    {getSortLabel(option)}
+        {/* Label */}
+        <div>
+          <h3 className="text-[14px] font-bold text-black mb-3">Label</h3>
+          <div className="space-y-1">
+            {LABELS.map(label => (
+              <button
+                key={label}
+                className={`block w-full text-left px-3 py-1.5 text-[13px] rounded transition-colors ${
+                  selectedLabel === label
+                    ? 'bg-blue-50 text-blue-600 font-medium'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-50'
+                }`}
+                onClick={() => setSelectedLabel(selectedLabel === label ? '' : label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Genre Header */}
+      <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto px-6 py-12 flex items-center justify-between">
+          <h1 className="text-4xl lg:text-5xl font-extrabold text-white uppercase tracking-tight">
+            {selectedGenre || 'Browse'}
+          </h1>
+          <div className="hidden lg:block w-[200px] h-[120px] rounded-lg overflow-hidden opacity-60">
+            <img 
+              src="https://images.unsplash.com/photo-1571327073757-71d13c24de30?w=400&q=60" 
+              alt="DJ" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
+        <div className="flex gap-8">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <Sidebar />
+          </div>
+
+          {/* Mobile Filter Toggle */}
+          <button
+            className="lg:hidden fixed bottom-24 right-4 z-40 bg-blue-600 text-white p-3 rounded-full shadow-lg"
+            onClick={() => setShowMobileFilters(true)}
+          >
+            <SlidersHorizontal size={20} />
+          </button>
+
+          {/* Mobile Filters Drawer */}
+          {showMobileFilters && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div className="absolute inset-0 bg-black/40" onClick={() => setShowMobileFilters(false)} />
+              <div className="absolute right-0 top-0 h-full w-[320px] bg-white overflow-y-auto p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-[16px] font-bold text-black">Filters</h2>
+                  <button onClick={() => setShowMobileFilters(false)} className="text-gray-400 hover:text-black">
+                    <X size={20} />
                   </button>
-                ))}
+                </div>
+                <Sidebar />
               </div>
-            )}
-          </div>
-        </header>
+            </div>
+          )}
 
-        {/* Content */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4 text-muted-text">
-            <Loader2 size={36} className="animate-spin text-electric-red" />
-            <p className="font-mono text-xs uppercase tracking-widest">Accessing the vault...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5" id="packs-grid">
-            {sortedPacks.length === 0 ? (
-              <div className="col-span-full text-center py-32 text-muted-text">
-                <p className="font-mono text-sm">No packs found.</p>
+          {/* Main Content */}
+          <main className="flex-1 min-w-0">
+            {/* Search Bar */}
+            <div className="relative mb-6">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search tracks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-[13px] text-black placeholder-gray-400 focus:outline-none focus:border-blue-300 transition-colors"
+              />
+            </div>
+
+            {/* Results Count */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[13px] text-gray-500">
+                {filteredTracks.length.toLocaleString()} tracks found
+              </span>
+            </div>
+
+            {/* Track List */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+              </div>
+            ) : filteredTracks.length === 0 ? (
+              <div className="flex flex-col items-center py-20 gap-3">
+                <Search size={40} className="text-gray-200" />
+                <p className="text-[14px] text-gray-500">No tracks found</p>
+                <button 
+                  className="text-[13px] text-blue-600 font-semibold hover:underline"
+                  onClick={() => { setSearchQuery(''); setSelectedGenre('Techno'); setBpmMin(110); setBpmMax(145); setSelectedKey(''); }}
+                >
+                  Clear all filters
+                </button>
               </div>
             ) : (
-              sortedPacks.map((pack, idx) => (
-                <div
-                  key={pack.id}
-                  className="premium-card animate-fade-up"
-                  style={{ animationDelay: `${idx * 0.05}s` }}
-                  onMouseEnter={() => preloadTrack({
-                    id: pack.id,
-                    title: pack.title,
-                    artist: pack.editor,
-                    preview_url: pack.preview_url,
-                  })}
-                >
-                  {/* Artwork */}
-                  <div className="relative aspect-square overflow-hidden rounded-t-xl">
-                    <Link to={`/pack/${pack.id}`}>
-                      <img
-                        src={pack.artwork}
-                        alt={pack.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </Link>
-
-                    {/* Badges */}
-                    {pack.is_free && (
-                      <div className="absolute top-3 left-3 pill-badge pill-badge-green">
-                        FREE
-                      </div>
-                    )}
-
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-all duration-300">
-                      <button
-                        className="w-16 h-16 bg-electric-red rounded-full flex items-center justify-center text-white transform scale-90 hover:scale-100 transition-transform shadow-xl shadow-red-500/40"
-                        onClick={(e) => handlePlay(e, pack)}
-                      >
-                        {currentTrack?.id === pack.id && isPlaying
-                          ? <Pause fill="currentColor" size={24} />
-                          : <Play fill="currentColor" size={24} style={{ transform: 'translateX(2px)' }} />
-                        }
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-mono text-[10px] text-electric-red uppercase tracking-widest font-bold">{pack.genre}</span>
-                      <span className="font-mono text-[10px] text-muted-text">{pack.tracks_count} Tracks</span>
-                    </div>
-                    <Link to={`/pack/${pack.id}`}>
-                      <h3 className="font-bold text-on-surface truncate hover:text-electric-red transition-colors mb-1 text-sm uppercase tracking-wide">{pack.title}</h3>
-                    </Link>
-                    <p className="text-xs text-muted-text mb-4 truncate">{pack.editor}</p>
-
-                    <div className="flex justify-between items-center pt-3 border-t border-border-gray/50">
-                      <span className={`font-mono text-base font-bold ${pack.price === 0 ? 'text-success-green' : 'text-on-surface'}`}>
-                        {pack.price === 0 ? 'FREE' : `$${pack.price.toFixed(2)}`}
-                      </span>
-                      <button
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                          isInCart(pack.id)
-                            ? 'bg-success-green text-white'
-                            : 'bg-surface-container-high text-muted-text hover:bg-electric-red hover:text-white'
-                        }`}
-                        onClick={() => addToCart(pack as unknown as Parameters<typeof addToCart>[0])}
-                        disabled={isInCart(pack.id)}
-                      >
-                        {isInCart(pack.id) ? <Check size={16} /> : <ShoppingCart size={16} />}
-                      </button>
-                    </div>
-                  </div>
+              <div className="space-y-0">
+                {/* Table Header */}
+                <div className="hidden lg:grid grid-cols-[40px_1fr_1.2fr_60px_80px_80px_100px] gap-4 items-center px-4 py-3 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                  <span></span>
+                  <span>Waveform Preview</span>
+                  <span>Track Title</span>
+                  <span>Artist</span>
+                  <span className="text-right">BPM</span>
+                  <span className="text-right">Key</span>
+                  <span className="text-right">Buy/Price</span>
                 </div>
-              ))
+
+                {/* Track Rows */}
+                {filteredTracks.slice(0, 50).map((track) => {
+                  const isCurrentPlaying = currentTrack?.id === track.id && isPlaying;
+                  const isFree = track.price === 0;
+                  return (
+                    <div
+                      key={track.id}
+                      className={`grid grid-cols-[1fr] lg:grid-cols-[40px_1fr_1.2fr_60px_80px_80px_100px] gap-2 lg:gap-4 items-center px-4 py-3 border-b border-gray-50 transition-all hover:bg-gray-50 ${
+                        isCurrentPlaying ? 'bg-blue-50' : ''
+                      }`}
+                      onMouseEnter={() => preloadTrack({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist,
+                        preview_url: track.preview_url,
+                      })}
+                    >
+                      {/* Play Button */}
+                      <button
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-black hover:bg-blue-600 hover:text-white transition-all flex-shrink-0"
+                        onClick={() => playTrack({
+                          id: track.id,
+                          title: track.title,
+                          artist: track.artist,
+                          preview_url: track.preview_url,
+                        })}
+                      >
+                        {isCurrentPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+                      </button>
+
+                      {/* Waveform Placeholder */}
+                      <div className="hidden lg:flex items-center h-8 bg-gray-50 rounded overflow-hidden">
+                        <div className="flex items-center h-full px-2 gap-[1px]">
+                          {Array.from({ length: 60 }).map((_, i) => (
+                            <div 
+                              key={i}
+                              className="w-[2px] bg-gray-300 rounded-full"
+                              style={{ height: `${Math.random() * 100}%`, minHeight: '2px' }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Track Info */}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[13px] text-black truncate">{track.title}</p>
+                      </div>
+
+                      {/* Artist */}
+                      <span className="text-[13px] text-gray-500 truncate">{track.artist}</span>
+
+                      {/* BPM */}
+                      <span className="text-[13px] text-black text-right font-mono">{track.bpm}</span>
+
+                      {/* Key */}
+                      <span className="text-[13px] text-gray-500 text-right font-mono">{track.key}</span>
+
+                      {/* Price */}
+                      <div className="flex justify-end">
+                        {isFree ? (
+                          <span className="text-[12px] text-blue-600 font-semibold">FREE</span>
+                        ) : (
+                          <button className="px-3 py-1 border border-gray-200 text-black text-[12px] font-semibold rounded hover:bg-black hover:text-white transition-all">
+                            €{track.price.toFixed(2)} BUY
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </div>
-        )}
+          </main>
+        </div>
       </div>
     </div>
   );
