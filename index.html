@@ -18,7 +18,55 @@
     <link rel="dns-prefetch" href="https://www.googleapis.com" />
     <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
     
+    <!-- SEO Meta Tags -->
     <title>DJ Music Marketplace - Premium DJ Edit Packs & Music</title>
+    <meta name="description" content="Download premium DJ edits, remixes, and original productions. 2000+ tracks across House, Techno, Trance, Hip-Hop, and more. Free & paid tracks for DJs." />
+    <meta name="keywords" content="DJ music, DJ edits, remixes, house music, techno, trance, hip hop, download music, DJ marketplace, beat downloads" />
+    <meta name="author" content="DJ Music Marketplace" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://djmusicmarketplace.fun/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="DJ Music Marketplace - Premium DJ Edit Packs & Music" />
+    <meta property="og:description" content="Download premium DJ edits, remixes, and original productions. 2000+ tracks across House, Techno, Trance, Hip-Hop, and more." />
+    <meta property="og:image" content="https://djmusicmarketplace.fun/og-image.jpg" />
+    <meta property="og:url" content="https://djmusicmarketplace.fun/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DJ Music Marketplace" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DJ Music Marketplace - Premium DJ Edit Packs & Music" />
+    <meta name="twitter:description" content="Download premium DJ edits, remixes, and original productions. 2000+ tracks." />
+    <meta name="twitter:image" content="https://djmusicmarketplace.fun/og-image.jpg" />
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID'); // ใส่ GA4 Measurement ID ของคุณ
+    </script>
+    
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="YOUR_GSC_VERIFICATION_CODE" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      "name": "DJ Music Marketplace",
+      "url": "https://djmusicmarketplace.fun/",
+      "description": "Premium DJ edits, remixes, and original productions for DJs.",
+      "genre": ["House", "Techno", "Trance", "Hip-Hop", "EDM"],
+      "sameAs": [
+        "https://www.facebook.com/profile.php?id=61592144669937",
+        "https://www.tiktok.com/@djmusicmarketplace"
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
@@ -29,11 +77,6 @@
       window.botpressWebChat = {
         botId: 'YOUR_BOT_ID_HERE', // ใส่ Bot ID จาก Botpress Cloud
         hostUrl: 'https://viber.botpress.cloud',
-        // theme customization (optional)
-        // theme: {
-        //   primaryColor: '#ff3b30',
-        //   backgroundColor: '#ffffff',
-        // },
       };
     </script>
     <script src="https://cdn.botpress.cloud/webchat/v3/inject.js" defer></script>

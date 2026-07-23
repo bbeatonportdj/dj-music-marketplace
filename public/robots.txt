@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /downloads/
+Disallow: /orders/
+
+Sitemap: https://djmusicmarketplace.fun/sitemap.xml
