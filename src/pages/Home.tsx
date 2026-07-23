@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Music, Download, Loader2, Search, Filter, ChevronDown, Clock, TrendingUp } from 'lucide-react';
+import { Play, Pause, Music, Download, Loader2, Search, ChevronDown, Clock, TrendingUp } from 'lucide-react';
 import { fetchTracks, fetchArtwork, prefetchArtwork } from '../lib/api';
 import { directDownload } from '../lib/download';
 import type { Track } from '../lib/api';
@@ -212,7 +212,7 @@ function Home() {
           </div>
 
           {/* Track Rows */}
-          {displayTracks.map((track, idx) => (
+          {displayTracks.map((track) => (
             <div
               key={track.id}
               className={`grid grid-cols-[2fr_1fr_80px_80px_100px_60px] gap-4 items-center px-5 py-3.5 border-b border-border-gray/50 last:border-b-0 cursor-pointer transition-all group hover:bg-surface-container-high/50 ${
