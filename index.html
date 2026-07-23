@@ -23,5 +23,19 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Botpress Webchat -->
+    <script>
+      window.botpressWebChat = {
+        botId: 'YOUR_BOT_ID_HERE', // ใส่ Bot ID จาก Botpress Cloud
+        hostUrl: 'https://viber.botpress.cloud',
+        // theme customization (optional)
+        // theme: {
+        //   primaryColor: '#ff3b30',
+        //   backgroundColor: '#ffffff',
+        // },
+      };
+    </script>
+    <script src="https://cdn.botpress.cloud/webchat/v3/inject.js" defer></script>
   </body>
 </html>
