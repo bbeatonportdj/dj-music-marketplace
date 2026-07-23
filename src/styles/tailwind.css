@@ -1,32 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* Sonic Edge Design System */
 @theme {
-  --color-surface: #131313;
-  --color-surface-gray: #121212;
-  --color-surface-bright: #393939;
-  --color-surface-container-lowest: #0e0e0e;
-  --color-surface-container-low: #1b1b1b;
-  --color-surface-container: #1f1f1f;
-  --color-surface-container-high: #2a2a2a;
-  --color-surface-container-highest: #353535;
-  --color-border-gray: #2A2A2A;
+  --color-surface: #ffffff;
+  --color-surface-gray: #f5f5f5;
+  --color-surface-bright: #eeeeee;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fafafa;
+  --color-surface-container: #f5f5f5;
+  --color-surface-container-high: #eeeeee;
+  --color-surface-container-highest: #e0e0e0;
+  --color-border-gray: #e5e5e5;
   
-  --color-electric-red: #FF3B30;
-  --color-neon-red: #FF3B30;
-  --color-success-green: #34C759;
+  --color-electric-red: #111111;
+  --color-neon-red: #111111;
+  --color-success-green: #16a34a;
   
-  --color-on-surface: #e2e2e2;
-  --color-muted-text: #888888;
-  --color-on-primary: #690003;
+  --color-on-surface: #111111;
+  --color-muted-text: #666666;
+  --color-on-primary: #ffffff;
   
-  --font-display: 'Sora', sans-serif;
+  --font-display: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Sora', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
-/* Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -45,9 +43,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -56,96 +53,45 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-gray);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-surface-bright);
 }
 
-/* Red Glow Effect */
-.red-glow {
-  box-shadow: 0 0 30px rgba(255, 59, 48, 0.3);
-}
-
-.red-glow:hover {
-  box-shadow: 0 0 40px rgba(255, 59, 48, 0.4);
-}
-
-/* Glass Effect */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Focus States for Accessibility */
 :focus-visible {
   outline: 2px solid var(--color-electric-red);
   outline-offset: 2px;
 }
 
-/* Label Caps Utility */
-.label-caps {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-/* Price Display Utility */
-.price-display {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.0;
-}
-
-/* Animation Classes */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 59, 48, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(255, 59, 48, 0.5); }
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
+[data-theme="dark"] {
+  --color-surface: #0a0a0a;
+  --color-surface-gray: #151515;
+  --color-surface-bright: #222222;
+  --color-surface-container-lowest: #080808;
+  --color-surface-container-low: #141414;
+  --color-surface-container: #1a1a1a;
+  --color-surface-container-high: #252525;
+  --color-surface-container-highest: #333333;
+  --color-border-gray: #2a2a2a;
+  --color-on-surface: #f0f0f0;
+  --color-muted-text: #888888;
+  --color-electric-red: #ffffff;
+  --color-neon-red: #ffffff;
+  --color-on-primary: #000000;
 }
 
-/* Light Mode */
-html.light {
-  --color-surface: #ffffff;
-  --color-surface-gray: #f5f5f5;
-  --color-surface-bright: #e0e0e0;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f8f8f8;
-  --color-surface-container: #f0f0f0;
-  --color-surface-container-high: #e8e8e8;
-  --color-surface-container-highest: #d0d0d0;
-  --color-border-gray: #e0e0e0;
-  --color-on-surface: #1a1a1a;
-  --color-muted-text: #666666;
-}
-
-html.light body {
+[data-theme="dark"] body {
   background-color: var(--color-surface);
   color: var(--color-on-surface);
-}
-
-html.light .red-glow {
-  box-shadow: 0 0 30px rgba(255, 59, 48, 0.2);
-}
-
-html.light .glass {
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.08);
 }
