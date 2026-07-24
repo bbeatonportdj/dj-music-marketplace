@@ -1,234 +1,334 @@
-import { useState } from 'react';
-import { 
-  LayoutDashboard, Music, BarChart3, Users, Settings, 
-  DollarSign, ArrowUpRight,
-  Search, Bell, Mail, User
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard, Music, BarChart3, Users, Settings,
+  DollarSign, ShoppingCart,
+  Search, LogOut,
+  UserCog, Shield, RefreshCw
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../lib/apiBase';
+import toast from 'react-hot-toast';
+import '../styles/admin-dashboard.css';
+
+interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string;
+  role: string;
+  createdAt: string;
+}
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'tracks' | 'sales' | 'users' | 'settings'>('overview');
+  const { user, isAdmin, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'tracks' | 'analytics' | 'settings'>('overview');
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [stats, setStats] = useState({ users: 0, tracks: 0, orders: 0, revenue: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      navigate('/');
+    }
+  }, [authLoading, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchStats();
+      if (activeTab === 'users') fetchUsers();
+    }
+  }, [isAdmin, activeTab]);
+
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await fetch(apiUrl('/api/admin/stats'));
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await fetch(apiUrl('/api/auth/users'));
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch(apiUrl(`/api/auth/role`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+
+      if (res.ok) {
+        toast.success('Role updated successfully');
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to update role');
+      }
+    } catch (err) {
+      toast.error('Failed to update role');
+    }
+  };
+
+  const filteredUsers = users.filter(u =>
+    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'tracks', label: 'Track Management', icon: Music },
-    { id: 'sales', label: 'Sales Reports', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'settings', label: 'Site Settings', icon: Settings },
+    { id: 'tracks', label: 'Track Management', icon: Music },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  const stats = [
-    { label: 'Total Sales', value: '$1,245,300', change: '+5% from last month', icon: DollarSign, color: 'bg-blue-50 text-blue-600' },
-    { label: 'New Users', value: '3,500', change: '+12% this week', icon: Users, color: 'bg-green-50 text-green-600' },
-    { label: 'Top Selling Genre', value: 'Techno', change: '18,000 tracks sold', icon: Music, color: 'bg-purple-50 text-purple-600' },
-  ];
+  if (authLoading) {
+    return (
+      <div className="admin-page">
+        <div className="admin-loading">
+          <RefreshCw size={24} className="spin" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const recentSales = [
-    { id: '#ORD-001', user: 'John Doe', tracks: '"Acid Rain" - DJ Kicks, "Groove" - Beatmaster', amount: '$25.00', date: '2023-10-27', status: 'Completed' },
-    { id: '#ORD-002', user: 'Sarah Lee', tracks: '"Cosmic" - Starfall', amount: '$12.00', date: '2023-10-26', status: 'Pending' },
-    { id: '#ORD-003', user: 'Mike Chen', tracks: '"Deep Dive" - Ocean', amount: '$15.00', date: '2023-10-25', status: 'Completed' },
-    { id: '#ORD-004', user: 'John Doe', tracks: '"Cosmic" - Starfall', amount: '$12.00', date: '2023-10-24', status: 'Pending' },
-    { id: '#ORD-005', user: 'John Doe', tracks: '"Acid Rain" - Starfall', amount: '$12.00', date: '2023-10-27', status: 'Pending' },
-  ];
+  if (!isAdmin) {
+    return (
+      <div className="admin-page">
+        <div className="admin-denied">
+          <Shield size={48} />
+          <h2>Access Denied</h2>
+          <p>You don't have permission to access this page.</p>
+          <a href="/" className="admin-denied-btn">Go Home</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-[240px] bg-white border-r border-gray-100 min-h-screen flex-shrink-0 hidden lg:block">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <Music size={20} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-[14px] font-bold text-black">DJ Marketplace</h1>
-                <p className="text-[11px] text-gray-400">Admin</p>
-              </div>
-            </div>
+    <div className="admin-page">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-header">
+          <Music size={20} />
+          Admin Panel
+        </div>
+
+        <div className="admin-user-info">
+          <div className="admin-avatar">
+            {user?.display_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'A'}
           </div>
-
-          <nav className="p-4">
-            {sidebarItems.map(item => (
-              <button
-                key={item.id}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-colors mb-1 ${
-                  activeTab === item.id
-                    ? 'bg-gray-100 text-black'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-black'
-                }`}
-                onClick={() => setActiveTab(item.id as typeof activeTab)}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 min-w-0">
-          {/* Top Bar */}
-          <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Global Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-2 text-[13px] text-black placeholder-gray-400 focus:outline-none focus:border-blue-300"
-              />
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-400 hover:text-black relative">
-                <Bell size={18} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-black">
-                <Mail size={18} />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-black">
-                <User size={18} />
-              </button>
-            </div>
+          <div>
+            <div className="admin-user-name">{user?.display_name || user?.email}</div>
+            <div className="admin-user-role">Administrator</div>
           </div>
+        </div>
 
-          <div className="p-6">
-            {activeTab === 'overview' && (
-              <>
-                <h2 className="text-2xl font-extrabold text-black mb-6">Overview</h2>
+        <nav className="admin-nav">
+          {sidebarItems.map(item => (
+            <button
+              key={item.id}
+              className={`admin-nav-item ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(item.id as typeof activeTab)}
+            >
+              <item.icon size={18} />
+              {item.label}
+            </button>
+          ))}
+          <button className="admin-nav-item" onClick={() => navigate('/')}>
+            <LogOut size={18} />
+            Back to Site
+          </button>
+        </nav>
+      </aside>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {stats.map((stat, idx) => (
-                    <div key={idx} className="bg-white rounded-lg border border-gray-100 p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}`}>
-                          <stat.icon size={20} />
-                        </div>
-                        <ArrowUpRight size={16} className="text-green-500" />
-                      </div>
-                      <h3 className="text-[13px] text-gray-500 mb-1">{stat.label}</h3>
-                      <p className="text-2xl font-bold text-black">{stat.value}</p>
-                      <p className="text-[12px] text-green-500 mt-1">{stat.change}</p>
-                    </div>
-                  ))}
+      <main className="admin-main">
+        <div className="admin-content">
+          {activeTab === 'overview' && (
+            <>
+              <h1 className="admin-page-title">Dashboard Overview</h1>
+
+              <div className="admin-stats-grid">
+                <div className="admin-stat-card">
+                  <div className="stat-icon stat-icon-yellow"><Users size={20} /></div>
+                  <div className="stat-value">{loadingStats ? '...' : stats.users}</div>
+                  <div className="stat-label">Total Users</div>
                 </div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon stat-icon-blue"><Music size={20} /></div>
+                  <div className="stat-value">{loadingStats ? '...' : stats.tracks}</div>
+                  <div className="stat-label">Total Tracks</div>
+                </div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon stat-icon-green"><ShoppingCart size={20} /></div>
+                  <div className="stat-value">{loadingStats ? '...' : stats.orders}</div>
+                  <div className="stat-label">Total Orders</div>
+                </div>
+                <div className="admin-stat-card">
+                  <div className="stat-icon stat-icon-yellow"><DollarSign size={20} /></div>
+                  <div className="stat-value">${loadingStats ? '...' : stats.revenue.toLocaleString()}</div>
+                  <div className="stat-label">Total Revenue</div>
+                </div>
+              </div>
 
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Recent Sales */}
-                  <div className="bg-white rounded-lg border border-gray-100">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-[16px] font-bold text-black">Recent Sales</h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                            <th className="text-left px-6 py-3">Order ID</th>
-                            <th className="text-left px-6 py-3">User</th>
-                            <th className="text-left px-6 py-3">Tracks</th>
-                            <th className="text-left px-6 py-3">Amount</th>
-                            <th className="text-left px-6 py-3">Date</th>
-                            <th className="text-left px-6 py-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                          {recentSales.map((sale, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 text-[13px] font-medium text-black">{sale.id}</td>
-                              <td className="px-6 py-4 text-[13px] text-gray-600">{sale.user}</td>
-                              <td className="px-6 py-4 text-[13px] text-gray-600 max-w-[200px] truncate">{sale.tracks}</td>
-                              <td className="px-6 py-4 text-[13px] font-medium text-black">{sale.amount}</td>
-                              <td className="px-6 py-4 text-[13px] text-gray-600">{sale.date}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2 py-1 text-[11px] font-semibold rounded ${
-                                  sale.status === 'Completed' 
-                                    ? 'bg-green-50 text-green-600' 
-                                    : 'bg-yellow-50 text-yellow-600'
-                                }`}>
-                                  {sale.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+              <div className="admin-quick-actions">
+                <h2>Quick Actions</h2>
+                <div className="quick-actions-grid">
+                  <button className="quick-action-card" onClick={() => setActiveTab('users')}>
+                    <UserCog size={18} />
+                    Manage Users
+                  </button>
+                  <button className="quick-action-card" onClick={() => setActiveTab('tracks')}>
+                    <Music size={18} />
+                    Manage Tracks
+                  </button>
+                  <button className="quick-action-card" onClick={() => setActiveTab('analytics')}>
+                    <BarChart3 size={18} />
+                    View Analytics
+                  </button>
+                  <button className="quick-action-card" onClick={() => setActiveTab('settings')}>
+                    <Settings size={18} />
+                    Site Settings
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
-                  {/* Monthly Revenue Chart */}
-                  <div className="bg-white rounded-lg border border-gray-100">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-[16px] font-bold text-black">Monthly Revenue (Last 6 Months)</h3>
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full" />
-                        <span className="text-[12px] text-gray-500">Revenue</span>
-                      </div>
-                      
-                      {/* Simple Chart */}
-                      <div className="h-[200px] flex items-end gap-2">
-                        {[
-                          { month: 'May', value: 80 },
-                          { month: 'Jun', value: 100 },
-                          { month: 'Jul', value: 120 },
-                          { month: 'Aug', value: 130 },
-                          { month: 'Sep', value: 160 },
-                          { month: 'Oct', value: 180 },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                            <span className="text-[10px] text-gray-400">${item.value}K</span>
-                            <div 
-                              className="w-full bg-blue-600 rounded-t"
-                              style={{ height: `${(item.value / 200) * 100}%` }}
-                            />
-                            <span className="text-[11px] text-gray-500">{item.month}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+          {activeTab === 'users' && (
+            <>
+              <div className="admin-manage-header">
+                <h1 className="admin-page-title" style={{ marginBottom: 0 }}>User Management</h1>
+                <button className="admin-refresh-btn" onClick={fetchUsers}>
+                  <RefreshCw size={14} />
+                  Refresh
+                </button>
+              </div>
+
+              <div className="admin-manage-filters" style={{ marginTop: 24 }}>
+                <div className="amf-item">
+                  <label className="amf-label">Search Users</label>
+                  <div className="amf-search-wrap">
+                    <Search size={14} className="amf-search-icon" />
+                    <input
+                      className="amf-input"
+                      placeholder="Search by email or name..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
                   </div>
                 </div>
-              </>
-            )}
-
-            {activeTab === 'tracks' && (
-              <div className="text-center py-20">
-                <Music size={48} className="text-gray-200 mx-auto mb-4" />
-                <h3 className="text-[16px] font-bold text-black mb-2">Track Management</h3>
-                <p className="text-[13px] text-gray-500">Manage your track inventory, uploads, and metadata.</p>
               </div>
-            )}
 
-            {activeTab === 'sales' && (
-              <div className="text-center py-20">
-                <BarChart3 size={48} className="text-gray-200 mx-auto mb-4" />
-                <h3 className="text-[16px] font-bold text-black mb-2">Sales Reports</h3>
-                <p className="text-[13px] text-gray-500">View detailed sales analytics and revenue reports.</p>
-              </div>
-            )}
+              {loadingUsers ? (
+                <div className="admin-loading-inline">
+                  <RefreshCw size={20} className="spin" />
+                  Loading users...
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="admin-empty">
+                  <Users size={48} />
+                  <p>No users found</p>
+                </div>
+              ) : (
+                <div className="admin-tracks-table-wrap">
+                  <table className="admin-tracks-table">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map(u => (
+                        <tr key={u.id} className="admin-track-row">
+                          <td>
+                            <div className="admin-track-info">
+                              <span className="admin-track-title">{u.display_name || 'N/A'}</span>
+                            </div>
+                          </td>
+                          <td><span className="admin-meta">{u.email}</span></td>
+                          <td>
+                            <span className={`amt-status-pill ${u.role === 'admin' ? 'admin-role-admin' : u.role === 'producer' ? 'admin-role-producer' : ''}`}>
+                              <span className="amt-status-dot" style={{ background: u.role === 'admin' ? '#eab308' : u.role === 'producer' ? '#60a5fa' : '#34d399' }} />
+                              {u.role}
+                            </span>
+                          </td>
+                          <td><span className="admin-meta">{new Date(u.createdAt).toLocaleDateString()}</span></td>
+                          <td>
+                            <div className="admin-action-cell">
+                              <select
+                                className="amf-select"
+                                value={u.role}
+                                onChange={e => handleRoleChange(u.id, e.target.value)}
+                                style={{ width: 'auto', minWidth: 100 }}
+                              >
+                                <option value="user">User</option>
+                                <option value="producer">Producer</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
 
-            {activeTab === 'users' && (
-              <div className="text-center py-20">
-                <Users size={48} className="text-gray-200 mx-auto mb-4" />
-                <h3 className="text-[16px] font-bold text-black mb-2">User Management</h3>
-                <p className="text-[13px] text-gray-500">Manage user accounts, roles, and permissions.</p>
-              </div>
-            )}
+          {activeTab === 'tracks' && (
+            <div className="admin-denied" style={{ minHeight: '60vh' }}>
+              <Music size={48} style={{ opacity: 0.3 }} />
+              <h2>Track Management</h2>
+              <p>Track management features coming soon.</p>
+            </div>
+          )}
 
-            {activeTab === 'settings' && (
-              <div className="text-center py-20">
-                <Settings size={48} className="text-gray-200 mx-auto mb-4" />
-                <h3 className="text-[16px] font-bold text-black mb-2">Site Settings</h3>
-                <p className="text-[13px] text-gray-500">Configure site-wide settings and preferences.</p>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
+          {activeTab === 'analytics' && (
+            <div className="admin-denied" style={{ minHeight: '60vh' }}>
+              <BarChart3 size={48} style={{ opacity: 0.3 }} />
+              <h2>Analytics</h2>
+              <p>Detailed analytics coming soon.</p>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="admin-denied" style={{ minHeight: '60vh' }}>
+              <Settings size={48} style={{ opacity: 0.3 }} />
+              <h2>Site Settings</h2>
+              <p>Site settings coming soon.</p>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
