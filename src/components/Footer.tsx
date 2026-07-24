@@ -22,54 +22,77 @@ const InstagramIcon = ({ size = 18 }: { size?: number }) => (
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-50 border-t border-gray-100">
-      <div className="max-w-[1200px] mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          {/* Logo */}
+    <footer className="bg-[#080808] border-t border-white/[0.06]">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          {/* Product */}
+          <div>
+            <h4 className="font-mono text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/55 mb-4">Product</h4>
+            <ul className="space-y-3">
+              <li><Link to="/browse" className="text-[14px] text-white/70 hover:text-white transition-colors">Library</Link></li>
+              <li><Link to="/new-releases" className="text-[14px] text-white/70 hover:text-white transition-colors">New Releases</Link></li>
+              <li><Link to="/search" className="text-[14px] text-white/70 hover:text-white transition-colors">Genres</Link></li>
+              <li><Link to="/faq" className="text-[14px] text-white/70 hover:text-white transition-colors">Pricing</Link></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="font-mono text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/55 mb-4">Company</h4>
+            <ul className="space-y-3">
+              <li><Link to="/about" className="text-[14px] text-white/70 hover:text-white transition-colors">About</Link></li>
+              <li><Link to="/contact" className="text-[14px] text-white/70 hover:text-white transition-colors">Contact</Link></li>
+              <li><Link to="/faq" className="text-[14px] text-white/70 hover:text-white transition-colors">Support</Link></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-mono text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/55 mb-4">Legal</h4>
+            <ul className="space-y-3">
+              <li><Link to="/terms" className="text-[14px] text-white/70 hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="text-[14px] text-white/70 hover:text-white transition-colors">Privacy Policy</Link></li>
+            </ul>
+          </div>
+
+          {/* Connect */}
+          <div>
+            <h4 className="font-mono text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/55 mb-4">Connect</h4>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://www.facebook.com/profile.php?id=61592144669937" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white/45 hover:text-white transition-colors"
+              >
+                <FacebookIcon size={18} />
+              </a>
+              <a 
+                href="https://twitter.com/djmusicmarketplace" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white/45 hover:text-white transition-colors"
+              >
+                <TwitterIcon size={18} />
+              </a>
+              <a 
+                href="https://www.instagram.com/djmusicmarketplace" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white/45 hover:text-white transition-colors"
+              >
+                <InstagramIcon size={18} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-[15px] font-extrabold tracking-tight uppercase text-black">DJ MARKETPLACE</span>
+            <img src="/logo.png" alt="DJ Marketplace" className="h-6 w-auto" />
           </Link>
-
-          {/* Links */}
-          <div className="flex items-center gap-6">
-            <Link to="/about" className="text-[13px] text-gray-500 hover:text-black transition-colors">
-              About
-            </Link>
-            <Link to="/faq" className="text-[13px] text-gray-500 hover:text-black transition-colors">
-              Support
-            </Link>
-            <Link to="/contact" className="text-[13px] text-gray-500 hover:text-black transition-colors">
-              Contact
-            </Link>
-          </div>
-
-          {/* Social Icons */}
-          <div className="flex items-center gap-4">
-            <a 
-              href="https://www.facebook.com/profile.php?id=61592144669937" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-black transition-colors"
-            >
-              <FacebookIcon size={18} />
-            </a>
-            <a 
-              href="https://twitter.com/djmusicmarketplace" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-black transition-colors"
-            >
-              <TwitterIcon size={18} />
-            </a>
-            <a 
-              href="https://www.instagram.com/djmusicmarketplace" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-black transition-colors"
-            >
-              <InstagramIcon size={18} />
-            </a>
-          </div>
+          <p className="text-[12.5px] text-white/45">© 2026 DJ Marketplace. All rights reserved.</p>
         </div>
       </div>
     </footer>

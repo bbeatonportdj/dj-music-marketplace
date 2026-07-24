@@ -33,16 +33,18 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#0A0A0A]">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+      <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-[400px]">
           {/* Logo */}
-          <h1 className="text-3xl font-extrabold text-black mb-8 tracking-tight">DJ MARKETPLACE.</h1>
+          <div className="mb-8">
+            <img src="/logo.png" alt="DJ Marketplace" className="h-10 w-auto" />
+          </div>
           
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[18px] font-bold text-black">User Authentication</h2>
+            <h2 className="text-[18px] font-bold text-white">User Authentication</h2>
             <div className="relative">
               <input
                 type="checkbox"
@@ -53,9 +55,9 @@ const Auth = () => {
               />
               <label
                 htmlFor="authToggle"
-                className="w-12 h-6 bg-gray-200 rounded-full cursor-pointer relative block"
+                className="w-12 h-6 bg-white/10 rounded-full cursor-pointer relative block"
               >
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isSignIn ? 'left-1' : 'left-7'}`} />
+                <div className={`absolute top-1 w-4 h-4 bg-[#FC4239] rounded-full transition-transform ${isSignIn ? 'left-1' : 'left-7'}`} />
               </label>
             </div>
           </div>
@@ -63,20 +65,20 @@ const Auth = () => {
           {/* User Type Toggle */}
           <div className="flex gap-2 mb-6">
             <button
-              className={`flex-1 py-2.5 text-[13px] font-semibold rounded-md transition-colors ${
+              className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg transition-colors ${
                 userType === 'dj'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  ? 'bg-[#FC4239] text-white'
+                  : 'bg-white/5 text-white/45 hover:bg-white/10'
               }`}
               onClick={() => setUserType('dj')}
             >
               Join as DJ
             </button>
             <button
-              className={`flex-1 py-2.5 text-[13px] font-semibold rounded-md transition-colors ${
+              className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg transition-colors ${
                 userType === 'artist'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  ? 'bg-[#FC4239] text-white'
+                  : 'bg-white/5 text-white/45 hover:bg-white/10'
               }`}
               onClick={() => setUserType('artist')}
             >
@@ -87,29 +89,29 @@ const Auth = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[12px] text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+              <label className="block text-[10px] text-white/45 uppercase tracking-[0.15em] mb-2 font-mono">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-[13px] text-black placeholder-gray-400 focus:outline-none focus:border-blue-300 transition-colors"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#FC4239]/50 transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[12px] text-gray-500 uppercase tracking-wider mb-2">Password</label>
+              <label className="block text-[10px] text-white/45 uppercase tracking-[0.15em] mb-2 font-mono">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-[13px] text-black placeholder-gray-400 focus:outline-none focus:border-blue-300 transition-colors pr-10"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#FC4239]/50 transition-colors pr-10"
                   required
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -119,7 +121,7 @@ const Auth = () => {
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 text-white text-[13px] font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-[#FC4239] text-white text-[13px] font-semibold rounded-lg hover:bg-[#e03a32] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
@@ -127,9 +129,9 @@ const Auth = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-center text-[13px] text-gray-500 mt-6">
+          <p className="text-center text-[13px] text-white/45 mt-6">
             Already have an account?{' '}
-            <Link to="/auth" className="text-blue-600 font-semibold hover:underline">
+            <Link to="/auth" className="text-[#FC4239] font-semibold hover:underline">
               Sign In
             </Link>
           </p>
@@ -137,15 +139,13 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Image */}
-      <div className="hidden lg:flex flex-1 bg-gray-100 items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
-        <img 
-          src="https://images.unsplash.com/photo-1571327073757-71d13c24de30?w=800&q=80" 
-          alt="DJ Equipment" 
-          className="relative z-10 w-[80%] max-w-[500px] rounded-lg shadow-2xl"
-        />
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <p className="text-2xl font-extrabold text-white drop-shadow-lg">Elevate Your Sound.</p>
+      <div className="hidden lg:flex flex-1 bg-[#0F0F0F] items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#FC4239]/10 rounded-full blur-[120px]" />
+        </div>
+        <div className="relative z-10 text-center px-8">
+          <h2 className="text-3xl font-extrabold text-white mb-4">Elevate Your Sound.</h2>
+          <p className="text-white/65 text-[15px]">Join 37,000+ DJs already using DJ Marketplace.</p>
         </div>
       </div>
     </div>

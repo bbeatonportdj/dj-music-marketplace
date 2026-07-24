@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { 
+import {
   Play, Pause, Search, SlidersHorizontal, X,
   Music, Loader2, ChevronDown, ChevronRight, AlertTriangle, RotateCcw,
   Download
@@ -38,7 +38,7 @@ const NewReleases = () => {
   const { addToCart, isInCart } = useCart();
   const { user } = useAuth();
   const { showNotification } = useNotifications();
-  
+
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
@@ -104,13 +104,13 @@ const NewReleases = () => {
   };
 
   const filteredTracks = tracks.filter(track => {
-    const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           track.artist.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = selectedGenre === 'All Genres' || track.genre === selectedGenre;
     const bpmRange = BPM_RANGES.find(r => r.label === selectedBpm);
     const matchesBpm = bpmRange ? (track.bpm >= bpmRange.min && track.bpm <= bpmRange.max) : true;
-    const matchesVersion = selectedVersion === 'All Versions' || 
-                           track.versionType.toLowerCase() === selectedVersion.toLowerCase() || 
+    const matchesVersion = selectedVersion === 'All Versions' ||
+                           track.versionType.toLowerCase() === selectedVersion.toLowerCase() ||
                            track.version.toLowerCase().includes(selectedVersion.toLowerCase());
     const matchesKey = selectedKeys.length === 0 || selectedKeys.includes(track.key);
     return matchesSearch && matchesGenre && matchesBpm && matchesVersion && matchesKey;
@@ -151,36 +151,39 @@ const NewReleases = () => {
   }, [filteredTracks, sortBy]);
 
   return (
-    <div className="flex min-h-[80vh]">
+    <div className="flex min-h-[80vh] bg-[#0A0A0A]">
       {/* Main Content */}
       <main className="flex-1 p-4 lg:px-16">
         <header className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <button 
-              className="lg:hidden flex items-center gap-2 px-3 py-2 bg-surface-gray border border-border-gray rounded-lg text-muted-text"
+            <button
+              className="lg:hidden flex items-center gap-2 px-3 py-2 bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg text-white/60"
               onClick={() => setShowSidebar(!showSidebar)}
             >
               <SlidersHorizontal size={18} />
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 bg-electric-red text-white text-xs font-bold rounded-full flex items-center justify-center">{activeFilterCount}</span>
+                <span className="w-5 h-5 bg-[#FC4239] text-white text-xs font-bold rounded-full flex items-center justify-center">{activeFilterCount}</span>
               )}
             </button>
-            <h1 className="font-display text-2xl lg:text-3xl font-extrabold text-on-surface">LATEST RELEASES</h1>
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#FC4239] mb-1">Latest</p>
+              <h1 className="font-black text-white text-[24px] lg:text-[32px] tracking-[-0.03em]">NEW RELEASES</h1>
+            </div>
           </div>
           <div className="relative">
-            <button 
-              className="flex items-center gap-2 px-3 py-2 bg-surface-gray border border-border-gray rounded-lg text-muted-text"
+            <button
+              className="flex items-center gap-2 px-3 py-2 bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg text-white/60"
               onClick={() => setShowSortMenu(!showSortMenu)}
             >
-              <span className="text-sm">Sort: <strong className="text-on-surface">{sortBy === 'newest' ? 'Newest' : sortBy === 'bpm' ? 'BPM' : sortBy === 'title' ? 'Title' : 'Rank'}</strong></span>
+              <span className="text-sm">Sort: <strong className="text-white">{sortBy === 'newest' ? 'Newest' : sortBy === 'bpm' ? 'BPM' : sortBy === 'title' ? 'Title' : 'Rank'}</strong></span>
               <ChevronDown size={14} />
             </button>
             {showSortMenu && (
-              <div className="absolute right-0 top-full mt-2 w-32 bg-surface-container border border-border-gray rounded-lg shadow-xl overflow-hidden z-50">
+              <div className="absolute right-0 top-full mt-2 w-32 bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg shadow-xl overflow-hidden z-50">
                 {(['newest', 'bpm', 'title', 'rank'] as const).map(opt => (
-                  <button 
-                    key={opt} 
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
+                  <button
+                    key={opt}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? 'bg-[#FC4239] text-white' : 'text-white/60 hover:text-white hover:bg-[#2A2A2A]'}`}
                     onClick={(e) => { e.stopPropagation(); setSortBy(opt); setShowSortMenu(false); }}
                   >
                     {opt === 'newest' ? 'Newest' : opt === 'bpm' ? 'BPM' : opt === 'title' ? 'Title' : 'Rank'}
@@ -192,31 +195,31 @@ const NewReleases = () => {
         </header>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
-            <Loader2 size={40} className="animate-spin text-electric-red" />
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-white/45">
+            <Loader2 size={40} className="animate-spin text-[#FC4239]" />
             <p className="font-mono text-sm uppercase tracking-wider">Loading tracks...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
-            <AlertTriangle size={40} className="text-electric-red opacity-40" />
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-white/45">
+            <AlertTriangle size={40} className="text-[#FC4239] opacity-40" />
             <p>{error}</p>
-            <button 
-              className="flex items-center gap-2 px-4 py-2 bg-electric-red text-white rounded-lg text-sm font-bold"
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-[#FC4239] text-white rounded-lg text-sm font-bold"
               onClick={loadTracks}
             >
               <RotateCcw size={14} /> Retry
             </button>
           </div>
         ) : Object.keys(groupedTracks).length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-text">
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-white/45">
             <Music size={48} className="opacity-20" />
             <p>No tracks matching your filters.</p>
           </div>
         ) : (
           Object.entries(groupedTracks).map(([genre, genreTracks]) => (
             <div key={genre} className="mb-8">
-              <h2 className="font-display text-lg font-bold text-on-surface mb-4 uppercase tracking-wider">
-                {genre} <span className="text-muted-text font-mono text-sm ml-2">{genreTracks.length}</span>
+              <h2 className="font-black text-white text-[18px] mb-4 uppercase tracking-[0.05em]">
+                {genre} <span className="text-white/40 font-mono text-sm ml-2">{genreTracks.length}</span>
               </h2>
               <div className="space-y-1">
                 {genreTracks.map((track, idx) => {
@@ -226,9 +229,11 @@ const NewReleases = () => {
                   const num = String(idx + 1).padStart(2, '0');
 
                   return (
-                    <div 
-                      key={track.id} 
-                      className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${isCurrentPlaying ? 'bg-surface-container' : 'hover:bg-surface-container-high'}`}
+                    <div
+                      key={track.id}
+                      className={`track-row flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 ${
+                        isCurrentPlaying ? 'bg-[#FC4239]/5 border-l-2 border-[#FC4239]' : 'hover:bg-[#1C1C1C]'
+                      }`}
                       onMouseEnter={() => preloadTrack({
                         id: track.id,
                         title: track.title,
@@ -236,55 +241,59 @@ const NewReleases = () => {
                         preview_url: track.preview_url,
                       })}
                     >
-                      <span className="font-mono text-xs text-border-gray w-6">{num}</span>
-                      <button 
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-gray text-muted-text hover:text-electric-red transition-colors"
+                      <span className="font-mono font-black text-xs text-[#666] w-6">{num}</span>
+                      <button
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${
+                          isCurrentPlaying
+                            ? 'bg-[#00C853] text-white'
+                            : 'bg-[#1C1C1C] border border-[#2A2A2A] text-white/60 hover:border-[#FC4239] hover:text-[#FC4239]'
+                        }`}
                         onClick={() => handlePlay(track)}
                       >
-                        {isCurrentPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                        {isCurrentPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                       </button>
-                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handlePlay(track)}>
-                        <div className="font-bold text-on-surface truncate">
-                          <span className="text-muted-text">{track.artist}</span> - <span>{track.title}</span>
+                      <div className="flex-1 min-w-0 cursor-pointer group" onClick={() => handlePlay(track)}>
+                        <div className="font-bold text-white truncate group-hover:text-[#FC4239] transition-colors">
+                          <span className="text-white/60">{track.artist}</span> - <span>{track.title}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-text">
+                        <div className="flex items-center gap-2 text-xs text-white/45 font-mono">
                           <span>{track.genre}</span>
-                          {track.bpm > 0 && <><span className="text-border-gray">·</span><span>{track.bpm} bpm</span></>}
-                          {track.key && <><span className="text-border-gray">·</span><span>{track.key}</span></>}
+                          {track.bpm > 0 && <><span className="text-white/25">·</span><span>{track.bpm} bpm</span></>}
+                          {track.key && <><span className="text-white/25">·</span><span>{track.key}</span></>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {track.version && (
                           <span className={`px-2 py-0.5 text-[10px] font-mono rounded ${
-                            track.versionType === 'original' ? 'bg-electric-red/20 text-electric-red' :
-                            track.versionType === 'extended' ? 'bg-success-green/20 text-success-green' :
-                            'bg-surface-bright/20 text-muted-text'
+                            track.versionType === 'original' ? 'bg-[#FC4239]/15 text-[#FC4239] border border-[#FC4239]/30' :
+                            track.versionType === 'extended' ? 'bg-[#00C853]/15 text-[#00C853] border border-[#00C853]/30' :
+                            'bg-white/5 text-white/60 border border-white/10'
                           }`}>
                             {track.version}
                           </span>
                         )}
                         {is_free ? (
-                          <button 
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-electric-red text-white red-glow"
-                            onClick={() => handleFreeDownload(track)} 
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#00C853] text-white hover:shadow-[0_4px_15px_rgba(0,200,83,0.3)] transition-all"
+                            onClick={() => handleFreeDownload(track)}
                             disabled={downloadingId === track.id}
                           >
                             {downloadingId === track.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                           </button>
                         ) : (
-                          <button 
+                          <button
                             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                              isInCart(track.id) 
-                                ? 'bg-success-green text-white' 
-                                : 'bg-surface-gray border border-border-gray text-on-surface hover:border-electric-red'
+                              isInCart(track.id)
+                                ? 'bg-[#00C853] text-white'
+                                : 'bg-[#1C1C1C] border border-[#2A2A2A] text-white hover:border-[#FC4239] hover:bg-[#FC4239]/10'
                             }`}
                             onClick={() => addToCart({ id: track.id, title: track.title, price: track.price ?? 0, artwork: track.artwork, artist: track.artist })}
                           >
                             {isInCart(track.id) ? '✓' : `$${track.price}`}
                           </button>
                         )}
-                        <button 
-                          className="p-1 text-muted-text hover:text-on-surface transition-colors"
+                        <button
+                          className="p-1 text-white/40 hover:text-white transition-colors"
                           onClick={() => setExpandedTrack(isExpanded ? null : track.id)}
                         >
                           <ChevronRight size={16} className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -300,43 +309,43 @@ const NewReleases = () => {
       </main>
 
       {/* Sidebar */}
-      <aside className={`w-[280px] bg-surface-gray border-l border-border-gray p-4 hidden lg:block ${showSidebar ? '' : 'hidden'}`}>
+      <aside className={`w-[280px] bg-[#0F0F0F] border-l border-[#1A1A1A] p-4 hidden lg:block ${showSidebar ? '' : 'hidden'}`}>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-display font-bold text-on-surface">FILTERS</h3>
-          <button 
-            className="p-1 text-muted-text hover:text-on-surface transition-colors"
+          <h3 className="font-black text-white text-[14px] uppercase tracking-[0.1em]">FILTERS</h3>
+          <button
+            className="p-1 text-white/40 hover:text-white transition-colors"
             onClick={() => setShowSidebar(false)}
           >
             <X size={18} />
           </button>
         </div>
-        
+
         <div className="mb-6">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
-            <input 
-              type="text" 
-              placeholder="Search tracks..." 
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="text"
+              placeholder="Search tracks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-surface-container border border-border-gray rounded-lg text-sm text-on-surface placeholder:text-border-gray focus:outline-none focus:border-electric-red transition-colors"
+              className="w-full pl-9 pr-3 py-2 bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#FC4239]/50 transition-colors"
             />
           </div>
         </div>
 
         <div className="mb-6">
-          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Genre</h4>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            <button 
-              className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === 'All Genres' ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
+          <h4 className="text-xs font-mono text-white/45 uppercase tracking-wider mb-3">Genre</h4>
+          <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-hide">
+            <button
+              className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === 'All Genres' ? 'bg-[#FC4239] text-white' : 'text-white/60 hover:text-white hover:bg-[#1C1C1C]'}`}
               onClick={() => setSelectedGenre('All Genres')}
             >
               All Genres
             </button>
             {GENRES.map(genre => (
-              <button 
+              <button
                 key={genre}
-                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === genre ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedGenre === genre ? 'bg-[#FC4239] text-white' : 'text-white/60 hover:text-white hover:bg-[#1C1C1C]'}`}
                 onClick={() => setSelectedGenre(genre)}
               >
                 {genre}
@@ -346,12 +355,12 @@ const NewReleases = () => {
         </div>
 
         <div className="mb-6">
-          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">BPM Range</h4>
+          <h4 className="text-xs font-mono text-white/45 uppercase tracking-wider mb-3">BPM Range</h4>
           <div className="space-y-1">
             {BPM_RANGES.map(range => (
               <button
                 key={range.label}
-                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedBpm === range.label ? 'bg-electric-red text-white' : 'text-muted-text hover:text-on-surface hover:bg-surface-container-high'}`}
+                className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedBpm === range.label ? 'bg-[#FC4239] text-white' : 'text-white/60 hover:text-white hover:bg-[#1C1C1C]'}`}
                 onClick={() => setSelectedBpm(range.label)}
               >
                 {range.label}
@@ -361,12 +370,12 @@ const NewReleases = () => {
         </div>
 
         <div className="mb-6">
-          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Version Type</h4>
+          <h4 className="text-xs font-mono text-white/45 uppercase tracking-wider mb-3">Version Type</h4>
           <div className="flex flex-wrap gap-1">
             {['All Versions', 'clean', 'dirty', 'intro', 'acapella', 'instrumental', 'extended', 'radio', 'club', 'deep'].map(v => (
               <button
                 key={v}
-                className={`px-2 py-1 text-xs font-mono rounded transition-colors ${selectedVersion === v ? 'bg-electric-red text-white' : 'bg-surface-container text-muted-text hover:text-on-surface'}`}
+                className={`px-2 py-1 text-xs font-mono rounded transition-colors ${selectedVersion === v ? 'bg-[#FC4239] text-white' : 'bg-[#1C1C1C] text-white/60 hover:text-white'}`}
                 onClick={() => setSelectedVersion(v)}
               >
                 {v}
@@ -376,12 +385,12 @@ const NewReleases = () => {
         </div>
 
         <div className="mb-6">
-          <h4 className="text-xs font-mono text-muted-text uppercase tracking-wider mb-3">Camelot Key</h4>
+          <h4 className="text-xs font-mono text-white/45 uppercase tracking-wider mb-3">Camelot Key</h4>
           <div className="grid grid-cols-6 gap-1">
             {CAMELOT_KEYS.map(key => (
               <button
                 key={key}
-                className={`px-1 py-1 text-xs font-mono rounded transition-colors ${selectedKeys.includes(key) ? 'bg-electric-red text-white' : 'bg-surface-container text-muted-text hover:text-on-surface'}`}
+                className={`px-1 py-1 text-xs font-mono rounded transition-colors ${selectedKeys.includes(key) ? 'bg-[#FC4239] text-white' : 'bg-[#1C1C1C] text-white/60 hover:text-white'}`}
                 onClick={() => {
                   setSelectedKeys(prev =>
                     prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
@@ -395,8 +404,8 @@ const NewReleases = () => {
         </div>
 
         {(selectedGenre !== 'All Genres' || selectedBpm !== 'All BPM' || selectedVersion !== 'All Versions' || selectedKeys.length > 0 || searchQuery) && (
-          <button 
-            className="w-full py-2 text-sm text-electric-red hover:underline"
+          <button
+            className="w-full py-2 text-sm text-[#FC4239] hover:underline"
             onClick={() => {
               setSelectedGenre('All Genres');
               setSelectedBpm('All BPM');

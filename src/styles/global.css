@@ -1,56 +1,56 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-color: #ffffff;
-  --surface-color: #ffffff;
-  --surface-dim: #f8f9fa;
-  --surface-bright: #e9ecef;
-  --surface-gray: #f8f9fa;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f8f9fa;
-  --surface-container: #f8f9fa;
-  --surface-container-high: #e9ecef;
-  --surface-container-highest: #dee2e6;
-  --surface-light: #f8f9fa;
-  --surface-variant: #e9ecef;
+  --bg-color: #080808;
+  --surface-color: #0f0f0f;
+  --surface-dim: #080808;
+  --surface-bright: #1a1a1a;
+  --surface-gray: #0f0f0f;
+  --surface-container-lowest: #050505;
+  --surface-container-low: #0a0a0a;
+  --surface-container: #111111;
+  --surface-container-high: #1a1a1a;
+  --surface-container-highest: #252525;
+  --surface-light: #0f0f0f;
+  --surface-variant: #1a1a1a;
   
-  --primary-color: #000000;
-  --primary: #000000;
+  --primary-color: #3b82f6;
+  --primary: #3b82f6;
   --on-primary: #ffffff;
-  --primary-container: #333333;
+  --primary-container: #1e3a5f;
   --on-primary-container: #ffffff;
-  --inverse-primary: #ffffff;
-  --accent-color: #2563EB;
-  --accent-color-rgb: 37, 99, 235;
-  --electric-red: #2563EB;
+  --inverse-primary: #1e3a5f;
+  --accent-color: #3b82f6;
+  --accent-color-rgb: 59, 130, 246;
+  --electric-red: #3b82f6;
   
-  --secondary: #6c757d;
+  --secondary: #6b7280;
   --on-secondary: #ffffff;
-  --secondary-container: #f8f9fa;
-  --on-secondary-container: #000000;
+  --secondary-container: #1a1a1a;
+  --on-secondary-container: #ffffff;
   
-  --tertiary: #888888;
-  --on-tertiary: #ffffff;
-  --tertiary-container: #e9ecef;
-  --on-tertiary-container: #000000;
+  --tertiary: #9ca3af;
+  --on-tertiary: #000000;
+  --tertiary-container: #1a1a1a;
+  --on-tertiary-container: #ffffff;
   
-  --text-main: #000000;
-  --on-surface: #000000;
-  --on-surface-variant: #333333;
-  --text-muted: #6c757d;
-  --muted-text: #6c757d;
-  --text-dim: #adb5bd;
+  --text-main: #ffffff;
+  --on-surface: #ffffff;
+  --on-surface-variant: #d1d5db;
+  --text-muted: #6b7280;
+  --muted-text: #6b7280;
+  --text-dim: #4b5563;
   
-  --border-color: #e9ecef;
-  --border-gray: #e9ecef;
-  --outline: #dee2e6;
-  --outline-variant: #e9ecef;
+  --border-color: #1a1a1a;
+  --border-gray: #1a1a1a;
+  --outline: #333333;
+  --outline-variant: #252525;
   
-  --success-green: #16a34a;
-  --error: #dc2626;
-  --on-error: #ffffff;
-  --error-container: #fef2f2;
-  --on-error-container: #991b1b;
+  --success-green: #22c55e;
+  --error: #ef4444;
+  --on-error: #000000;
+  --error-container: #450a0a;
+  --on-error-container: #fecaca;
   
   --player-height: 72px;
   --nav-height: 64px;
@@ -59,10 +59,10 @@
   --margin-mobile: 16px;
   --margin-desktop: 48px;
   
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --red-glow: 0 2px 8px rgba(37, 99, 235, 0.15);
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(0, 0, 0, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --red-glow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] {
@@ -194,16 +194,16 @@ h4 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-color);
+  background: #080808;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: #252525;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
+  background: #333333;
 }
 
 .glass {
